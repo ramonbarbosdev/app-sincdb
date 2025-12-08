@@ -5,7 +5,7 @@ import { Component } from '@angular/core';
   selector: 'app-footer',
   template: `<div class="layout-footer">
     <span class="text-sm">
-      &copy; {{ currentYear }} Agrotech. Desenvolvido por
+      &copy; {{ currentYear }} W5I. Desenvolvido por
       <a
         href="https://www.linkedin.com/in/ramon-barbosa-8b9427223/"
         target="_blank"
