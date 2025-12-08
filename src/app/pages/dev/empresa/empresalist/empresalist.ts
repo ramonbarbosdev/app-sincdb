@@ -33,7 +33,7 @@ export class Empresalist {
   public listagem: Empresa[] = [];
   public baseService = inject(BaseService);
   endpoint = 'empresa';
-  primaryKey = 'id_empresa';
+  primaryKey = 'id';
   router = inject(Router);
   private route = inject(ActivatedRoute);
   isDialog: boolean = false;

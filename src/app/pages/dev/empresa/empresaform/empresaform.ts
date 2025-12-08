@@ -165,7 +165,7 @@ export class Empresaform {
       next: (res) => {
         this.listaAssinatura = (res as any).map((index: any) => {
           const item = new FlagOption();
-          item.code = index.id_planoassinatura;
+          item.code = index.id;
           item.name = index.nm_planoassinatura;
           this.cd.markForCheck();
           return item;

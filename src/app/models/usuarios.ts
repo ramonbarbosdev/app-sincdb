@@ -1,7 +1,7 @@
 import { Usuarioempresa } from "./usuarioempresa";
 
 export class Usuarios {
-  public id!: number;
+  public id!: string;
   public nome: string = '';
   public login: string = '';
   public senha: string = '';

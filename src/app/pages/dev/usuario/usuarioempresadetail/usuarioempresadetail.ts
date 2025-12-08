@@ -164,7 +164,7 @@ export class Usuarioempresadetail {
       next: (res) => {
         this.listaEmpresa = (res as any).map((index: any) => {
           const item = new FlagOption();
-          item.code = index.id_empresa;
+          item.code = index.id;
           item.name = index.cd_empresa + ' - ' + index.nm_empresa;
            item.extra = {
              nm_empresa: index.nm_empresa,

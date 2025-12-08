@@ -1,2 +1,16 @@
-/* You can add global styles to this file, and also import other style files */
 @import "tailwindcss";
+@import "primeicons/primeicons.css";
+@import '../src/assets/layout/layout.scss';
+// @import '../src/assets/demo/demo.scss';
+
+.flex-row-responsive {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    width: 100%;
+
+    @media (min-width: 768px) {
+        flex-direction: row;
+    }
+}

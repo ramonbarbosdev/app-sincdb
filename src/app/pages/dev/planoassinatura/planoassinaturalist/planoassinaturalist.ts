@@ -33,7 +33,7 @@ export class Planoassinaturalist {
   loading: boolean = true;
   public baseService = inject(BaseService);
   endpoint = 'planoassinatura';
-  primaryKey = 'id_planoassinatura';
+  primaryKey = 'id';
   router = inject(Router);
   private route = inject(ActivatedRoute);
   isDialog: boolean = false;

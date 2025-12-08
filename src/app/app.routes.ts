@@ -21,6 +21,8 @@ export const routes: Routes = [
       { path: 'home', component: HomeDev },
       { path: 'usuario', component: Usuariolist },
       { path: 'role', component: Rolelist },
+      { path: 'planoassinatura', component: Planoassinaturalist },
+      { path: 'empresa', component: Empresalist },
     ],
   },
   {
