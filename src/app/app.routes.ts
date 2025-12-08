@@ -7,6 +7,7 @@ import { Empresalist } from './pages/dev/empresa/empresalist/empresalist';
 import { HomeDev } from './pages/dev/home-dev/home-dev';
 import { Planoassinaturalist } from './pages/dev/planoassinatura/planoassinaturalist/planoassinaturalist';
 import { HomeClient } from './pages/client/home-client/home-client';
+import { Conexaoform } from './pages/client/conexao/conexaoform/conexaoform';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
@@ -30,6 +31,9 @@ export const routes: Routes = [
     component: AppLayout,
     canActivateChild: [authGuard],
     data: { roles: ['client', 'dev'] },
-    children: [{ path: 'home', component: HomeClient }],
+    children: [
+      { path: 'home', component: HomeClient },
+      { path: 'conexao', component: Conexaoform }
+    ],
   },
 ];

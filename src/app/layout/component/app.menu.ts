@@ -71,12 +71,12 @@ export class AppMenu {
           ],
         },
         {
-          label: 'Gerenciamentos',
+          label: 'Operações',
           items: [
             {
-              label: 'Categoria do Serviço',
-              icon: 'pi pi-fw pi-home',
-              routerLink: ['/client/categoriaservico'],
+              label: 'Conexão',
+              icon: 'pi pi-wifi',
+              routerLink: ['/client/conexao'],
             },
             {
               label: 'Clientes',

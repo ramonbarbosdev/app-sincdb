@@ -1,0 +1,167 @@
+<p-card class="w-full max-w-5xl mx-auto my-6 px-2 sm:px-4">
+  <!-- HEADER -->
+  <ng-template pTemplate="header">
+    <!-- <div class="flex flex-col sm:flex-row justify-between items-center w-full p-4 gap-2 sm:gap-0">
+      <h5 class="text-lg sm:text-xl font-semibold text-center sm:text-left">
+        Configuração da Conexão
+      </h5>
+    </div> -->
+  </ng-template>
+
+  <!-- CONTEÚDO -->
+  <ng-template #content>
+
+    <h3 class="text-xl font-semibold mb-3 text-primary">Conexão com Banco Local</h3>
+    <div class="flex-row-responsive w-full">
+      <app-layout-campo
+        [error]="errorValidacao['db_cloud_host']"
+        [label]="'Host:'"
+        [width]="'md:w-6/12'"
+      >
+        <p-password
+          name="db_cloud_host"
+          id="db_cloud_host"
+          [(ngModel)]="cloud.db_cloud_host"
+          placeholder=""
+          [toggleMask]="false"
+          [fluid]="true"
+          [feedback]="false"
+        ></p-password>
+      </app-layout-campo>
+
+      <app-layout-campo
+        [error]="errorValidacao['db_cloud_port']"
+        [label]="'Porta:'"
+        [width]="' md:w-6/12'"
+      >
+        <p-password
+          name="db_cloud_port"
+          id="db_cloud_port"
+          [(ngModel)]="cloud.db_cloud_port"
+          placeholder=""
+          [toggleMask]="false"
+          [fluid]="true"
+          [feedback]="false"
+        ></p-password>
+      </app-layout-campo>
+    </div>
+    <!-- Segunda linha -->
+    <div class="flex-row-responsive w-full">
+      <app-layout-campo
+        [error]="errorValidacao['db_cloud_user']"
+        [label]="'Usuario:'"
+        [width]="' md:w-6/12'"
+      >
+        <p-password
+          name="db_cloud_user"
+          id="db_cloud_user"
+          [(ngModel)]="cloud.db_cloud_user"
+          placeholder=""
+          [toggleMask]="false"
+          [fluid]="true"
+          [feedback]="false"
+        ></p-password>
+      </app-layout-campo>
+
+      <app-layout-campo
+        [error]="errorValidacao['db_cloud_password']"
+        [label]="'Senha:'"
+        [width]="'md:w-6/12'"
+      >
+        <p-password
+          name="db_cloud_password"
+          id="db_cloud_password"
+          [(ngModel)]="cloud.db_cloud_password"
+          placeholder=""
+          [toggleMask]="false"
+          [fluid]="true"
+          [feedback]="false"
+        ></p-password>
+      </app-layout-campo>
+    </div>
+
+    <hr class="my-6" />
+
+    <h3 class="text-xl font-semibold mb-3 text-primary">Conexão com Banco Local</h3>
+
+    <div class="flex-row-responsive w-full">
+      <app-layout-campo
+        [error]="errorValidacao['db_local_host']"
+        [label]="'Host:'"
+        [width]="' md:w-6/12'"
+      >
+        <p-password
+          name="db_local_host"
+          id="db_local_host"
+          [(ngModel)]="local.db_local_host"
+          placeholder=""
+          [toggleMask]="false"
+          [fluid]="true"
+          [feedback]="false"
+        ></p-password>
+      </app-layout-campo>
+
+      <app-layout-campo
+        [error]="errorValidacao['db_local_port']"
+        [label]="'Porta:'"
+        [width]="'md:w-6/12'"
+      >
+        <p-password
+          name="db_local_port"
+          id="db_local_port"
+          [(ngModel)]="local.db_local_port"
+          placeholder=""
+          [toggleMask]="false"
+          [fluid]="true"
+          [feedback]="false"
+        ></p-password>
+      </app-layout-campo>
+    </div>
+
+    <div class="flex-row-responsive w-full">
+      <app-layout-campo
+        [error]="errorValidacao['db_local_user']"
+        [label]="'Usuario:'"
+        [width]="' md:w-6/12'"
+      >
+        <p-password
+          name="db_local_user"
+          id="db_local_user"
+          [(ngModel)]="local.db_local_user"
+          placeholder=""
+          [toggleMask]="false"
+          [fluid]="true"
+          [feedback]="false"
+        ></p-password>
+      </app-layout-campo>
+
+      <app-layout-campo
+        [error]="errorValidacao['db_local_password']"
+        [label]="'Senha:'"
+        [width]="'md:w-6/12'"
+      >
+        <p-password
+          name="db_local_password"
+          id="db_local_password"
+          [(ngModel)]="local.db_local_password"
+          placeholder=""
+          [toggleMask]="false"
+          [fluid]="true"
+          [feedback]="false"
+        ></p-password>
+      </app-layout-campo>
+    </div>
+  </ng-template>
+
+  <!-- FOOTER -->
+  <ng-template #footer>
+    <div class="flex flex-col sm:flex-row justify-end gap-2 mt-4 px-2 sm:px-0">
+      <p-button
+        label="Salvar"
+        icon="pi pi-check"
+        (click)="onSave()"
+        styleClass="w-full sm:w-auto"
+      />
+    </div>
+  </ng-template>
+</p-card>
