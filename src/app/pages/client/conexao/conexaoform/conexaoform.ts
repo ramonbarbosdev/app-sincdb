@@ -6,11 +6,9 @@ import { CommonModule } from '@angular/common';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { ZodError } from 'zod';
-import { NgxMaskDirective } from 'ngx-mask';
 import { ButtonModule } from 'primeng/button';
 import { LayoutCampo } from '../../../../components/layout-campo/layout-campo';
 import { AuthService } from '../../../../auth/auth.service';
-import { Usuarios } from '../../../../models/usuarios';
 import { BaseService } from '../../../../services/base.service';
 import { ConexaoSchema } from '../../../../schema/conexao-schema';
 import { Conexao } from '../../../../models/conexao';
@@ -26,7 +24,6 @@ import { Router } from '@angular/router';
     CommonModule,
     InputTextModule,
     PasswordModule,
-    NgxMaskDirective,
     ButtonModule,
   ],
   templateUrl: './conexaoform.html',
