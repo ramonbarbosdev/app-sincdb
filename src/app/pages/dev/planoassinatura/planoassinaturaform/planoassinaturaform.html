@@ -1,0 +1,58 @@
+<app-layout-form-simples
+  [(visible)]="isDialog"
+  [title]="'Formulario de Empresas'"
+  [loading]="loading"
+  (save)="onSave()"
+  (cancel)="hideDialog()"
+  (show)="onShow()"
+>
+ 
+  <div class="flex-row-responsive">
+    <app-layout-campo
+      [error]="errorValidacao['nm_planoassinatura']"
+      [label]="'Nome: (*)'"
+      [width]="'w-8/12'"
+      [sublabel]="'Informe o nome da emrpesa'"
+      [describedby]="'nm_planoassinatura'"
+    >
+      <input
+        title="nm_planoassinatura"
+        pInputText
+        id="nm_planoassinatura"
+        [(ngModel)]="objeto.nm_planoassinatura"
+        class="w-full"
+        [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['nm_planoassinatura'] }"
+      />
+    </app-layout-campo>
+     <app-layout-campo
+      [label]="'Valor: '"
+      [width]="'md:w-4/12'"
+      [sublabel]="'Informe o valor do plano'"
+      [describedby]="'vl_mensal'"
+    >
+      <p-inputgroup>
+        <p-inputNumber
+          name="vl_mensal"
+          id="vl_mensal"
+          [(ngModel)]="objeto.vl_mensal"
+          inputId="currency-br"
+          mode="currency"
+          currency="BRL"
+          locale="pt-BR"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="4"
+          [max]="999999.99"
+          [min]="0"
+        ></p-inputNumber>
+        <p-inputgroup-addon>$</p-inputgroup-addon>
+      </p-inputgroup>
+    </app-layout-campo>
+  </div>
+
+  <div class="flex-row-responsive">
+   
+    
+  </div>
+
+  
+</app-layout-form-simples>

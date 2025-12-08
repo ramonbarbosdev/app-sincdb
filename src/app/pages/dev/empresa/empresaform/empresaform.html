@@ -1,0 +1,100 @@
+<app-layout-form-simples
+  [(visible)]="isDialog"
+  [title]="'Formulario de Empresas'"
+  [loading]="loading"
+  (save)="onSave()"
+  (cancel)="hideDialog()"
+  (show)="onShow()"
+>
+ 
+  <div class="flex-row-responsive">
+    <app-layout-campo
+      [error]="errorValidacao['cd_empresa']"
+      [label]="'Código: (*)'"
+      [width]="'md:w-4/12'"
+      [sublabel]="'Informe o cd_empresa'"
+      [describedby]="'Informe o código'"
+    >
+      <input
+        title="cd_empresa"
+        pInputText
+        id="cd_empresa"
+        [(ngModel)]="objeto.cd_empresa"
+        [disabled]="true"
+        class="w-full"
+        [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['cd_empresa'] }"
+      />
+    </app-layout-campo>
+
+    <app-layout-campo
+      [error]="errorValidacao['nm_empresa']"
+      [label]="'Nome: (*)'"
+      [width]="'w-8/12'"
+      [sublabel]="'Informe o nome da emrpesa'"
+      [describedby]="'nm_empresa'"
+    >
+      <input
+        title="nm_empresa"
+        pInputText
+        id="nm_empresa"
+        [(ngModel)]="objeto.nm_empresa"
+        class="w-full"
+        [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['nm_empresa'] }"
+      />
+    </app-layout-campo>
+  </div>
+
+  <!-- Linha 2: ds_email e Permissão -->
+  <div class="flex-row-responsive">
+    <app-layout-campo
+      [error]="errorValidacao['id_planoassinatura']"
+      [label]="'Plano: (*)'"
+      [width]="'md:w-4/12'"
+      [sublabel]="'Informe a plano'"
+      [describedby]="'id_planoassinatura'"
+    >
+      <p-select
+        [checkmark]="true"
+        [showClear]="true"
+        name="id_planoassinatura"
+        [options]="listaAssinatura"
+        optionLabel="name"
+        optionValue="code"
+        placeholder="Selecione"
+        class="w-full"
+        [(ngModel)]="objeto.id_planoassinatura"
+        [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['id_planoassinatura'] }"
+      />
+    </app-layout-campo>
+    <app-layout-campo [label]="'Email: '" [width]="'md:w-6/12'">
+      <input
+        title="ds_email"
+        pInputText
+        id="ds_email"
+        [(ngModel)]="objeto.ds_email"
+        class="w-full"
+      />
+    </app-layout-campo>
+    <app-layout-campo [label]="'Status: '" [width]="'md:w-2/12'">
+      <p-togglebutton
+        [(ngModel)]="objeto.fl_ativo"
+        onLabel="Ativo"
+        offLabel="Inativo"
+        class="w-full"
+      />
+    </app-layout-campo>
+  </div>
+
+  <div class="flex-row-responsive">
+    <app-layout-campo [label]="'Chave: '" [width]="'md:w-12/12'">
+      <input
+        title="id_tenant"
+        pInputText
+        id="id_tenant"
+        [(ngModel)]="objeto.id_tenant"
+        class="w-full"
+        [disabled]="true"
+      />
+    </app-layout-campo>
+  </div>
+</app-layout-form-simples>

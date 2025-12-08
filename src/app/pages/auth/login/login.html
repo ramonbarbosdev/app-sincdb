@@ -1,0 +1,85 @@
+<!-- <app-floating-configurator></app-floating-configurator> -->
+
+<div class="flex min-h-screen overflow-hidden">
+  <!-- LADO ESQUERDO: formulário -->
+  <div
+    class="flex flex-col items-center justify-center w-full md:w-1/2  px-8 py-12"
+  >
+    <div class="w-full max-w-md">
+      <div class="text-center mb-8">
+        <div class="flex justify-center items-center mb-4">
+          <!-- <img src="/icone.png" alt="Logo" class="w-24 sm:w-32 lg:w-40" /> -->
+        </div>
+        <div class="text-surface-900  text-2xl sm:text-3xl font-medium mb-2">
+          Bem-vindo
+        </div>
+        <span class="text-muted-color text-sm sm:text-base font-medium">
+          Faça login para continuar
+        </span>
+      </div>
+
+      <form #f="ngForm" class="flex flex-col gap-4" (ngSubmit)="entrar()">
+        <app-layout-campo
+          [error]="errorValidacao['login']"
+          [label]="'Login:'"
+          [width]="'w-full'"
+          [sublabel]="'Informe o seu CPF como login'"
+          [describedby]="'cd_areavisita'"
+        >
+          <input
+            title="login"
+            name="login"
+            pInputText
+            id="login"
+            type="text"
+            placeholder="000.000.000-00"
+            class="w-full"
+            [(ngModel)]="objeto.login"
+            [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['login'] }"
+            mask="000.000.000-00"
+          />
+        </app-layout-campo>
+
+        <app-layout-campo
+          [error]="errorValidacao['senha']"
+          [label]="'Senha:'"
+          [width]="'w-full'"
+          [sublabel]="'Informe a sua Senha para autenticar'"
+          [describedby]="'senha'"
+        >
+          <p-password
+            name="senha"
+            id="senha"
+            [(ngModel)]="objeto.senha"
+            placeholder="Senha"
+            [toggleMask]="true"
+            [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['senha'] }"
+            [fluid]="true"
+            [feedback]="false"
+          ></p-password>
+        </app-layout-campo>
+
+        <div class="flex items-center justify-between mt-2 mb-6">
+          <div class="flex items-center gap-2 text-sm">
+       
+            <p-checkbox name="checked" [(ngModel)]="checked" id="rememberme1" binary></p-checkbox>
+            <label for="rememberme1">Lembre-me</label>
+          </div>
+        
+        </div>
+
+        <p-button type="submit" label="Entrar" styleClass="w-full mt-4"  />
+      </form>
+    </div>
+  </div>
+
+  <!-- LADO DIREITO: gradiente zinc -->
+  <div
+    class="hidden md:flex w-1/2 bg-gradient-to-br from-zinc-900 via-zinc-700 to-zinc-500 items-center justify-center"
+  >
+    <div class="text-zinc-200 text-4xl font-semibold">Sincronizador de Dados</div>
+  </div>
+</div>
+
+<app-selecionar-organizacao [visible]="visibleOrganizacao" (cancel)="hideDialog()" [objeto]="objeto" [listaEmpresa]="listaEmpresa">
+</app-selecionar-organizacao>

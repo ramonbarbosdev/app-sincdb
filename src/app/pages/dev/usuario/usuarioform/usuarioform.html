@@ -1,0 +1,106 @@
+<app-layout-form-simples
+  [(visible)]="isDialog"
+  [title]="'Formulario de Usuario'"
+  [loading]="loading"
+  (save)="onSave()"
+  (cancel)="hideDialog()"
+  (show)="onShow()"
+>
+  <!-- Linha 1: Login e Nome -->
+  <div class="flex-row-responsive">
+    <app-layout-campo
+      [error]="errorValidacao['login']"
+      [label]="'Login: (*)'"
+      [width]="'md:w-6/12'"
+      [sublabel]="'Informe o login'"
+      [describedby]="'login'"
+    >
+      <input
+        title="login"
+        pInputText
+        id="login"
+        [(ngModel)]="objeto.login"
+        [disabled]="false"
+        class="w-full"
+        [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['login'] }"
+        mask="000.000.000-00"
+      />
+    </app-layout-campo>
+
+    <app-layout-campo
+      [error]="errorValidacao['nome']"
+      [label]="'Nome do usuario: (*)'"
+      [width]="'md:w-6/12'"
+      [sublabel]="'Informe o nome de usuario'"
+      [describedby]="'nome'"
+    >
+      <input
+        title="nome"
+        pInputText
+        id="nome"
+        [(ngModel)]="objeto.nome"
+        class="w-full"
+        [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['nome'] }"
+      />
+    </app-layout-campo>
+  </div>
+
+  <!-- Linha 2: Senha e Permissão -->
+  <div class="flex-row-responsive">
+    <app-layout-campo
+      [error]="errorValidacao['senha']"
+      [label]="'Senha: (*)'"
+      [width]="'md:w-6/12'"
+      [sublabel]="'Informe a senha de usuario'"
+      [describedby]="'senha'"
+    >
+      <p-password
+        name="senha"
+        id="senha"
+        [(ngModel)]="objeto.senha"
+        placeholder="Senha"
+        [toggleMask]="true"
+        [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['senha'] }"
+        [fluid]="true"
+        [feedback]="false"
+      ></p-password>
+    </app-layout-campo>
+
+    <app-layout-campo
+      [error]="errorValidacao['role']"
+      [label]="'Permissão: (*)'"
+      [width]="'md:w-6/12'"
+      [sublabel]="'Informe a permissão'"
+      [describedby]="'role'"
+    >
+      <p-select
+        [checkmark]="true"
+        [showClear]="true"
+        name="id_tenant"
+        [options]="listaRoles"
+        optionLabel="name"
+        optionValue="code"
+        placeholder="Selecione"
+        class="w-full"
+        [(ngModel)]="objeto.role"
+        [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['role'] }"
+      />
+    </app-layout-campo>
+  </div>
+
+  <p-tabs value="0">
+    <p-tablist>
+      <p-tab value="0">Empresas</p-tab>
+    </p-tablist>
+    <p-tabpanels>
+      <p-tabpanel value="0">
+        <app-usuarioempresadetail
+          [(objeto)]="objeto"
+          [itemTemp]="itensUsuarioEmpresa"
+          [nomeItem]="'itensUsuarioEmpresa'"
+          [carregarDados]="carregarDetalhes"
+        ></app-usuarioempresadetail>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+</app-layout-form-simples>

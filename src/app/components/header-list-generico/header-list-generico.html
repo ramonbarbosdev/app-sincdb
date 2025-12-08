@@ -1,0 +1,120 @@
+<div class="card w-full overflow-x-auto">
+  <div class="font-semibold text-xl mb-4">{{ title }}</div>
+
+  <p-table
+    #dt
+    [value]="value"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="10"
+    [totalRecords]="totalRegistro"
+    (onLazyLoad)="carregarLazy($event)"
+    [loading]="loading"
+    dataKey="id"
+    [rowsPerPageOptions]="[2,5, 10, 15,20]"
+    [paginator]="true"
+    [rowHover]="true"
+    [showGridlines]="false"
+    responsiveLayout="scroll"
+    [globalFilterFields]="globalFilterFields"
+    stripedRows
+    selectionMode="multiple"
+  >
+    <ng-template #caption>
+      <div class="flex flex-wrap gap-2 justify-between items-center">
+        <div class="flex flex-wrap gap-2">
+          <button
+            title="Novo"
+            pButton
+            label="Novo"
+            icon="pi pi-plus"
+            class="p-button-outlined"
+            (click)="onAdd()"
+          ></button>
+
+          <button
+            title="Limpar"
+            pButton
+            label="Limpar Filtros"
+            icon="pi pi-filter-slash"
+            class="p-button-outlined"
+            (click)="onClearFilters(dt)"
+          ></button>
+        </div>
+
+        <p-iconfield iconPosition="left" class="w-full sm:w-auto mt-2 sm:mt-0">
+          <p-inputicon>
+            <i class="pi pi-search"></i>
+          </p-inputicon>
+          <input
+            #filter
+            pInputText
+            type="text"
+            (input)="onGlobalFilter(dt, $event)"
+            placeholder="Pesquisar..."
+            class="w-full sm:w-auto"
+          />
+        </p-iconfield>
+      </div>
+    </ng-template>
+
+    <ng-template #header>
+      <tr>
+        <th style="min-width: 8rem"></th>
+        <th
+          *ngFor="let col of columns"
+          [style.min-width]="col.minWidth || '10rem'"
+        >
+          {{ col.header }}
+          <p-columnFilter
+            [type]="col.filterType || 'text'"
+            [field]="col.field"
+            display="menu"
+            [placeholder]="col.filterPlaceholder || 'Filtrar...'"
+          ></p-columnFilter>
+        </th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-row>
+      <tr>
+        <td>
+          <ng-container *ngFor="let action of actions">
+            <p-button
+              [icon]="action.icon"
+              [label]="action.label"
+              [severity]="action.severity"
+              [rounded]="action.rounded"
+              [outlined]="action.outlined"
+              (click)="executarAcao(row, action)"
+              class="mr-2"
+            ></p-button>
+          </ng-container>
+        </td>
+        <td *ngFor="let col of columns">
+          {{ col.formatter ? col.formatter(row[col.field], row) : row[col.field]
+          }}
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #footer>
+      <tr>
+        <td
+          [attr.colspan]="columns.length + 1"
+          class="text-right font-semibold pr-4"
+        >
+          Total de registros: {{ totalRegistro }}
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td [attr.colspan]="columns.length + 1" class="text-center">
+          Nenhum registro encontrado.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

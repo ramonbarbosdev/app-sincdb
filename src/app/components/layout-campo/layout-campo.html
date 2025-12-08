@@ -1,0 +1,28 @@
+<div class="flex flex-col gap-2 w-full max-w-full" >
+<label
+  class="block text-sm sm:text-base font-medium wrap-break-word min-h-5"
+>
+  {{ label }}
+</label>
+
+
+  <ng-content></ng-content>
+
+  <p-message
+    *ngIf="error"
+    severity="error"
+    size="small"
+    variant="simple"
+    class="text-xs sm:text-sm"
+  >
+    {{ error }}
+  </p-message>
+
+  <small
+    *ngIf="sublabel && describedby && !error"
+    [id]="describedby"
+    class="block text-xs sm:text-sm text-gray-500 dark:text-gray-400 wrap-break-word"
+  >
+    {{ sublabel }}
+  </small>
+</div>

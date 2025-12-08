@@ -1,0 +1,65 @@
+<div class="flex flex-col gap-3 mb-3">
+  <!-- Linha 1 -->
+  <div class="flex-row-responsive">
+    <app-layout-campo [label]="'Empresa: (*)'" [width]="'md:w-12/12'" [describedby]="'id_empresa'">
+      <p-select
+        [checkmark]="true"
+        [showClear]="true"
+        name="id_empresa"
+        [options]="listaEmpresa"
+        optionLabel="name"
+        optionValue="code"
+        placeholder="Selecione"
+        class="w-full"
+        [(ngModel)]="itemTemp.id_empresa"
+        [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['id_empresa'] }"
+        (onChange)="processarCodigoEmpresa($event)"
+      />
+    </app-layout-campo>
+  </div>
+
+  <!-- Botão Adicionar -->
+  <div>
+    <button
+      title="add"
+      pButton
+      label="Adicionar"
+      class="p-button-outlined mb-2 mr-2"
+      icon="pi pi-plus"
+      (click)="adicionarItem()"
+    ></button>
+  </div>
+
+  <p-table [value]="objeto[nomeItem]" [scrollable]="true" scrollHeight="400px" styleClass="mt-4">
+    <ng-template #header>
+      <tr>
+        <th style="min-width: 20px"></th>
+        <th>Código</th>
+        <th>Nome</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-item let-i="rowIndex">
+      <tr>
+        <td>
+          <p-button
+            icon="pi pi-pencil"
+            class="mr-2"
+            [rounded]="true"
+            [outlined]="true"
+            (click)="editarItem(i)"
+            [disabled]="!itemTemp.id_empresa"
+          ></p-button>
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            [rounded]="true"
+            [outlined]="true"
+            (click)="removerItem(i)"
+          ></p-button>
+        </td>
+        <td>{{ getObjetoLabel(listaEmpresa, item.id_empresa, 'cd_empresa') }}</td>
+        <td>{{ getObjetoLabel(listaEmpresa, item.id_empresa, 'nm_empresa') }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

@@ -1,0 +1,81 @@
+<p-dialog
+  [(visible)]="visible"
+  [style]="{ width: width }"
+  [modal]="true"
+  [maximizable]="true"
+  (onHide)="hideDialog()"
+  (onShow)="onDialogShow()"
+  [closable]="true"
+  appendTo="body"
+>
+  <!-- Header customizado -->
+  <ng-template pTemplate="header">
+    <div class="flex justify-between items-center w-full">
+      <span>{{ title }}</span>
+
+      <div class="flex items-center gap-2">
+        <!-- Botões dinâmicos -->
+
+        <!-- Menu popup -->
+        <div *ngIf="isMenu" class="flex-shrink-0">
+          <p-menu
+            #menu
+            [popup]="true"
+            [model]="menuCard"
+            appendTo="body"
+          ></p-menu>
+          <p-button
+            (click)="menu.toggle($event); $event.stopPropagation()"
+            text
+            rounded
+            icon="pi pi-ellipsis-h"
+            class="!p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          ></p-button>
+        </div>
+
+        <p-button
+          *ngFor="let btn of headerButtons"
+          [label]="btn.label"
+          [icon]="btn.icon"
+          [class]="btn.class"
+          (click)="btn.action()"
+          text
+        ></p-button>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- Conteúdo -->
+  <ng-template #content>
+    <!-- Mostrar skeleton enquanto carrega -->
+    <ng-container *ngIf="loading; else formContent">
+      <div class="space-y-4 p-2">
+        <p-skeleton width="80%" height="2rem"></p-skeleton>
+        <p-skeleton width="100%" height="2.5rem"></p-skeleton>
+        <p-skeleton width="60%" height="2rem"></p-skeleton>
+        <p-skeleton width="100%" height="2.5rem"></p-skeleton>
+        <p-skeleton width="40%" height="2rem"></p-skeleton>
+      </div>
+    </ng-container>
+
+    <ng-template #formContent>
+      <div class="card flex flex-col" [style]="{ height: height }">
+        <ng-content></ng-content>
+      </div>
+    </ng-template>
+
+  </ng-template>
+
+  <!-- Rodapé -->
+  <ng-template #footer>
+    <div class="flex justify-end gap-2 mt-4">
+      <p-button
+        label="Cancelar"
+        icon="pi pi-times"
+        text
+        (click)="hideDialog()"
+      />
+      <p-button label="Salvar" icon="pi pi-check" (click)="onSave()" />
+    </div>
+  </ng-template>
+</p-dialog>

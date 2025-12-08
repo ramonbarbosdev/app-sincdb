@@ -1,0 +1,11 @@
+<app-header-list-generico
+  [title]="'Usuarios'"
+  [columns]="columns"
+  [actions]="actions"
+  (add)="onAdd()"
+  [endpoint]="endpoint + '/listar'"
+>
+</app-header-list-generico>
+
+<app-usuarioform [(isDialog)]="isDialog" [onReloadList]="onShow" [key]="idEdicao">
+</app-usuarioform>

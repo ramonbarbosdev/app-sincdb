@@ -1,0 +1,117 @@
+<app-layout-form-simples
+  [(visible)]="isDialog"
+  [title]="'Formulario de Permissões'"
+  [loading]="loading"
+  (save)="onSave()"
+  (cancel)="hideDialog()"
+  (show)="onShow()"
+  [height]="'600px'"
+>
+  <div class="flex-row-responsive">
+    <!-- Linha 1 -->
+
+    <app-layout-campo
+      [error]="errorValidacao['nomeRole'] "
+      [label]="'Nome: (*)'"
+      [width]="'w-6/12'"
+      [sublabel]="'Informe o nome da permissão'"
+      [describedby]="'nomeRole'"
+    >
+      <input
+        title="nomeRole"
+        name="nomeRole"
+        pInputText
+        id="nomeRole"
+        type="text"
+        placeholder=""
+        class="w-full"
+        [(ngModel)]="objeto.nomeRole"
+        [disabled]="false"
+        [ngClass]=" {'ng-dirty ng-invalid' : errorValidacao['nomeRole'] }  "
+      />
+    </app-layout-campo>
+  </div>
+
+  <p-panel
+    header="Rotas pré-definidas"
+    [toggleable]="true"
+    [collapsed]="false"
+    class="mb-4"
+     *ngIf="!objeto.id"
+  >
+    <div class="flex-row-responsive">
+      <app-layout-campo
+        [label]="'Basicas:'"
+        [width]="'w-3/12'"
+      >
+        <p-togglebutton
+          onLabel="Sim"
+          offLabel="Não"
+          [style]="{ width: '100%' }"
+          (onChange)="processarPreDefinicao($event)"
+        />
+      </app-layout-campo>
+      <app-layout-campo
+        [label]="'Banco Geral:'"
+        [width]="'w-3/12'"
+      >
+        <p-togglebutton
+          onLabel="Sim"
+          offLabel="Não"
+          [style]="{ width: '100%' }"
+          (onChange)="processarPreDefinicaoGeral($event)"
+        />
+      </app-layout-campo>
+      <app-layout-campo
+        [label]="'Banco Clientes:'"
+        [width]="'w-3/12'"
+      >
+        <p-togglebutton
+          onLabel="Sim"
+          offLabel="Não"
+          [style]="{ width: '100%' }"
+          (onChange)="processarPreDefinicaoCliente($event)"
+        />
+      </app-layout-campo>
+      <app-layout-campo
+        [label]="'Banco Projetos:'"
+        [width]="'w-3/12'"
+      >
+        <p-togglebutton
+          onLabel="Sim"
+          offLabel="Não"
+          [style]="{ width: '100%' }"
+          (onChange)="processarPreDefinicaoProjeto($event)"
+        />
+      </app-layout-campo>
+      <app-layout-campo
+        [label]="'Limpar:'"
+        [width]="'w-3/12'"
+      >
+        <p-togglebutton
+          onLabel="Sim"
+          offLabel="Não"
+          [style]="{ width: '100%' }"
+          (onChange)="processarPreDefinicaoLimpeza($event)"
+        />
+      </app-layout-campo>
+    </div>
+  </p-panel> 
+
+  <p-tabs value="0" class="" *ngIf="!isMobile">
+    <p-tablist>
+      <p-tab value="0">Rotas</p-tab>
+    </p-tablist>
+    <p-tabpanels>
+      <p-tabpanel value="0">
+        <app-rotapermissiondetail
+          [(objeto)]="objeto"
+          [itemTemp]="itensRotaPermission"
+          [nomeItem]="'itensRotaPermission'"
+          [carregarDados]="carregarDetalhes"
+        >
+        </app-rotapermissiondetail>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+</app-layout-form-simples>

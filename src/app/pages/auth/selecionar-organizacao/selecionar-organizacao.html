@@ -1,0 +1,43 @@
+<p-dialog
+  header="Selecione"
+  [modal]="true"
+  [(visible)]="visible"
+  [style]="{ width: '25rem' }"
+  (onHide)="hideDialog()"
+  (onShow)="showDialog()"
+>
+  <div class="flex-row-responsive">
+    <app-layout-campo
+      [label]="'Organização:'"
+      [width]="'w-full'"
+      [sublabel]="'Informe a organização'"
+      [describedby]="'id_tenant'"
+    >
+      <p-select
+        [checkmark]="true"
+        [showClear]="true"
+        name="id_tenant"
+        [options]="listaEmpresa"
+        optionLabel="name"
+        optionValue="code"
+        placeholder="Empresas"
+        class="w-full"
+        [(ngModel)]="objeto.id_tenant"
+      />
+    </app-layout-campo>
+  </div>
+  <div class="flex-row-responsive">
+     <app-layout-campo
+      [label]="'Aréa do Desenvolvedor:'"
+      [width]="'w-full'"
+      *ngIf="getVerificarPermissao() "
+    >
+     <p-toggleswitch [(ngModel)]="objeto.isAreaDev" />
+
+    </app-layout-campo>
+  </div>
+
+  <div class="flex justify-end gap-2">
+    <p-button label="Continuar" (click)="login()" [loading]="loading" />
+  </div>
+</p-dialog>

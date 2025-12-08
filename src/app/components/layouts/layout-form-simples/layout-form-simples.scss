@@ -1,0 +1,19 @@
+/* sem :host, assim aplica globalmente */
+::ng-deep .p-dialog .p-dialog-content {
+    max-height: none !important;
+    height: auto !important;
+    scrollbar-width: thin;
+    scrollbar-color: #888 transparent;
+}
+
+
+::ng-deep .p-dialog .p-dialog-content::-webkit-scrollbar {
+    width: 1px;
+        
+}
+
+::ng-deep .p-dialog .p-dialog-content::-webkit-scrollbar-thumb {
+    border-radius: 1px;
+        
+}
+
