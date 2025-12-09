@@ -22,6 +22,9 @@
           [loading]="loadingBase"
           (ngModelChange)="processarBase($event)"
           [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['base'] }"
+          [filter]="true"
+          filterPlaceholder="Buscar base..."
+          [filterBy]="'name'"
         />
       </app-layout-campo>
 
@@ -43,6 +46,9 @@
           [loading]="loadingEsquema"
           (ngModelChange)="processarEsquema($event)"
           [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['esquema'] }"
+          [filter]="true"
+          filterPlaceholder="Buscar esquema..."
+          [filterBy]="'name'"
         />
       </app-layout-campo>
     </div>
@@ -60,27 +66,29 @@
           class="w-full"
           [(ngModel)]="objeto.tabela"
           [loading]="loadingTabela"
-        />
+          [filter]="true"
+          filterPlaceholder="Buscar tabela..."
+          [filterBy]="'name'"
+        >
+        </p-select>
       </app-layout-campo>
     </div>
 
-  <div class=" p-2 flex flex-col sm:flex-row items-center gap-4 w-full">
-  
-  <!-- Progress -->
-  <div class="flex-1 w-full">
-    <app-sync-progresso-bar></app-sync-progresso-bar>
-  </div>
+    <div class="p-2 flex flex-col sm:flex-row items-center gap-4 w-full">
+      <!-- Progress -->
+      <div class="flex-1 w-full">
+        <app-sync-progresso-bar></app-sync-progresso-bar>
+      </div>
 
-  <!-- Botão -->
-  <p-button
-    label="Verificar"
-    icon="pi pi-search"
-    (click)="verificar()"
-    styleClass="p-button-primary w-full sm:w-auto"
-    [loading]="loadingVerificacao"
-  ></p-button>
-  
-</div>
+      <!-- Botão -->
+      <p-button
+        label="Verificar"
+        icon="pi pi-search"
+        (click)="verificar()"
+        styleClass="p-button-primary w-full sm:w-auto"
+        [loading]="loadingVerificacao"
+      ></p-button>
+    </div>
   </ng-template>
 
   <!-- FOOTER -->
@@ -95,14 +103,14 @@
       <div class="flex gap-3">
         <p-button
           label="Sincronizar"
-          icon="pi pi-check"
+          icon="pi pi-sync"
           (click)="execultarSincronizacao()"
           styleClass="w-full sm:w-auto"
           [loading]="loadingSincronizacao"
         />
         <p-button
           label="Verificar/Sincronizar"
-          icon="pi pi-check"
+          icon="pi pi-sync"
           (click)="verificarEExecutar()"
           styleClass="w-full sm:w-auto"
           [loading]="loadingSincronizacao"
@@ -112,6 +120,6 @@
   </ng-template>
 </p-card>
 
-<div class="mt-4" *ngIf="listaErros.length > 0" >
+<div class="mt-4" *ngIf="listaErros.length > 0">
   <app-sync-erros [erros]="listaErros"></app-sync-erros>
 </div>
