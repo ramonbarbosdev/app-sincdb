@@ -264,6 +264,8 @@ export class Estruturaform {
   cancelarSincronizacao() {
     this.baseService.findAll(`estrutura/cancelar`).subscribe({
       next: (resposta: any) => {
+        this.listaErros = [];
+
         this.progressoSync.resetar();
         this.loadingSincronizacao = false;
         this.loadingVerificacao = false;
