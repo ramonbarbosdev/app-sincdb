@@ -10,10 +10,20 @@ import { FlagOption } from '../../../../models/flag-option';
 import { ButtonModule } from 'primeng/button';
 import { ZodError } from 'zod';
 import { EstruturaSchema } from '../../../../schema/estrutura-schema';
+import { SyncProgressoBar } from '../../../../components/sync-progresso-bar/sync-progresso-bar';
+import { ProgressoSyncService } from '../../../../services/progresso-sync-service';
 
 @Component({
   selector: 'app-estruturaform',
-  imports: [CardModule, LayoutCampo, SelectModule, CommonModule, FormsModule, ButtonModule],
+  imports: [
+    CardModule,
+    LayoutCampo,
+    SelectModule,
+    CommonModule,
+    FormsModule,
+    ButtonModule,
+    SyncProgressoBar,
+  ],
   templateUrl: './estruturaform.html',
   styleUrl: './estruturaform.scss',
 })
@@ -27,12 +37,15 @@ export class Estruturaform {
   public listaTabela: FlagOption[] = [];
 
   private cd = inject(ChangeDetectorRef);
+  private progressoSync = inject(ProgressoSyncService);
 
   loadingBase = true;
   loadingEsquema = false;
   loadingTabela = false;
+  loadingVerificacao = false;
 
   ngOnInit() {
+    this.progressoSync.vazioProgressoLocal();
     this.obterBase();
   }
 
@@ -82,6 +95,7 @@ export class Estruturaform {
 
         if (this.listaEsquema?.length) {
           this.objeto.esquema = String(this.listaEsquema[this.listaEsquema.length - 1].code);
+          this.obterTabela(this.objeto.esquema);
         }
 
         this.loadingEsquema = false;
@@ -150,5 +164,34 @@ export class Estruturaform {
     });
   }
 
-  continuarVerificacao(tabelaEsquema: string) {}
+  continuarVerificacao(tabela: string) {
+    if (!tabela) return;
+
+    let base = this.objeto.base;
+    let esquema = this.objeto.esquema;
+
+    this.loadingVerificacao = true;
+
+    this.baseService.findAll(`estrutura/verificar/${base}/${esquema}/${tabela}`).subscribe({
+      next: (res) => {
+        this.progressoSync.verificacaoConcluidaProgressoLocal();
+        this.loadingVerificacao = false;
+      },
+      error: (err) => {
+        this.loadingVerificacao = false;
+      },
+    });
+  }
+
+  cancelarSincronizacao() {
+    this.baseService.findAll(`estrutura/cancelar`).subscribe({
+      next: (resposta: any) => {
+        this.progressoSync.resetar();
+      },
+    });
+  }
+
+  ngOnDestroy() {
+    this.cancelarSincronizacao();
+  }
 }

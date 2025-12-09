@@ -63,16 +63,26 @@
         />
       </app-layout-campo>
     </div>
+
+       <app-sync-progresso-bar></app-sync-progresso-bar>
+
   </ng-template>
 
   <!-- FOOTER -->
   <ng-template #footer>
-    <div class="flex flex-col sm:flex-row justify-end gap-2 mt-4 px-2 sm:px-0">
+    <div class="flex flex-col sm:flex-row justify-between gap-2 mt-4 px-2 sm:px-0">
       <p-button
-        label="Salvar"
+        label="Cancelar"
+        icon="pi pi-ban"
+        (click)="cancelarSincronizacao()"
+        styleClass="w-full sm:w-auto"
+      />
+      <p-button
+        label="Verificar"
         icon="pi pi-check"
         (click)="verificar()"
         styleClass="w-full sm:w-auto"
+        [loading]="loadingVerificacao"
       />
     </div>
   </ng-template>

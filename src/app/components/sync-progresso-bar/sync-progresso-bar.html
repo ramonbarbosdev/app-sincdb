@@ -1,0 +1,14 @@
+<div class="mt-3 flex flex-col gap-2">
+  <p-progressbar
+    [value]="progresso"
+    [showValue]="false"
+  >
+    <ng-template pTemplate="content">
+      <span >{{ progresso }}%</span>
+    </ng-template>
+  </p-progressbar>
+
+  <p *ngIf="mensagem" class="status-text mt-2">
+    {{ mensagem }}
+  </p>
+</div>

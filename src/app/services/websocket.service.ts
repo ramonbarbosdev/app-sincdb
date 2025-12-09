@@ -4,8 +4,7 @@ import SockJS from 'sockjs-client';
 import { Subject, Observable, BehaviorSubject } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-import { v4 as uuidv4 } from 'uuid';
-import { AuthService } from '../auth/auth.service';
+
 
 @Injectable({
   providedIn: 'root',
@@ -23,6 +22,9 @@ export class WebsocketService {
 
   private OnlineSubject = new Subject<void>();
 
+  private progressoSubject = new Subject<any>();
+  public progresso$ = this.progressoSubject.asObservable();
+
   public initConnectionSocket() {
     const url = `${environment.apiUrlWebSocket}`;
     this.stompClient = new Client({
@@ -38,8 +40,14 @@ export class WebsocketService {
 
       this.stompClient.subscribe('/topic/online', (message: IMessage) => {
         const data = JSON.parse(message.body);
-        this.OnlineSubject.next(data); // passa o login no evento
+        this.OnlineSubject.next(data); 
       });
+
+      this.stompClient.subscribe('/topic/sync/progress', (message: IMessage) => {
+        const data = JSON.parse(message.body);
+        this.progressoSubject.next(data);
+      });
+
     };
 
     this.stompClient.onStompError = (frame) => {
