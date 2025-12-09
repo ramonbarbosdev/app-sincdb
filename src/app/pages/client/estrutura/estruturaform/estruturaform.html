@@ -64,8 +64,23 @@
       </app-layout-campo>
     </div>
 
-       <app-sync-progresso-bar></app-sync-progresso-bar>
+  <div class=" p-2 flex flex-col sm:flex-row items-center gap-4 w-full">
+  
+  <!-- Progress -->
+  <div class="flex-1 w-full">
+    <app-sync-progresso-bar></app-sync-progresso-bar>
+  </div>
 
+  <!-- Botão -->
+  <p-button
+    label="Verificar"
+    icon="pi pi-search"
+    (click)="verificar()"
+    styleClass="p-button-primary w-full sm:w-auto"
+    [loading]="loadingVerificacao"
+  ></p-button>
+  
+</div>
   </ng-template>
 
   <!-- FOOTER -->
@@ -77,13 +92,26 @@
         (click)="cancelarSincronizacao()"
         styleClass="w-full sm:w-auto"
       />
-      <p-button
-        label="Verificar"
-        icon="pi pi-check"
-        (click)="verificar()"
-        styleClass="w-full sm:w-auto"
-        [loading]="loadingVerificacao"
-      />
+      <div class="flex gap-3">
+        <p-button
+          label="Sincronizar"
+          icon="pi pi-check"
+          (click)="execultarSincronizacao()"
+          styleClass="w-full sm:w-auto"
+          [loading]="loadingSincronizacao"
+        />
+        <p-button
+          label="Verificar/Sincronizar"
+          icon="pi pi-check"
+          (click)="verificarEExecutar()"
+          styleClass="w-full sm:w-auto"
+          [loading]="loadingSincronizacao"
+        />
+      </div>
     </div>
   </ng-template>
 </p-card>
+
+<div class="mt-4" *ngIf="listaErros.length > 0" >
+  <app-sync-erros [erros]="listaErros"></app-sync-erros>
+</div>

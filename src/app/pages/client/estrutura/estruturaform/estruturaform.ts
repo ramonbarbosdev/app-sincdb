@@ -12,6 +12,9 @@ import { ZodError } from 'zod';
 import { EstruturaSchema } from '../../../../schema/estrutura-schema';
 import { SyncProgressoBar } from '../../../../components/sync-progresso-bar/sync-progresso-bar';
 import { ProgressoSyncService } from '../../../../services/progresso-sync-service';
+import { SyncErros } from '../../../../components/sync-erros/sync-erros';
+import { Router } from '@angular/router';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-estruturaform',
@@ -23,6 +26,7 @@ import { ProgressoSyncService } from '../../../../services/progresso-sync-servic
     FormsModule,
     ButtonModule,
     SyncProgressoBar,
+    SyncErros,
   ],
   templateUrl: './estruturaform.html',
   styleUrl: './estruturaform.scss',
@@ -36,13 +40,19 @@ export class Estruturaform {
   public listaEsquema: FlagOption[] = [];
   public listaTabela: FlagOption[] = [];
 
+  public listaErros: any[] = [];
+
   private cd = inject(ChangeDetectorRef);
   private progressoSync = inject(ProgressoSyncService);
+  private messageService = inject(MessageService);
+
+  router = inject(Router);
 
   loadingBase = true;
   loadingEsquema = false;
   loadingTabela = false;
   loadingVerificacao = false;
+  loadingSincronizacao = false;
 
   ngOnInit() {
     this.progressoSync.vazioProgressoLocal();
@@ -171,13 +181,78 @@ export class Estruturaform {
     let esquema = this.objeto.esquema;
 
     this.loadingVerificacao = true;
+    this.loadingSincronizacao = true;
+
+    this.progressoSync.iniciarGenericoProgressoLocal();
 
     this.baseService.findAll(`estrutura/verificar/${base}/${esquema}/${tabela}`).subscribe({
       next: (res) => {
-        this.progressoSync.verificacaoConcluidaProgressoLocal();
+        // this.progressoSync.verificacaoConcluidaProgressoLocal();
         this.loadingVerificacao = false;
+        this.loadingSincronizacao = false;
       },
       error: (err) => {
+        this.loadingVerificacao = false;
+        this.loadingSincronizacao = true;
+      },
+    });
+  }
+
+  verificarEExecutar() {
+    if (!this.validarItens()) return;
+
+    const base = this.objeto.base;
+    const esquema = this.objeto.esquema;
+    const tabela = !this.objeto.tabela ? this.objeto.esquema : this.objeto.tabela;
+
+    this.loadingVerificacao = true;
+    this.loadingSincronizacao = true;
+
+    this.progressoSync.iniciarGenericoProgressoLocal();
+
+    this.baseService.findAll(`estrutura/verificar/${base}/${esquema}/${tabela}`).subscribe({
+      next: () => {
+        this.loadingVerificacao = false;
+        this.execultarSincronizacao();
+      },
+      error: () => {
+        this.loadingVerificacao = false;
+        this.loadingSincronizacao = false;
+        // this.progressoSync.atualizarMensagem('Verificação falhou');
+      },
+    });
+  }
+
+  execultarSincronizacao() {
+    if (!this.validarItens()) return;
+
+    let base = this.objeto.base;
+
+    this.loadingSincronizacao = true;
+    this.loadingVerificacao = true;
+
+    this.progressoSync.iniciarGenericoProgressoLocal();
+
+    this.baseService.findAll(`estrutura/${base}`).subscribe({
+      next: (res) => {
+        this.loadingSincronizacao = false;
+        this.loadingVerificacao = false;
+
+        if (res.errors.length > 0) {
+          this.listaErros = res.errors ?? [];
+          return;
+        }
+
+        this.router.navigate(['client/home']);
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Sucesso',
+          detail: 'Sincronização finalizada!',
+        });
+      },
+      error: (err) => {
+        this.loadingSincronizacao = false;
         this.loadingVerificacao = false;
       },
     });
@@ -187,11 +262,15 @@ export class Estruturaform {
     this.baseService.findAll(`estrutura/cancelar`).subscribe({
       next: (resposta: any) => {
         this.progressoSync.resetar();
+        this.loadingSincronizacao = false;
+        this.loadingVerificacao = false;
       },
     });
   }
 
   ngOnDestroy() {
+    this.listaErros = []
     this.cancelarSincronizacao();
+    this.progressoSync.vazioProgressoLocal();
   }
 }

@@ -48,6 +48,7 @@ export class ProgressoSyncService {
       tabelaAtual: null,
     });
   }
+
   verificacaoConcluidaProgressoLocal() {
     this.updateProgresso({
       progresso: 100,
@@ -57,10 +58,33 @@ export class ProgressoSyncService {
     });
   }
 
+  sincronizacaoConcluidaProgressoLocal() {
+    this.updateProgresso({
+      progresso: 100,
+      mensagem: 'Sincronização concluida!',
+      tabelaAtual: null,
+      status: 'PROCESSANDO',
+    });
+  }
+
+  iniciarGenericoProgressoLocal() {
+    this.updateProgresso({
+      progresso: 0,
+      mensagem: 'Iniciando...',
+      tabelaAtual: null,
+    });
+  }
   finalizarProgressoLocal() {
     this.updateProgresso({
       progresso: 0,
-      mensagem: 'Finalizado',
+      mensagem: 'Finalizado!',
+      tabelaAtual: null,
+    });
+  }
+  atualizarMensagem(msg:string) {
+    this.updateProgresso({
+      progresso: 0,
+      mensagem: msg,
       tabelaAtual: null,
     });
   }
