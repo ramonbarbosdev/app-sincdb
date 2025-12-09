@@ -80,12 +80,12 @@ export class AppMenu {
             },
             {
               label: 'Estruturas',
-              icon: 'pi pi-fw pi-home',
+              icon: 'pi pi-sitemap',
               routerLink: ['/client/estrutura'],
             },
             {
-              label: 'Serviços',
-              icon: 'pi pi-fw pi-home',
+              label: 'Dados',
+              icon: 'pi pi-database',
               routerLink: ['/client/servico'],
             },
           ],
