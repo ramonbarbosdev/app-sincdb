@@ -120,6 +120,8 @@
   </ng-template>
 </p-card>
 
-<div class="mt-4" *ngIf="listaErros.length > 0">
-  <app-sync-erros [erros]="listaErros"></app-sync-erros>
-</div>
+<p-card class="w-full max-w-5xl mx-auto my-6 px-2 sm:px-4"  *ngIf="listaErros.length > 0">
+  <div class="mt-4">
+    <app-sync-erros [erros]="listaErros"></app-sync-erros>
+  </div>
+</p-card>

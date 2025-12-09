@@ -162,6 +162,8 @@ export class Estruturaform {
   verificar() {
     if (!this.validarItens()) return;
 
+    this.listaErros = [];
+
     let base = this.objeto.base;
     let esquema = this.objeto.esquema;
 
@@ -200,6 +202,7 @@ export class Estruturaform {
 
   verificarEExecutar() {
     if (!this.validarItens()) return;
+    this.listaErros = [];
 
     const base = this.objeto.base;
     const esquema = this.objeto.esquema;
@@ -269,7 +272,7 @@ export class Estruturaform {
   }
 
   ngOnDestroy() {
-    this.listaErros = []
+    this.listaErros = [];
     this.cancelarSincronizacao();
     this.progressoSync.vazioProgressoLocal();
   }
