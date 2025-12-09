@@ -10,7 +10,6 @@
 
   <!-- CONTEÚDO -->
   <ng-template #content>
-
     <h3 class="text-xl font-semibold mb-3 text-primary">Conexão com Banco Local</h3>
     <div class="flex-row-responsive w-full">
       <app-layout-campo
@@ -150,6 +149,22 @@
           [feedback]="false"
         ></p-password>
       </app-layout-campo>
+    </div>
+
+    <div
+      *ngIf="objeto.arquivoValidado == true"
+      class="flex items-center space-x-2 gap-2 text-white"
+    >
+    <p-toggleswitch [(ngModel)]="cloud.fl_admin" name="fl_admin" id="fl_admin"/>
+      <label hlmLabel for="fl_admin">Acesso Administrador</label>
+    </div>
+
+    <div *ngIf="objeto.arquivoValidado == false">
+      <app-upload-certiicado
+      (certificadoEnviado)="onCertificadoEnviado($event)"
+        [arquivoValido]="objeto.arquivoValidado"
+        [login]="objeto.login"
+      ></app-upload-certiicado>
     </div>
   </ng-template>
 

@@ -68,7 +68,7 @@ export class BaseService {
     );
   }
 
-  findAll(endpoint: string, token?:string): Observable<any> {
+  findAll(endpoint: string, token?: string): Observable<any> {
     const url = `${this.apiUrl}/${endpoint}`;
 
     const headers = {
@@ -158,6 +158,22 @@ export class BaseService {
       }),
       catchError((e) => {
         console.log(e);
+        this.exibirErros(e);
+        return throwError(() => e);
+      })
+    );
+  }
+
+  uploadFile(endpoint: string, data: any): Observable<string> {
+    const url = `${this.apiUrl}/${endpoint}`;
+
+    return this.http.post(url, data, { responseType: 'text' as 'text' }).pipe(
+      tap((res: string) => {
+        console.log(res);
+        this.exibirSucesso(res);
+      }),
+      catchError((e) => {
+        console.error(e);
         this.exibirErros(e);
         return throwError(() => e);
       })

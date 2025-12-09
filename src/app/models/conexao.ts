@@ -1,5 +1,5 @@
 export class Conexao {
   public id_conexao?: string;
-  public arquivoValidado: boolean = false;
+  public arquivoValidado: boolean = true;
   public login: string = '';
 }

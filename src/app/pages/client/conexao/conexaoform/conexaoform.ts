@@ -13,6 +13,8 @@ import { BaseService } from '../../../../services/base.service';
 import { ConexaoSchema } from '../../../../schema/conexao-schema';
 import { Conexao } from '../../../../models/conexao';
 import { Router } from '@angular/router';
+import { UploadCertiicado } from "../upload-certiicado/upload-certiicado";
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 
 @Component({
   selector: 'app-conexaoform',
@@ -25,6 +27,8 @@ import { Router } from '@angular/router';
     InputTextModule,
     PasswordModule,
     ButtonModule,
+    UploadCertiicado,
+    ToggleSwitchModule,
   ],
   templateUrl: './conexaoform.html',
   styleUrl: './conexaoform.scss',
@@ -100,7 +104,6 @@ export class Conexaoform {
       } else {
         this.baseService.create(`${this.endpoint}/`, payload).subscribe({
           next: (res: any) => {
-          
             this.objeto.id_conexao = res.id_conexao;
 
             this.router.navigate(['client/home']);
@@ -127,5 +130,10 @@ export class Conexaoform {
       }
       throw error;
     }
+  }
+
+  onCertificadoEnviado(ok: boolean) {
+    this.objeto.arquivoValidado = ok;
+    this.onEdit();
   }
 }
