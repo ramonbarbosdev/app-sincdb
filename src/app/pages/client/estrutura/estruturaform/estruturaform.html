@@ -8,7 +8,7 @@
 
   <ng-template #content>
     <div class="flex-row-responsive w-full">
-      <app-layout-campo [label]="'Bases:'" [width]="'md:w-6/12'">
+      <app-layout-campo [label]="'Bases:'" [width]="'md:w-6/12'" [error]="errorValidacao['base']">
         <p-select
           [checkmark]="true"
           [showClear]="true"
@@ -21,10 +21,15 @@
           [(ngModel)]="objeto.base"
           [loading]="loadingBase"
           (ngModelChange)="processarBase($event)"
+          [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['base'] }"
         />
       </app-layout-campo>
 
-      <app-layout-campo [label]="'Esquema:'" [width]="'md:w-6/12'">
+      <app-layout-campo
+        [label]="'Esquema:'"
+        [width]="'md:w-6/12'"
+        [error]="errorValidacao['esquema']"
+      >
         <p-select
           [checkmark]="true"
           [showClear]="true"
@@ -37,13 +42,13 @@
           [(ngModel)]="objeto.esquema"
           [loading]="loadingEsquema"
           (ngModelChange)="processarEsquema($event)"
-
+          [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['esquema'] }"
         />
       </app-layout-campo>
     </div>
 
     <div class="flex-row-responsive w-full">
-      <app-layout-campo [label]="'Tabela:'" [width]="'md:w-6/12'">
+      <app-layout-campo [label]="'Tabela:'" [width]="'md:w-12/12'">
         <p-select
           [checkmark]="true"
           [showClear]="true"
@@ -57,7 +62,18 @@
           [loading]="loadingTabela"
         />
       </app-layout-campo>
+    </div>
+  </ng-template>
 
+  <!-- FOOTER -->
+  <ng-template #footer>
+    <div class="flex flex-col sm:flex-row justify-end gap-2 mt-4 px-2 sm:px-0">
+      <p-button
+        label="Salvar"
+        icon="pi pi-check"
+        (click)="verificar()"
+        styleClass="w-full sm:w-auto"
+      />
     </div>
   </ng-template>
 </p-card>

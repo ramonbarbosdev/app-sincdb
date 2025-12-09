@@ -7,16 +7,20 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseService } from '../../../../services/base.service';
 import { FlagOption } from '../../../../models/flag-option';
+import { ButtonModule } from 'primeng/button';
+import { ZodError } from 'zod';
+import { EstruturaSchema } from '../../../../schema/estrutura-schema';
 
 @Component({
   selector: 'app-estruturaform',
-  imports: [CardModule, LayoutCampo, SelectModule, CommonModule, FormsModule],
+  imports: [CardModule, LayoutCampo, SelectModule, CommonModule, FormsModule, ButtonModule],
   templateUrl: './estruturaform.html',
   styleUrl: './estruturaform.scss',
 })
 export class Estruturaform {
   public objeto: Estruturas = new Estruturas();
   private baseService = inject(BaseService);
+  public errorValidacao: Record<string, string> = {};
 
   public listaBase: FlagOption[] = [];
   public listaEsquema: FlagOption[] = [];
@@ -111,5 +115,37 @@ export class Estruturaform {
           this.loadingTabela = false;
         },
       });
+  }
+
+  validarItens(): boolean {
+    try {
+      EstruturaSchema.parse([this.objeto]);
+      this.errorValidacao = {};
+      return true;
+    } catch (error) {
+      if (error instanceof ZodError) {
+        this.errorValidacao = {};
+        error.issues.forEach((e) => {
+          const value = e.path[1];
+          this.errorValidacao[String(value)] = e.message;
+        });
+        return false;
+      }
+      throw error;
+    }
+  }
+
+  verificar() {
+    if (!this.validarItens()) return;
+
+    let base = this.objeto.base;
+    let esquema = this.objeto.esquema;
+
+    this.baseService.findAll(`sincronizacao/verificaesquema/${base}/${esquema}`).subscribe({
+      next: (res) => {
+        console.log(res);
+      },
+      error: (err) => {},
+    });
   }
 }
