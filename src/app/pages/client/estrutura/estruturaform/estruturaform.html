@@ -1,0 +1,63 @@
+<p-card class="w-full max-w-5xl mx-auto my-6 px-2 sm:px-4">
+  <!-- HEADER -->
+  <ng-template pTemplate="header">
+    <div class="flex flex-col sm:flex-row justify-between items-center w-full p-4 gap-2 sm:gap-0">
+      <h5 class="text-lg sm:text-xl font-semibold text-center sm:text-left">Estrutura de Dados</h5>
+    </div>
+  </ng-template>
+
+  <ng-template #content>
+    <div class="flex-row-responsive w-full">
+      <app-layout-campo [label]="'Bases:'" [width]="'md:w-6/12'">
+        <p-select
+          [checkmark]="true"
+          [showClear]="true"
+          name="base"
+          [options]="listaBase"
+          optionLabel="name"
+          optionValue="code"
+          placeholder="Selecione"
+          class="w-full"
+          [(ngModel)]="objeto.base"
+          [loading]="loadingBase"
+          (ngModelChange)="processarBase($event)"
+        />
+      </app-layout-campo>
+
+      <app-layout-campo [label]="'Esquema:'" [width]="'md:w-6/12'">
+        <p-select
+          [checkmark]="true"
+          [showClear]="true"
+          name="esquema"
+          [options]="listaEsquema"
+          optionLabel="name"
+          optionValue="code"
+          placeholder="Selecione"
+          class="w-full"
+          [(ngModel)]="objeto.esquema"
+          [loading]="loadingEsquema"
+          (ngModelChange)="processarEsquema($event)"
+
+        />
+      </app-layout-campo>
+    </div>
+
+    <div class="flex-row-responsive w-full">
+      <app-layout-campo [label]="'Tabela:'" [width]="'md:w-6/12'">
+        <p-select
+          [checkmark]="true"
+          [showClear]="true"
+          name="tabela"
+          [options]="listaTabela"
+          optionLabel="name"
+          optionValue="code"
+          placeholder="Selecione"
+          class="w-full"
+          [(ngModel)]="objeto.tabela"
+          [loading]="loadingTabela"
+        />
+      </app-layout-campo>
+
+    </div>
+  </ng-template>
+</p-card>

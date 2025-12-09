@@ -79,9 +79,9 @@ export class AppMenu {
               routerLink: ['/client/conexao'],
             },
             {
-              label: 'Clientes',
+              label: 'Estruturas',
               icon: 'pi pi-fw pi-home',
-              routerLink: ['/client/cliente'],
+              routerLink: ['/client/estrutura'],
             },
             {
               label: 'Serviços',
