@@ -14,3 +14,21 @@
         flex-direction: row;
     }
 }
+
+#splash-screen {
+  
+    .splash-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .logo {
+        margin-bottom: 10px
+    }
+
+    img {
+        width: 100px;
+        margin-bottom: 1rem;
+    }
+}

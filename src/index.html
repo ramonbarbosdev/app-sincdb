@@ -5,12 +5,40 @@
     <title>SyncDb</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/x-icon" href="favicon.png" />
+    <link
+      rel="icon"
+      href="https://images.vexels.com/media/users/3/155465/isolated/preview/abccd26bd518f14be20cc3c207c76ebb-icone-de-nuvem-plana-de-previsao-do-tempo.png"
+      type="image/svg+xml"
+    />
+
     <script>
       window.global = window;
     </script>
+
+    <style>
+  #splash-screen {
+    position: fixed;
+    inset: 0;
+    background: #16132D !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    z-index: 99999;
+    font-size: 1.2rem;
+  }
+</style>
   </head>
   <body>
+    <div id="splash-screen">
+      <div class="splash-content">
+        <div class="logo">
+          <span>SyncDB</span>
+        </div>
+        <p>Carregando sistema, aguarde...</p>
+      </div>
+    </div>
+
     <app-root></app-root>
   </body>
 </html>

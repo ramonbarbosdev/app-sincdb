@@ -22,7 +22,7 @@ export class App {
     let attempts = 0;
 
     const check = () => {
-      this.baseService.findAll('auth/dominio').subscribe({
+      this.baseService.findAll('status/').subscribe({
         next: (res) => {
           console.log(res);
           if (res.status) this.removeSplash();
@@ -55,6 +55,8 @@ export class App {
   private primeng = inject(PrimeNG);
 
   ngOnInit() {
+
+       this.waitForBackend();
     this.primeng.ripple.set(true);
 
     this.primeng.setTranslation({
