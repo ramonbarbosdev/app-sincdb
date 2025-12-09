@@ -143,9 +143,12 @@ export class Estruturaform {
 
     this.baseService.findAll(`sincronizacao/verificaesquema/${base}/${esquema}`).subscribe({
       next: (res) => {
-        console.log(res);
+        let tabelaEsquema = !this.objeto.tabela ? this.objeto.esquema : this.objeto.tabela;
+        this.continuarVerificacao(tabelaEsquema);
       },
       error: (err) => {},
     });
   }
+
+  continuarVerificacao(tabelaEsquema: string) {}
 }
