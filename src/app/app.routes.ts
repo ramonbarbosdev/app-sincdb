@@ -9,6 +9,7 @@ import { Planoassinaturalist } from './pages/dev/planoassinatura/planoassinatura
 import { HomeClient } from './pages/client/home-client/home-client';
 import { Conexaoform } from './pages/client/conexao/conexaoform/conexaoform';
 import { Estruturaform } from './pages/client/estrutura/estruturaform/estruturaform';
+import { Dadosform } from './pages/dados/dadosform/dadosform';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
@@ -35,7 +36,8 @@ export const routes: Routes = [
     children: [
       { path: 'home', component: HomeClient },
       { path: 'conexao', component: Conexaoform },
-      { path: 'estrutura', component: Estruturaform }
+      { path: 'estrutura', component: Estruturaform },
+      { path: 'dados', component: Dadosform }
     ],
   },
 ];

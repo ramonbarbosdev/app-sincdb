@@ -1,23 +1,23 @@
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
+import { Operacao } from '../../../models/operacao';
+import { BaseService } from '../../../services/base.service';
+import { FlagOption } from '../../../models/flag-option';
+import { MessageService } from 'primeng/api';
+import { ProgressoSyncService } from '../../../services/progresso-sync-service';
+import { Router } from '@angular/router';
+import { ZodError } from 'zod';
+import { OperacoeSchema } from '../../../schema/operacao-schema';
 import { CardModule } from 'primeng/card';
-import { LayoutCampo } from '../../../../components/layout-campo/layout-campo';
+import { LayoutCampo } from '../../../components/layout-campo/layout-campo';
 import { SelectModule } from 'primeng/select';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { BaseService } from '../../../../services/base.service';
-import { FlagOption } from '../../../../models/flag-option';
 import { ButtonModule } from 'primeng/button';
-import { ZodError } from 'zod';
-import { SyncProgressoBar } from '../../../../components/sync-progresso-bar/sync-progresso-bar';
-import { ProgressoSyncService } from '../../../../services/progresso-sync-service';
-import { SyncErros } from '../../../../components/sync-erros/sync-erros';
-import { Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
-import { Operacao } from '../../../../models/operacao';
-import { OperacoeSchema } from '../../../../schema/operacao-schema';
+import { SyncProgressoBar } from '../../../components/sync-progresso-bar/sync-progresso-bar';
+import { SyncErros } from '../../../components/sync-erros/sync-erros';
 
 @Component({
-  selector: 'app-estruturaform',
+  selector: 'app-dadosform',
   imports: [
     CardModule,
     LayoutCampo,
@@ -28,10 +28,10 @@ import { OperacoeSchema } from '../../../../schema/operacao-schema';
     SyncProgressoBar,
     SyncErros,
   ],
-  templateUrl: './estruturaform.html',
-  styleUrl: './estruturaform.scss',
+  templateUrl: './dadosform.html',
+  styleUrl: './dadosform.scss',
 })
-export class Estruturaform {
+export class Dadosform {
   public objeto: Operacao = new Operacao();
   private baseService = inject(BaseService);
   public errorValidacao: Record<string, string> = {};
@@ -45,7 +45,8 @@ export class Estruturaform {
   private cd = inject(ChangeDetectorRef);
   private progressoSync = inject(ProgressoSyncService);
   private messageService = inject(MessageService);
-  endpointPrincipal = 'dados'
+
+  endpointPrincipal = 'dados';
 
   router = inject(Router);
 

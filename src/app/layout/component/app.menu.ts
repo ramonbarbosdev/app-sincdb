@@ -86,7 +86,7 @@ export class AppMenu {
             {
               label: 'Dados',
               icon: 'pi pi-database',
-              routerLink: ['/client/servico'],
+              routerLink: ['/client/dados'],
             },
           ],
         },
