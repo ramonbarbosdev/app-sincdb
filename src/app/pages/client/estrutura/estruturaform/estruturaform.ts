@@ -45,7 +45,7 @@ export class Estruturaform {
   private cd = inject(ChangeDetectorRef);
   private progressoSync = inject(ProgressoSyncService);
   private messageService = inject(MessageService);
-  endpointPrincipal = 'dados'
+  endpointPrincipal = 'estrutura'
 
   router = inject(Router);
 

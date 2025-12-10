@@ -196,6 +196,21 @@ export class BaseService {
     );
   }
 
+  verificarStatus(endpoint: string): Observable<any> {
+    const url = `${this.apiUrl}/${endpoint}`;
+
+   
+    return this.http.get<any>(url).pipe(
+      tap((res) => {
+        return res;
+      }),
+      catchError((e) => {
+        console.log(e);
+        return throwError(() => e);
+      })
+    );
+  }
+
   exibirErros(e: any) {
     this.messageService.add({
       severity: 'error',

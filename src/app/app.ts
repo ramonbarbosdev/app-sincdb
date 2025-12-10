@@ -22,7 +22,7 @@ export class App {
     let attempts = 0;
 
     const check = () => {
-      this.baseService.findAll('status/').subscribe({
+      this.baseService.verificarStatus('status/').subscribe({
         next: (res) => {
           console.log(res);
           if (res.status) this.removeSplash();
