@@ -202,8 +202,8 @@ export class Dadosform {
           this.loadingSincronizacao = false;
         },
         error: (err) => {
+          this.loadingSincronizacao = false;
           this.loadingVerificacao = false;
-          this.loadingSincronizacao = true;
         },
       });
   }

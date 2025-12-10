@@ -201,8 +201,8 @@ export class Estruturaform {
           this.loadingSincronizacao = false;
         },
         error: (err) => {
-          this.loadingVerificacao = false;
-          this.loadingSincronizacao = true;
+        this.loadingSincronizacao = false;
+        this.loadingVerificacao = false;
         },
       });
   }
