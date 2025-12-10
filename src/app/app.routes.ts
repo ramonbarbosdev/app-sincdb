@@ -10,6 +10,7 @@ import { HomeClient } from './pages/client/home-client/home-client';
 import { Conexaoform } from './pages/client/conexao/conexaoform/conexaoform';
 import { Estruturaform } from './pages/client/estrutura/estruturaform/estruturaform';
 import { Dadosform } from './pages/dados/dadosform/dadosform';
+import { Perfil } from './pages/client/perfil/perfil';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
@@ -35,6 +36,7 @@ export const routes: Routes = [
     data: { roles: ['client', 'dev'] },
     children: [
       { path: 'home', component: HomeClient },
+      { path: 'perfil', component: Perfil },
       { path: 'conexao', component: Conexaoform },
       { path: 'estrutura', component: Estruturaform },
       { path: 'dados', component: Dadosform }

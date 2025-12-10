@@ -64,7 +64,7 @@ export class Login {
 
   entrar() {
     if (!this.validarItens()) return;
-
+     this.loading = true;
     this.auth.obterOrganizacao(this.objeto).subscribe({
       next: (res) => {
       
@@ -77,9 +77,13 @@ export class Login {
         });
 
         this.objeto.role = res.role;
+
+         this.loading = false;
       },
       error: (e) => {
         this.visibleOrganizacao = false;
+         this.loading = false;
+
       },
     });
   }

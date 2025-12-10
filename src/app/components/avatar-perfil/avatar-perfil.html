@@ -1,0 +1,40 @@
+<!-- AVATAR -->
+<div class="flex flex-col items-center justify-center my-6">
+  <input
+    type="file"
+    #fileInput
+    accept="image/*"
+    hidden
+    (change)="onFileSelect($event)"
+  />
+
+  <div class="relative inline-block cursor-pointer" (click)="fileInput.click()">
+    <p-avatar
+      [image]="imagem"
+      [icon]="imagem ? '' : 'pi pi-user'"
+      shape="circle"
+      class="avatar-edit"
+      styleClass="border-2 border-primary"
+      [size]="'xlarge'"
+      [style.width]="'8rem'"
+      [style.height]="'8rem'"
+    ></p-avatar>
+
+    <!-- ÍCONE DE LÁPIS -->
+    <div
+      class="absolute bottom-2 right-2 bg-blue-400 text-white flex items-center justify-center rounded-full p-1 shadow-md edit-icon"
+    >
+      <i class="pi pi-pencil text-sm"></i>
+    </div>
+
+    <button
+      title="remover"
+      *ngIf="imagem"
+      (click)="removerFoto($event)"
+      class="absolute top-2 right-2 bg-red-600 text-white flex items-center justify-center rounded-full p-1 shadow-md hover:bg-red-700 transition-colors"
+    >
+      <i class="pi pi-trash text-sm"></i>
+    </button>
+  </div>
+</div>
+<!-- AVATAR -->

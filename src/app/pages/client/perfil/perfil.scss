@@ -1,0 +1,13 @@
+.relative:hover .edit-icon {
+    background-color: #2563eb;
+    /* azul mais forte */
+    transform: scale(1.1);
+}
+
+::ng-deep .p-avatar.avatar-edit {
+    width: 9rem !important;
+    /* aumenta o tamanho */
+    height: 9rem !important;
+    font-size: 3rem !important;
+    /* ajusta o ícone padrão */
+}

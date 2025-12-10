@@ -1,0 +1,129 @@
+<p-card class="w-full max-w-5xl mx-auto my-6 px-2 sm:px-4">
+  <!-- HEADER -->
+  <ng-template pTemplate="header">
+    <div
+      class="flex flex-col sm:flex-row justify-between items-center w-full p-4 gap-2 sm:gap-0"
+    >
+      <h5 class="text-lg sm:text-xl font-semibold text-center sm:text-left">
+        Edição de Perfil
+      </h5>
+    </div>
+  </ng-template>
+
+  <!-- CONTEÚDO -->
+  <ng-template #content>
+    <!-- AVATAR -->
+    <div class="flex justify-center mb-6">
+      <app-avatar-perfil
+        [imagem]="objeto.img"
+        (imagemChange)="objeto.img = $event"
+        (fileChange)="selectedFile = $event"
+        (removerChange)="removerFoto()"
+      ></app-avatar-perfil>
+    </div>
+    <!-- AVATAR -->
+
+    <!-- Primeira linha -->
+    <div class="flex-row-responsive w-full">
+      <app-layout-campo [label]="'Login:'" [width]="'w-full md:w-6/12'">
+        <input
+          title="login"
+          name="login"
+          pInputText
+          id="login"
+          type="text"
+          placeholder=""
+          class="w-full"
+          [(ngModel)]="objeto.login"
+          [disabled]="true"
+          mask="000.000.000-00"
+        />
+      </app-layout-campo>
+
+      <app-layout-campo
+        [label]="'Nome de usuário: (*)'"
+        [width]="'w-full md:w-6/12'"
+        [error]="errorValidacao['nome']"
+      >
+        <input
+          title="nome"
+          name="nome"
+          pInputText
+          id="nome"
+          type="text"
+          placeholder=""
+          class="w-full"
+          [(ngModel)]="objeto.nome"
+          [ngClass]="{'ng-dirty ng-invalid': errorValidacao['nome']}"
+        />
+      </app-layout-campo>
+    </div>
+
+    <!-- Segunda linha -->
+    <div class="flex-row-responsive w-full">
+      <app-layout-campo
+        [error]="errorValidacao['senha']"
+        [label]="'Senha:'"
+        [width]="'w-full md:w-4/12'"
+      >
+        <p-password
+          name="senha"
+          id="senha"
+          [(ngModel)]="objeto.senha"
+          placeholder="Senha"
+          [toggleMask]="true"
+          [fluid]="true"
+          [feedback]="false"
+        ></p-password>
+      </app-layout-campo>
+
+      <app-layout-campo
+        [label]="'Permissão:'"
+        [width]="'w-full md:w-4/12'"
+      >
+        <input
+          title="role"
+          name="role"
+          pInputText
+          id="role"
+          type="text"
+          placeholder=""
+          class="w-full"
+          [(ngModel)]="objeto.role"
+          [disabled]="true"
+        />
+      </app-layout-campo>
+
+      <app-layout-campo
+        [label]="'Cargo:'"
+        [width]="'w-full md:w-4/12'"
+      >
+        <input
+          title="cargo"
+          name="cargo"
+          pInputText
+          id="cargo"
+          type="text"
+          placeholder=""
+          class="w-full"
+          [(ngModel)]="objeto.cargo"
+          [disabled]="true"
+        />
+      </app-layout-campo>
+    </div>
+  </ng-template>
+
+  <!-- FOOTER -->
+  <ng-template #footer>
+    <div
+      class="flex flex-col sm:flex-row justify-end gap-2 mt-4 px-2 sm:px-0"
+    >
+      <p-button
+        label="Salvar"
+        icon="pi pi-check"
+        (click)="onSave()"
+        styleClass="w-full sm:w-auto"
+      />
+    </div>
+  </ng-template>
+</p-card>

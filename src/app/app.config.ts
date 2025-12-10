@@ -9,6 +9,7 @@ import Aura from '@primeuix/themes/aura';
 import { provideEnvironmentNgxMask } from 'ngx-mask';
 import { OrcaFacilTheme } from './theme/orcafacil-theme';
 import { OrcaFacilDark } from './theme/orcafacil-dark.theme';
+import { SyncDBTheme } from './theme/sincdb-theme';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -21,7 +22,7 @@ export const appConfig: ApplicationConfig = {
       ripple: true,
       inputVariant: 'filled',
       theme: {
-        preset: OrcaFacilTheme,
+        preset: SyncDBTheme,
         options: { prefix: 'p', darkModeSelector: '.app-dark' },
       },
     }),
