@@ -15,6 +15,8 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { SyncProgressoBar } from '../../../components/sync-progresso-bar/sync-progresso-bar';
 import { SyncErros } from '../../../components/sync-erros/sync-erros';
+import { SyncConsole } from "../../../components/sync-console/sync-console";
+import { WebsocketService } from '../../../services/websocket.service';
 
 @Component({
   selector: 'app-dadosform',
@@ -27,7 +29,8 @@ import { SyncErros } from '../../../components/sync-erros/sync-erros';
     ButtonModule,
     SyncProgressoBar,
     SyncErros,
-  ],
+    SyncConsole
+],
   templateUrl: './dadosform.html',
   styleUrl: './dadosform.scss',
 })
@@ -45,6 +48,7 @@ export class Dadosform {
   private cd = inject(ChangeDetectorRef);
   private progressoSync = inject(ProgressoSyncService);
   private messageService = inject(MessageService);
+  private ws = inject(WebsocketService);
 
   endpointPrincipal = 'dados';
 
@@ -271,7 +275,7 @@ export class Dadosform {
     this.baseService.findAll(`${this.endpointPrincipal}/cancelar`).subscribe({
       next: (resposta: any) => {
         this.listaErros = [];
-
+         this.ws.emitClearTerminal();
         this.progressoSync.resetar();
         this.loadingSincronizacao = false;
         this.loadingVerificacao = false;
