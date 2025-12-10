@@ -1,0 +1,24 @@
+<div class="terminal-container" *ngIf="visible">
+  <div class="terminal-header">
+    <div class="buttons">
+
+      <!-- Fechar -->
+      <span class="btn close" (click)="closeTerminal()"></span>
+
+      <!-- Limpar -->
+      <span title="limpar" class="btn minimize" (click)="clear()"></span>
+
+      <!-- Reabrir -->
+      <span class="btn maximize" (click)="openTerminal()"></span>
+
+    </div>
+
+    <div class="title">Terminal</div>
+  </div>
+
+  <div id="terminal-box" class="terminal-body">
+    <div *ngFor="let line of logs" class="terminal-line">
+      {{ line }}
+    </div>
+  </div>
+</div>

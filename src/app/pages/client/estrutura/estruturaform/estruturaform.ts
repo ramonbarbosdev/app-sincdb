@@ -15,6 +15,8 @@ import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { Operacao } from '../../../../models/operacao';
 import { OperacoeSchema } from '../../../../schema/operacao-schema';
+import { SyncConsole } from "../../../../components/sync-console/sync-console";
+import { WebsocketService } from '../../../../services/websocket.service';
 
 @Component({
   selector: 'app-estruturaform',
@@ -27,7 +29,8 @@ import { OperacoeSchema } from '../../../../schema/operacao-schema';
     ButtonModule,
     SyncProgressoBar,
     SyncErros,
-  ],
+    SyncConsole
+],
   templateUrl: './estruturaform.html',
   styleUrl: './estruturaform.scss',
 })
@@ -45,9 +48,10 @@ export class Estruturaform {
   private cd = inject(ChangeDetectorRef);
   private progressoSync = inject(ProgressoSyncService);
   private messageService = inject(MessageService);
+  private ws = inject(WebsocketService);
+  router = inject(Router);
   endpointPrincipal = 'estrutura'
 
-  router = inject(Router);
 
   loadingBase = true;
   loadingEsquema = false;
@@ -272,6 +276,7 @@ export class Estruturaform {
         this.listaErros = [];
 
         this.progressoSync.resetar();
+         this.ws.emitClearTerminal();
         this.loadingSincronizacao = false;
         this.loadingVerificacao = false;
       },

@@ -2,13 +2,15 @@
   <!-- HEADER -->
   <ng-template pTemplate="header">
     <div class="flex flex-col sm:flex-row justify-between items-center w-full p-4 gap-2 sm:gap-0">
-      <h5 class="text-lg sm:text-xl font-semibold text-center sm:text-left">Sincronizar Estrutura</h5>
+      <h5 class="text-lg sm:text-xl font-semibold text-center sm:text-left">
+        Sincronizar Estrutura
+      </h5>
     </div>
   </ng-template>
 
   <ng-template #content>
     <div class="flex-row-responsive w-full">
-      <app-layout-campo [label]="'Bases:'" [width]="'md:w-6/12'" [error]="errorValidacao['base']">
+      <app-layout-campo [label]="'Bases: (*)'" [width]="'md:w-6/12'" [error]="errorValidacao['base']">
         <p-select
           [checkmark]="true"
           [showClear]="true"
@@ -29,7 +31,7 @@
       </app-layout-campo>
 
       <app-layout-campo
-        [label]="'Esquema:'"
+        [label]="'Esquema: (*)'"
         [width]="'md:w-6/12'"
         [error]="errorValidacao['esquema']"
       >
@@ -54,7 +56,7 @@
     </div>
 
     <div class="flex-row-responsive w-full">
-      <app-layout-campo [label]="'Tabela:'" [width]="'md:w-12/12'">
+      <app-layout-campo [label]="'Tabela:'" [width]="'md:w-10/12'">
         <p-select
           [checkmark]="true"
           [showClear]="true"
@@ -72,22 +74,33 @@
         >
         </p-select>
       </app-layout-campo>
-    </div>
-
-    <div class="p-2 flex flex-col sm:flex-row items-center gap-4 w-full">
-      <!-- Progress -->
-      <div class="flex-1 w-full">
-        <app-sync-progresso-bar></app-sync-progresso-bar>
-      </div>
-
-      <!-- Botão -->
-      <p-button
+      <app-layout-campo [label]="'&nbsp;'" [width]="'md:w-2/12'">
+        <p-button
         label="Verificar"
         icon="pi pi-search"
         (click)="verificar()"
         styleClass="p-button-primary w-full sm:w-auto"
         [loading]="loadingVerificacao"
       ></p-button>
+      </app-layout-campo>
+    </div>
+
+    <div class="p-2 flex flex-col sm:flex-row items-center gap-4 w-full">
+      <!-- Botão -->
+      <!-- <p-button
+        label="Verificar"
+        icon="pi pi-search"
+        (click)="verificar()"
+        styleClass="p-button-primary w-full sm:w-auto"
+        [loading]="loadingVerificacao"
+      ></p-button> -->
+      <!-- Progress -->
+      <div class="flex-1 w-full">
+        <app-sync-console></app-sync-console>
+        <app-sync-progresso-bar></app-sync-progresso-bar>
+      </div>
+
+      
     </div>
   </ng-template>
 
@@ -120,7 +133,7 @@
   </ng-template>
 </p-card>
 
-<p-card class="w-full max-w-5xl mx-auto my-6 px-2 sm:px-4"  *ngIf="listaErros.length > 0">
+<p-card class="w-full max-w-5xl mx-auto my-6 px-2 sm:px-4" *ngIf="listaErros.length > 0">
   <div class="mt-4">
     <app-sync-erros [erros]="listaErros"></app-sync-erros>
   </div>

@@ -25,6 +25,12 @@ export class WebsocketService {
   private progressoSubject = new Subject<any>();
   public progresso$ = this.progressoSubject.asObservable();
 
+  private logsSubject = new Subject<string>();
+  public logs$ = this.logsSubject.asObservable();
+
+  private clearTerminalSubject = new Subject<void>();
+  public clearTerminal$ = this.clearTerminalSubject.asObservable();
+
   public initConnectionSocket() {
     const url = `${environment.apiUrlWebSocket}`;
     this.stompClient = new Client({
@@ -40,7 +46,7 @@ export class WebsocketService {
 
       this.stompClient.subscribe('/topic/online', (message: IMessage) => {
         const data = JSON.parse(message.body);
-        this.OnlineSubject.next(data); 
+        this.OnlineSubject.next(data);
       });
 
       this.stompClient.subscribe('/topic/sync/progress', (message: IMessage) => {
@@ -48,6 +54,10 @@ export class WebsocketService {
         this.progressoSubject.next(data);
       });
 
+      this.stompClient.subscribe('/topic/logs', (message: IMessage) => {
+        const data = message.body;
+        this.logsSubject.next(data);
+      });
     };
 
     this.stompClient.onStompError = (frame) => {
@@ -59,6 +69,10 @@ export class WebsocketService {
 
   getOnline(): Observable<void> {
     return this.OnlineSubject.asObservable();
+  }
+
+  emitClearTerminal() {
+    this.clearTerminalSubject.next();
   }
 
   sendMessage(destination: string, payload: any) {
