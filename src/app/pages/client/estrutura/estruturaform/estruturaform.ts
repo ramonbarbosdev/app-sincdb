@@ -239,13 +239,14 @@ export class Estruturaform {
     if (!this.validarItens()) return;
 
     let base = this.objeto.base;
+    let esquema = this.objeto.esquema;
 
     this.loadingSincronizacao = true;
     this.loadingVerificacao = true;
 
     this.progressoSync.iniciarGenericoProgressoLocal();
 
-    this.baseService.findAll(`${this.endpointPrincipal}/${base}`).subscribe({
+    this.baseService.findAll(`${this.endpointPrincipal}/${base}/${esquema}`).subscribe({
       next: (res) => {
         this.loadingSincronizacao = false;
         this.loadingVerificacao = false;
