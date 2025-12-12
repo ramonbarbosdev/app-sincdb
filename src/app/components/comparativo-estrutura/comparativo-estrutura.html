@@ -1,0 +1,53 @@
+<div class="card w-full overflow-x-auto">
+  <div class="font-semibold text-xl mb-4">Mapa de Estruturas das Bases</div>
+
+  <div class="card">
+
+    <p-treetable [value]="nodes" [loading]="loading" [lazy]="true" (onNodeExpand)="onNodeExpand($event)"
+      [scrollable]="true" scrollHeight="350px" [tableStyle]="{ 'min-width': '40rem' }">
+
+      <ng-template #header>
+        <tr>
+          <th>Base</th>
+          <th>Status</th>
+        </tr>
+      </ng-template>
+
+      <ng-template #loadingbody>
+        <tr>
+          <td><p-skeleton width="150px"></p-skeleton></td>
+          <td><p-skeleton width="80px"></p-skeleton></td>
+        </tr>
+        <tr>
+          <td><p-skeleton width="120px"></p-skeleton></td>
+          <td><p-skeleton width="60px"></p-skeleton></td>
+        </tr>
+        <tr>
+          <td><p-skeleton width="180px"></p-skeleton></td>
+          <td><p-skeleton width="70px"></p-skeleton></td>
+        </tr>
+      </ng-template>
+
+      <ng-template #body let-rowNode let-rowData="rowData">
+        <tr [ttRow]="rowNode">
+
+          <td>
+            <div class="flex items-center gap-2">
+              <p-treetable-toggler [rowNode]="rowNode"></p-treetable-toggler>
+              <span>{{ rowData?.nome }}</span>
+            </div>
+          </td>
+
+          <td>
+            <p-tag *ngIf="rowData" [severity]="rowData.cor" [value]="rowData.status"></p-tag>
+          </td>
+
+        </tr>
+      </ng-template>
+
+    </p-treetable>
+
+  </div>
+
+
+</div>
