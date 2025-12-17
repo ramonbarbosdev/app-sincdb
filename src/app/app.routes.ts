@@ -11,6 +11,7 @@ import { Conexaoform } from './pages/client/conexao/conexaoform/conexaoform';
 import { Estruturaform } from './pages/client/estrutura/estruturaform/estruturaform';
 import { Dadosform } from './pages/dados/dadosform/dadosform';
 import { Perfil } from './pages/client/perfil/perfil';
+import { ParametroMasterList } from './pages/dev/parametros/parametro-master-list/parametro-master-list';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
@@ -27,6 +28,7 @@ export const routes: Routes = [
       { path: 'role', component: Rolelist },
       { path: 'planoassinatura', component: Planoassinaturalist },
       { path: 'empresa', component: Empresalist },
+      { path: 'parametro', component: ParametroMasterList },
     ],
   },
   {

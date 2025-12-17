@@ -54,6 +54,11 @@ export class AppMenu {
             icon: 'pi pi-fw pi-bookmark',
             routerLink: ['/dev/usuario'],
           },
+          {
+            label: 'Parâmetros',
+            icon: 'pi pi-fw pi-bookmark',
+            routerLink: ['parametro'],
+          },
         ],
       });
     } else {

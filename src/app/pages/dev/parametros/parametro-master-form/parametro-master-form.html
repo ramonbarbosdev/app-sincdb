@@ -1,0 +1,48 @@
+<app-layout-form-simples [(visible)]="isDialog" [title]="'Formulario de Parâmetro'" [loading]="loading"
+    (save)="onSave()" (cancel)="hideDialog()" (show)="onShow()" [width]="'800px'">
+    <!-- Linha 1 -->
+    <div class="flex-row-responsive">
+        <app-layout-campo [error]="errorValidacao['codigo'] " [label]="'Código: (*)'" [width]="'w-2/12'"
+            [sublabel]="'Informe o código'" [describedby]="'codigo'">
+            <input title="codigo" name="codigo" pInputText id="codigo" type="text" placeholder="" class="w-full"
+                [(ngModel)]="objeto.codigo" [disabled]="true"
+                [ngClass]=" {'ng-dirty ng-invalid' : errorValidacao['codigo'] }  " />
+        </app-layout-campo>
+
+        <app-layout-campo [error]="errorValidacao['nomeChave'] " [label]="'Nome: (*)'" [width]="'w-10/12'"
+            [sublabel]="'Informe a chave do parametro'" [describedby]="'nomeChave'">
+            <input title="nomeChave" name="nomeChave" pInputText id="nomeChave" type="text" placeholder=""
+                class="w-full" [(ngModel)]="objeto.nomeChave" [disabled]="false"
+                [ngClass]=" {'ng-dirty ng-invalid' : errorValidacao['nomeChave'] }  " />
+        </app-layout-campo>
+
+
+    </div>
+    <!-- Linha 1 -->
+
+    <div class="flex-row-responsive">
+
+
+
+        <app-layout-campo [error]="errorValidacao['tipo'] " [label]="'Tipo: (*)'" [width]="'w-6/12'"
+            [sublabel]="'Informe o tipo do parametro'" [describedby]="'tipo'">
+            <p-select [checkmark]="true" [showClear]="true" name="tipo" [options]="listarTipo" optionLabel="name"
+                optionValue="code" placeholder="Selecione" class="w-full" [(ngModel)]="objeto.tipo"
+                [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['tipo'] }" />
+        </app-layout-campo>
+
+        <app-layout-campo [error]="errorValidacao['valor'] " [label]="'Valor:'" [width]="'w-6/12'"
+            [sublabel]="'Informe o valor do parametro'" [describedby]="'valor'">
+            <input title="valor" name="valor" pInputText id="valor" type="text" placeholder="" class="w-full"
+                [(ngModel)]="objeto.valor" [disabled]="false"
+                [ngClass]=" {'ng-dirty ng-invalid' : errorValidacao['valor'] }  " />
+        </app-layout-campo>
+    </div>
+
+    <app-layout-campo [label]="'Observação:'" [width]="'w-12/12'">
+        <textarea pTextarea placeholder="Descrição" [autoResize]="true" rows="3" cols="30" name="observacoes"
+            id="observacoes" [(ngModel)]="objeto.observacoes"></textarea>
+    </app-layout-campo>
+
+
+</app-layout-form-simples>
