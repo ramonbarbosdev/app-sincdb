@@ -24,6 +24,7 @@ export class UpdateSystem {
 
 
   ngOnInit() {
+    
     this.updateAvailable$.subscribe(avail => {
       if (avail) {
         this.showUpdateDialog = true;

@@ -1,81 +1,83 @@
 <p-dialog
+  header="Atualização do sistema"
   [(visible)]="showUpdateDialog"
   [modal]="true"
   [closable]="false"
   [draggable]="false"
-  [style]="{ width: '440px' }"
-  contentStyleClass="p-4"
->
+  [style]="{ width: '420px' }">
 
-  <!-- Header customizado -->
-  <ng-template pTemplate="header">
-    <div class="flex align-items-center gap-2">
-      <i class="pi pi-cloud-download text-xl text-primary"></i>
-      <span class="text-lg font-semibold">Atualização do sistema</span>
-    </div>
-  </ng-template>
-
-  <!-- Atualização disponível -->
+  <!-- ============================= -->
+  <!-- ATUALIZAÇÃO DISPONÍVEL -->
+  <!-- ============================= -->
   <ng-container *ngIf="updateAvailable$ | async">
-    <div class="flex flex-column gap-3">
-      <p class="m-0 text-color-secondary">
-        Uma nova versão do sistema está disponível.
-        Recomendamos atualizar para obter melhorias e correções.
-      </p>
 
-      <div class="flex justify-end gap-2 mt-2">
-        <p-button
-          label="Atualizar"
-          icon="pi pi-refresh"
-          severity="primary"
-          (onClick)="update()"
-        ></p-button>
+    <div class="flex align-items-start gap-3 mb-3">
+      <i class="pi pi-info-circle text-blue-500 text-2xl"></i>
+
+      <div>
+        <p class="font-medium mb-1">
+          Nova versão disponível
+        </p>
+        <small class="text-color-secondary">
+          Recomendamos atualizar para obter melhorias e correções.
+        </small>
       </div>
     </div>
+
+    <div class="flex justify-end">
+      <p-button
+        label="Atualizar agora"
+        icon="pi pi-refresh"
+        (onClick)="update()">
+      </p-button>
+    </div>
+
   </ng-container>
-
-  <!-- Baixando -->
+  <!-- ============================= -->
+  <!-- BAIXANDO -->
+  <!-- ============================= -->
   <ng-container *ngIf="downloading$ | async">
-    <div class="flex flex-column gap-3">
-      <div class="flex align-items-center gap-2">
-        <i class="pi pi-spin pi-spinner text-primary"></i>
-        <span class="font-medium">Baixando atualização</span>
-      </div>
 
-      <p-progressBar
-        [value]="progress$ | async"
-        [showValue]="true"
-        styleClass="mt-2"
-      ></p-progressBar>
-
+    <div class="flex align-items-center gap-2 mb-4">
+      <i class="pi pi-download text-primary"></i>
       <small class="text-color-secondary">
-        Não feche o aplicativo durante o download.
+        Baixando atualização...
       </small>
     </div>
+
+    <p-progressBar
+      [value]="progress$ | async"
+      [showValue]="true">
+    </p-progressBar>
+
   </ng-container>
+  <!-- ============================= -->
+  <!-- PRONTO PARA INSTALAR -->
+  <!-- ============================= -->
+  <ng-container  *ngIf="downloaded$ | async" >
 
-  <!-- Pronto para instalar -->
-  <ng-container *ngIf="downloaded$ | async">
-    <div class="flex flex-column gap-3">
-      <div class="flex align-items-center gap-2">
-        <i class="pi pi-check-circle text-green-500 text-xl"></i>
-        <span class="font-medium">Atualização pronta</span>
-      </div>
+    <div class="flex align-items-start gap-3 mb-3 mt-3">
+      <i class="pi pi-check-circle text-green-500 text-2xl"></i>
 
-      <p class="m-0 text-color-secondary">
-        A atualização foi concluída com sucesso.
-        O aplicativo será reiniciado para finalizar a instalação.
-      </p>
-
-      <div class="flex justify-end gap-2 mt-2">
-        <p-button
-          label="Instalar e reiniciar"
-          icon="pi pi-check"
-          severity="success"
-          (onClick)="install()"
-        ></p-button>
+      <div>
+        <p class="font-medium mb-1">
+          Atualização pronta
+        </p>
+        <small class="text-color-secondary">
+          O aplicativo será reiniciado para concluir a instalação.
+        </small>
       </div>
     </div>
+
+    <div class="flex justify-end">
+      <p-button
+        label="Instalar e reiniciar"
+        icon="pi pi-check"
+        severity="success"
+        (onClick)="install()">
+      </p-button>
+    </div>
+
   </ng-container>
 
 </p-dialog>
