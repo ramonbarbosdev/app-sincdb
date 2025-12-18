@@ -1,0 +1,53 @@
+<p-dialog
+  header="Atualização do sistema"
+  [(visible)]="showUpdateDialog"
+  [modal]="true"
+  [closable]="false"
+  [style]="{ width: '420px' }"
+>
+
+  <!-- Atualização disponível -->
+  <ng-container *ngIf="updateAvailable$ | async">
+    <p class="mb-3">
+      Uma nova versão do sistema está disponível.
+    </p>
+
+    <div class="flex justify-end gap-2">
+      <p-button
+        label="Atualizar agora"
+        icon="pi pi-refresh"
+        (onClick)="update()"
+      ></p-button>
+    </div>
+  </ng-container>
+
+  <!-- Baixando -->
+  <ng-container *ngIf="downloading$ | async">
+    <p class="mb-2">
+      Baixando atualização...
+    </p>
+
+    <p-progressBar
+      [value]="progress$ | async"
+      [showValue]="true"
+    ></p-progressBar>
+  </ng-container>
+
+  <!-- Pronto para instalar -->
+  <ng-container *ngIf="downloaded$ | async">
+    <p class="mb-3">
+      Atualização pronta para instalação.
+      O aplicativo será reiniciado.
+    </p>
+
+    <div class="flex justify-end gap-2">
+      <p-button
+        label="Instalar e reiniciar"
+        icon="pi pi-check"
+        severity="success"
+        (onClick)="install()"
+      ></p-button>
+    </div>
+  </ng-container>
+
+</p-dialog>

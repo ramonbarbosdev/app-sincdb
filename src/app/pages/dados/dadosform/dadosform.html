@@ -8,7 +8,7 @@
 
   <ng-template #content>
     <div class="flex-row-responsive w-full">
-      <app-layout-campo [label]="'Bases:'" [width]="'md:w-6/12'" [error]="errorValidacao['base']">
+      <app-layout-campo [label]="'Bases: (*)'" [width]="'md:w-6/12'" [error]="errorValidacao['base']">
         <p-select
           [checkmark]="true"
           [showClear]="true"
@@ -29,7 +29,7 @@
       </app-layout-campo>
 
       <app-layout-campo
-        [label]="'Esquema:'"
+        [label]="'Esquema: (*)'"
         [width]="'md:w-6/12'"
         [error]="errorValidacao['esquema']"
       >

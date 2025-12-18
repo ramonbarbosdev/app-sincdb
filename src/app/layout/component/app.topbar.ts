@@ -8,6 +8,7 @@ import { LayoutService } from '../service/layout.service';
 import { Menu } from 'primeng/menu';
 import { AuthService } from '../../auth/auth.service';
 import { AvatarModule } from 'primeng/avatar';
+import { UpdateService } from '../../services/update.service';
 
 @Component({
   selector: 'app-topbar',
@@ -63,6 +64,8 @@ import { AvatarModule } from 'primeng/avatar';
           ></i>
         </button>
         <div class="relative">
+
+
           <!-- <button
             class="layout-topbar-action layout-topbar-action-highlight"
             pStyleClass="@next"
@@ -121,10 +124,11 @@ import { AvatarModule } from 'primeng/avatar';
 export class AppTopbar {
   items!: MenuItem[];
 
-  constructor(public layoutService: LayoutService) {}
+  constructor(public layoutService: LayoutService) { }
   private router = inject(Router);
   private auth = inject(AuthService);
   private cd = inject(ChangeDetectorRef);
+  private updateService = inject(UpdateService);
 
   public avatarImg: string = '';
   public avatarNome: string = '';
@@ -137,6 +141,10 @@ export class AppTopbar {
     });
   }
 
+  checkUpdates() {
+    this.updateService.checkForUpdates();
+  }
+
   toggleDarkMode() {
     this.layoutService.layoutConfig.update((state) => ({
       ...state,
@@ -147,7 +155,7 @@ export class AppTopbar {
   displayConfirmation: boolean = false;
   confirmationTitle: string = '';
   confirmationMessage: string = '';
-  confirmationAction: () => void = () => {};
+  confirmationAction: () => void = () => { };
 
   openConfirmation(title: string, message: string, action: () => void) {
     this.confirmationTitle = title;
@@ -167,6 +175,11 @@ export class AppTopbar {
         this.router.navigate(['client/perfil']);
       },
     },
+     {
+        label: 'Verificar atualizações',
+        icon: 'pi pi-refresh',
+        command: () => this.checkUpdates()
+      },
     // {
     //   label: 'Configuração',
     //   icon: 'pi pi-fw pi-cog',

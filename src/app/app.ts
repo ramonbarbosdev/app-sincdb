@@ -5,9 +5,10 @@ import { PrimeNG } from 'primeng/config';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { UpdateSystem } from "./components/update-system/update-system";
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, ButtonModule, ToastModule, ConfirmDialogModule],
+  imports: [RouterOutlet, ButtonModule, ToastModule, ConfirmDialogModule, UpdateSystem],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
