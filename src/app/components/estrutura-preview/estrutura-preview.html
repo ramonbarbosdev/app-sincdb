@@ -1,0 +1,133 @@
+<ng-container *ngIf="response as r; else loading">
+
+  <p-splitter
+    [panelSizes]="[25, 75]"
+    style="height: 70vh">
+
+    <!-- PAINEL ESQUERDO: CATEGORIAS -->
+    <ng-template pTemplate="panel">
+
+      <p-panel header="Categorias">
+
+        <p-listbox
+          [options]="r.categorias"
+          [(ngModel)]="categoriaSelecionada"
+          optionLabel="titulo"
+          [style]="{ width: '100%' }">
+
+          <ng-template let-cat pTemplate="item">
+            <div class="flex justify-between align-items-center w-full">
+              <span>
+                <i [class]="cat.icone" class="mr-2"></i>
+                {{ cat.titulo }}
+              </span>
+
+              <p-tag
+                *ngIf="cat.total > 0"
+                severity="info"
+                [value]="cat.total">
+              </p-tag>
+            </div>
+          </ng-template>
+
+        </p-listbox>
+
+      </p-panel>
+
+    </ng-template>
+
+    <!-- PAINEL DIREITO: DETALHES -->
+    <ng-template pTemplate="panel">
+
+     <p-panel
+    *ngIf="categoriaSelecionada; else selecioneCategoria"
+    [header]="categoriaSelecionada.titulo">
+
+    <!-- CONTAINER COM SCROLL -->
+    <div class="painel-scroll">
+
+      <div *ngFor="let item of categoriaSelecionada.items; trackBy: trackById"
+           class="mb-3">
+
+        <p-panel toggleable>
+
+          <ng-template pTemplate="header">
+            <div class="flex justify-between align-items-center w-full">
+
+              <div class="flex align-items-center gap-2">
+                <p-checkbox
+                  [(ngModel)]="item.selecionado"
+                  [binary]="true"
+                  [disabled]="!item.executavel">
+                </p-checkbox>
+
+                <strong>{{ item.objeto }}</strong>
+                <small class="text-color-secondary">
+                  ({{ item.tipo }})
+                </small>
+              </div>
+
+              <div class="flex gap-2">
+                <p-tag
+                  *ngIf="item.perigoso"
+                  severity="danger"
+                  value="Perigoso">
+                </p-tag>
+
+                <p-tag
+                  *ngIf="!item.executavel"
+                  severity="info"
+                  value="Informativo">
+                </p-tag>
+              </div>
+
+            </div>
+          </ng-template>
+
+          <!-- AVISOS -->
+          <div *ngIf="item.avisos?.length">
+            <p-message
+              *ngFor="let aviso of item.avisos"
+              severity="warn"
+              [text]="aviso">
+            </p-message>
+          </div>
+
+          <!-- SQL -->
+          <div *ngIf="item.sql">
+            <p-divider></p-divider>
+            <!-- <p-inputTextarea
+              [value]="item.sql"
+              rows="5"
+              autoResize
+              readonly
+              styleClass="w-full font-monospace">
+            </p-inputTextarea> -->
+          </div>
+
+        </p-panel>
+
+      </div>
+
+    </div>
+
+  </p-panel>
+
+    </ng-template>
+
+  </p-splitter>
+
+</ng-container>
+
+<!-- LOADING -->
+<ng-template #loading>
+  <p-skeleton height="2rem" class="mb-2"></p-skeleton>
+  <p-skeleton height="2rem"></p-skeleton>
+</ng-template>
+
+<!-- PLACEHOLDER -->
+<ng-template #selecioneCategoria>
+  <div class="p-4 text-center text-color-secondary">
+    Selecione uma categoria à esquerda
+  </div>
+</ng-template>

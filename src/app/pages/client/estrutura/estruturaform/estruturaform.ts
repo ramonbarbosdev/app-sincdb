@@ -17,6 +17,7 @@ import { Operacao } from '../../../../models/operacao';
 import { OperacoeSchema } from '../../../../schema/operacao-schema';
 import { SyncConsole } from "../../../../components/sync-console/sync-console";
 import { WebsocketService } from '../../../../services/websocket.service';
+import { EstruturaPreview, EstruturaResponse } from "../../../../components/estrutura-preview/estrutura-preview";
 
 @Component({
   selector: 'app-estruturaform',
@@ -29,7 +30,8 @@ import { WebsocketService } from '../../../../services/websocket.service';
     ButtonModule,
     SyncProgressoBar,
     SyncErros,
-    SyncConsole
+    SyncConsole,
+    EstruturaPreview
 ],
   templateUrl: './estruturaform.html',
   styleUrl: './estruturaform.scss',
@@ -44,6 +46,7 @@ export class Estruturaform {
   public listaTabela: FlagOption[] = [];
 
   public listaErros: any[] = [];
+  public response!: EstruturaResponse;
 
   private cd = inject(ChangeDetectorRef);
   private progressoSync = inject(ProgressoSyncService);
@@ -51,7 +54,6 @@ export class Estruturaform {
   private ws = inject(WebsocketService);
   router = inject(Router);
   endpointPrincipal = 'estrutura'
-
 
   loadingBase = true;
   loadingEsquema = false;
@@ -196,7 +198,8 @@ export class Estruturaform {
       .findAll(`${this.endpointPrincipal}/verificar/${base}/${esquema}/${tabela}`)
       .subscribe({
         next: (res) => {
-          // this.progressoSync.verificacaoConcluidaProgressoLocal();
+        console.log(res)
+        this.response = res;
           this.loadingVerificacao = false;
           this.loadingSincronizacao = false;
         },
