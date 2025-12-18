@@ -54,7 +54,6 @@ export interface DDLItemDTO {
   dependencias: string[];
 }
 
-
 @Component({
   selector: 'app-estrutura-preview',
   imports: [CardModule,
