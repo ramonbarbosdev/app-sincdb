@@ -46,7 +46,7 @@ export class Estruturaform {
   public listaTabela: FlagOption[] = [];
 
   public listaErros: any[] = [];
-  public response!: EstruturaResponse;
+  public response: any;
 
   private cd = inject(ChangeDetectorRef);
   private progressoSync = inject(ProgressoSyncService);
@@ -286,7 +286,7 @@ export class Estruturaform {
     this.baseService.findAll(`${this.endpointPrincipal}/cancelar`).subscribe({
       next: (resposta: any) => {
         this.listaErros = [];
-
+        this.response = null;
         this.progressoSync.resetar();
         this.ws.emitClearTerminal();
         this.loadingSincronizacao = false;
