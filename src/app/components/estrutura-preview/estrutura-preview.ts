@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -13,6 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { SkeletonModule } from 'primeng/skeleton';
 import { SplitterModule } from 'primeng/splitter';
 import { ListboxModule } from 'primeng/listbox';
+import { DialogModule } from 'primeng/dialog';
 
 export interface EstruturaResponse {
   sucesso: boolean;
@@ -69,19 +70,28 @@ export interface DDLItemDTO {
     FormsModule,
     SkeletonModule,
     SplitterModule,
-    ListboxModule],
+    ListboxModule,
+    DialogModule],
+    standalone: true,
   templateUrl: './estrutura-preview.html',
   styleUrl: './estrutura-preview.scss',
 })
 export class EstruturaPreview {
   @Input() response!: EstruturaResponse;
+  @Input() visible: boolean = false;
+  @Output() visibleChange = new EventEmitter<boolean>();
+
+  hideDialog() {
+    this.visible = false;
+    this.visibleChange.emit(false);
+  }
 
   categoriaSelecionada?: CategoriaDDLDTO;
 
   trackById(_: number, item: DDLItemDTO) {
     return item.id;
   }
-  
+
   exportarJson() {
     const blob = new Blob(
       [JSON.stringify(this.response, null, 2)],

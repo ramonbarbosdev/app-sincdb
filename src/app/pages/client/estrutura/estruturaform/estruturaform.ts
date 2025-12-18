@@ -32,7 +32,7 @@ import { EstruturaPreview, EstruturaResponse } from "../../../../components/estr
     SyncErros,
     SyncConsole,
     EstruturaPreview
-],
+  ],
   templateUrl: './estruturaform.html',
   styleUrl: './estruturaform.scss',
 })
@@ -55,6 +55,9 @@ export class Estruturaform {
   router = inject(Router);
   endpointPrincipal = 'estrutura'
 
+  visibleDetail = false;
+
+
   loadingBase = true;
   loadingEsquema = false;
   loadingTabela = false;
@@ -64,6 +67,11 @@ export class Estruturaform {
   ngOnInit() {
     this.progressoSync.vazioProgressoLocal();
     this.obterBase();
+  }
+
+  abrirDetalhes()
+  {
+      this.visibleDetail = true;
   }
 
   processarBase(item: any) {
@@ -179,7 +187,7 @@ export class Estruturaform {
         let tabelaEsquema = !this.objeto.tabela ? this.objeto.esquema : this.objeto.tabela;
         this.continuarVerificacao(tabelaEsquema);
       },
-      error: (err) => {},
+      error: (err) => { },
     });
   }
 
@@ -198,14 +206,14 @@ export class Estruturaform {
       .findAll(`${this.endpointPrincipal}/verificar/${base}/${esquema}/${tabela}`)
       .subscribe({
         next: (res) => {
-        console.log(res)
-        this.response = res;
+          console.log(res)
+          this.response = res;
           this.loadingVerificacao = false;
           this.loadingSincronizacao = false;
         },
         error: (err) => {
-        this.loadingSincronizacao = false;
-        this.loadingVerificacao = false;
+          this.loadingSincronizacao = false;
+          this.loadingVerificacao = false;
         },
       });
   }
@@ -280,7 +288,7 @@ export class Estruturaform {
         this.listaErros = [];
 
         this.progressoSync.resetar();
-         this.ws.emitClearTerminal();
+        this.ws.emitClearTerminal();
         this.loadingSincronizacao = false;
         this.loadingVerificacao = false;
       },

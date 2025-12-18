@@ -113,6 +113,14 @@
         styleClass="w-full sm:w-auto"
       />
       <div class="flex gap-3">
+         <p-button
+          label="Detalhes"
+          icon="pi pi-sync"
+          (click)="abrirDetalhes()"
+          styleClass="w-full sm:w-auto"
+          [loading]="loadingSincronizacao"
+          *ngIf="response"
+        />
         <p-button
           label="Sincronizar"
           icon="pi pi-sync"
@@ -138,4 +146,4 @@
   </div>
 </p-card>
 
-<app-estrutura-preview [response]="response"></app-estrutura-preview>
+<app-estrutura-preview [response]="response" [(visible)]="visibleDetail"></app-estrutura-preview>
