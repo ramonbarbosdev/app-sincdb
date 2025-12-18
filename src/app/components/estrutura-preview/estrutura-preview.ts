@@ -1,4 +1,15 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  SimpleChanges,
+  OnChanges
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -8,18 +19,22 @@ import { PanelModule } from 'primeng/panel';
 import { TagModule } from 'primeng/tag';
 import { AccordionModule } from 'primeng/accordion';
 import { TextareaModule } from 'primeng/textarea';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { SkeletonModule } from 'primeng/skeleton';
 import { SplitterModule } from 'primeng/splitter';
 import { ListboxModule } from 'primeng/listbox';
 import { DialogModule } from 'primeng/dialog';
+import { ScrollerModule } from 'primeng/scroller';
+import { PaginatorModule } from 'primeng/paginator';
+
+/* =======================
+   MODELOS
+======================= */
 
 export interface EstruturaResponse {
   sucesso: boolean;
   base: string;
   esquema: string;
-  geradoEm: string; // ISO string (ex: 2025-12-18T11:20:37.965)
+  geradoEm: string;
   resumo: ResumoDTO;
   categorias: CategoriaDDLDTO[];
 }
@@ -33,6 +48,7 @@ export interface ResumoDTO {
   podeExecutar: boolean;
   mensagem: string;
 }
+
 export interface CategoriaDDLDTO {
   id: string;
   titulo: string;
@@ -42,6 +58,7 @@ export interface CategoriaDDLDTO {
   total: number;
   items: DDLItemDTO[];
 }
+
 export interface DDLItemDTO {
   id: string;
   objeto: string;
@@ -54,44 +71,98 @@ export interface DDLItemDTO {
   dependencias: string[];
 }
 
+/* =======================
+   COMPONENTE
+======================= */
+
 @Component({
   selector: 'app-estrutura-preview',
-  imports: [CardModule,
-    AccordionModule,
-    PanelModule,
-    CheckboxModule,
-    TagModule,
-    TextareaModule,
-    ButtonModule,
-    DividerModule,
-    MessageModule,
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
     CommonModule,
     FormsModule,
+    ButtonModule,
+    CardModule,
+    CheckboxModule,
+    DividerModule,
+    MessageModule,
+    PanelModule,
+    TagModule,
+    AccordionModule,
+    TextareaModule,
     SkeletonModule,
     SplitterModule,
     ListboxModule,
-    DialogModule],
-    standalone: true,
+    DialogModule,
+    ScrollerModule,
+    PaginatorModule
+  ],
   templateUrl: './estrutura-preview.html',
-  styleUrl: './estrutura-preview.scss',
+  styleUrl: './estrutura-preview.scss'
 })
-export class EstruturaPreview {
-  @Input() response!: EstruturaResponse;
-  @Input() visible: boolean = false;
+export class EstruturaPreview implements OnChanges {
+
+  @Input({ required: true }) response!: EstruturaResponse;
+  @Input() visible = false;
   @Output() visibleChange = new EventEmitter<boolean>();
 
-  hideDialog() {
-    this.visible = false;
+  categoriaSelecionada?: CategoriaDDLDTO;
+  itensPaginados: DDLItemDTO[] = [];
+
+  readonly rowsPorPagina = 5;
+
+  /* =======================
+     CICLO DE VIDA
+  ======================= */
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (
+      (changes['response'] && this.response) ||
+      (changes['visible']?.currentValue === true && this.response)
+    ) {
+      this.resetarEstado();
+    }
+  }
+
+  /* =======================
+     MÉTODOS
+  ======================= */
+
+  private resetarEstado(): void {
+    this.categoriaSelecionada = undefined;
+    this.itensPaginados = [];
+  }
+
+  fecharDialog(): void {
     this.visibleChange.emit(false);
   }
 
-  categoriaSelecionada?: CategoriaDDLDTO;
+  selecionarCategoria(): void {
+    this.atualizarPagina(0);
+  }
 
-  trackById(_: number, item: DDLItemDTO) {
+  onPageChange(event: any): void {
+    this.atualizarPagina(event.first);
+  }
+
+  private atualizarPagina(start: number): void {
+    if (!this.categoriaSelecionada?.items?.length) {
+      this.itensPaginados = [];
+      return;
+    }
+
+    this.itensPaginados = this.categoriaSelecionada.items.slice(
+      start,
+      start + this.rowsPorPagina
+    );
+  }
+
+  trackById(_: number, item: DDLItemDTO): string {
     return item.id;
   }
 
-  exportarJson() {
+  exportarJson(): void {
     const blob = new Blob(
       [JSON.stringify(this.response, null, 2)],
       { type: 'application/json' }
@@ -105,12 +176,11 @@ export class EstruturaPreview {
     window.URL.revokeObjectURL(url);
   }
 
-  executar() {
+  executar(): void {
     const selecionados = this.response.categorias
       .flatMap(c => c.items)
       .filter(i => i.selecionado && i.executavel);
 
     console.log('Executar:', selecionados);
-    // aqui você chama o backend
   }
 }

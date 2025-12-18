@@ -1,42 +1,36 @@
-<p-dialog [(visible)]="visible" [style]="{ width: '800px' }" (onHide)="hideDialog()">
+<p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '900px' }" (onHide)="fecharDialog()">
 
-
-
-
-    <ng-container *ngIf="response as r; else loading">
-
-        <ng-template pTemplate="header">
-            <div class="flex justify-between align-items-center w-full ">
-                <div>
-                    <h3 class="m-0">Verificação de Estrutura</h3>
-                    <small class="text-color-secondary">
-                        Base: {{ response.base }} | Esquema: {{ response.esquema }}
-                    </small>
-                </div>
-
-                <div class="flex gap-2">
-                    <p-tag severity="info" value="{{ response.resumo.totalQueries }} queries">
-                    </p-tag>
-
-                    <p-tag *ngIf="response.resumo.totalPerigosas > 0" severity="danger"
-                        value="{{ response.resumo.totalPerigosas }} perigosas">
-                    </p-tag>
-
-                    <p-tag *ngIf="response.resumo.totalPerigosas === 0" severity="success" value="Seguro">
-                    </p-tag>
-                </div>
+    <!-- HEADER -->
+    <ng-template pTemplate="header">
+        <div *ngIf="response" class="flex justify-between align-items-center w-full">
+            <div>
+                <h3 class="m-0">Verificação de Estrutura</h3>
+                <small class="text-color-secondary">
+                    Base: {{ response.base }} | Esquema: {{ response.esquema }}
+                </small>
             </div>
-        </ng-template>
 
-        <p-splitter [panelSizes]="[30, 70]" class="h-[65vh]">
+            <div class="flex gap-2">
+                <p-tag severity="info" [value]="response.resumo.totalQueries + ' queries'"></p-tag>
+                <p-tag *ngIf="response.resumo.totalPerigosas > 0" severity="danger"
+                    [value]="response.resumo.totalPerigosas + ' perigosas'">
+                </p-tag>
+                <p-tag *ngIf="response.resumo.totalPerigosas === 0" severity="success" value="Seguro">
+                </p-tag>
+            </div>
+        </div>
+    </ng-template>
 
-            <!-- PAINEL ESQUERDO: CATEGORIAS -->
+    <!-- CONTEÚDO -->
+    <ng-container *ngIf="response; else loading">
+
+        <p-splitter [panelSizes]="[35, 65]" class="h-[65vh]">
+
+            <!-- ESQUERDA -->
             <ng-template pTemplate="panel">
-
                 <p-panel header="Categorias" class="h-full">
-
-                    <p-listbox [options]="r.categorias" [(ngModel)]="categoriaSelecionada" optionLabel="titulo"
-                        [style]="{ width: '100%', height: '100%' }">
+                    <p-listbox [options]="response.categorias" [(ngModel)]="categoriaSelecionada"
+                        (onChange)="selecionarCategoria()" optionLabel="titulo">
 
                         <ng-template let-cat pTemplate="item">
                             <div class="flex justify-between align-items-center w-full">
@@ -44,74 +38,57 @@
                                     <i [class]="cat.icone" class="mr-2"></i>
                                     {{ cat.titulo }}
                                 </span>
-
-                                <p-tag *ngIf="cat.total > 0" severity="info" [value]="cat.total">
-                                </p-tag>
+                                <p-tag *ngIf="cat.total > 0" severity="info" [value]="cat.total"></p-tag>
                             </div>
                         </ng-template>
 
                     </p-listbox>
-
                 </p-panel>
-
             </ng-template>
 
-            <!-- PAINEL DIREITO: DETALHES -->
+            <!-- DIREITA -->
             <ng-template pTemplate="panel">
 
-                <p-panel *ngIf="categoriaSelecionada; else selecioneCategoria" [header]="categoriaSelecionada.titulo">
+                <p-panel *ngIf="categoriaSelecionada; else selecioneCategoria" [header]="categoriaSelecionada.titulo" class="h-full bg-red-100">
 
-                    <!-- CONTAINER COM SCROLL -->
-                    <div class="painel-scroll">
+                    <div >
+                        <div *ngFor="let item of itensPaginados; trackBy: trackById" class="mb-3">
 
-                        <div *ngFor="let item of categoriaSelecionada.items; trackBy: trackById" class="mb-3">
-
-                            <p-panel [toggleable]="true">
+                            <p-panel toggleable [collapsed]="true">
 
                                 <ng-template pTemplate="header">
-                                    <div class="flex justify-between align-items-center w-full">
+                                    <div class="flex align-items-center gap-2">
+                                        <p-checkbox [(ngModel)]="item.selecionado" [binary]="true"
+                                            [disabled]="!item.executavel">
+                                        </p-checkbox>
 
-                                        <div class="flex align-items-center gap-2">
-                                            <p-checkbox [(ngModel)]="item.selecionado" [binary]="true"
-                                                [disabled]="!item.executavel">
-                                            </p-checkbox>
-
-                                            <strong>{{ item.objeto }}</strong>
-                                            <small class="text-color-secondary">
-                                                ({{ item.tipo }})
-                                            </small>
-                                        </div>
-
-                                        <div class="flex gap-2">
-                                            <p-tag *ngIf="item.perigoso" severity="danger" value="Perigoso">
-                                            </p-tag>
-
-                                            <p-tag *ngIf="!item.executavel" severity="info" value="Informativo">
-                                            </p-tag>
-                                        </div>
-
+                                        <strong>{{ item.objeto }}</strong>
+                                        <small class="text-color-secondary">({{ item.tipo }})</small>
                                     </div>
                                 </ng-template>
 
-                                <!-- AVISOS -->
                                 <div *ngIf="item.avisos?.length">
                                     <p-message *ngFor="let aviso of item.avisos" severity="warn" [text]="aviso">
                                     </p-message>
                                 </div>
 
-                                <!-- SQL -->
                                 <div *ngIf="item.sql">
                                     <p-divider></p-divider>
-
-                                    <textarea rows="10" cols="30" pTextarea [(ngModel)]="item.sql"
-                                        class="w-full font-monospace"></textarea>
+                                    <textarea pTextarea rows="8" [(ngModel)]="item.sql" class="w-full font-monospace">
+                                    </textarea>
                                 </div>
 
-                            </p-panel>
 
+
+                            </p-panel>
                         </div>
 
+
                     </div>
+
+                    <p-paginator [rows]="rowsPorPagina" [totalRecords]="categoriaSelecionada.items.length"
+                        (onPageChange)="onPageChange($event)" styleClass="mb-3">
+                    </p-paginator>
 
                 </p-panel>
 
@@ -121,30 +98,28 @@
 
     </ng-container>
 
+    <!-- LOADING -->
     <ng-template #loading>
         <p-skeleton height="2rem" class="mb-2"></p-skeleton>
         <p-skeleton height="2rem"></p-skeleton>
     </ng-template>
 
+    <!-- SELEÇÃO -->
     <ng-template #selecioneCategoria>
-        <div class=" flex justify-center items-center h-full w-full  text-center text-color-secondary">
+        <div class="flex justify-center align-items-center h-full text-color-secondary">
             Selecione uma categoria à esquerda
         </div>
     </ng-template>
 
-
+    <!-- FOOTER -->
     <ng-template pTemplate="footer">
-        <div class="flex justify-between align-items-center w-full">
+        <div *ngIf="response" class="flex justify-between w-full">
             <small class="text-color-secondary">
                 Gerado em {{ response.geradoEm | date:'dd/MM/yyyy HH:mm:ss' }}
             </small>
 
-            <div class="flex gap-2">
-                <p-button label="Exportar JSON" icon="pi pi-download" severity="secondary" (onClick)="exportarJson()">
-                </p-button>
-
-
-            </div>
+            <p-button label="Exportar JSON" icon="pi pi-download" severity="secondary" (onClick)="exportarJson()">
+            </p-button>
         </div>
     </ng-template>
 
