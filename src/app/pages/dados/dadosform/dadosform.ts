@@ -30,7 +30,7 @@ import { WebsocketService } from '../../../services/websocket.service';
     SyncProgressoBar,
     SyncErros,
     SyncConsole
-],
+  ],
   templateUrl: './dadosform.html',
   styleUrl: './dadosform.scss',
 })
@@ -63,6 +63,15 @@ export class Dadosform {
   ngOnInit() {
     this.progressoSync.vazioProgressoLocal();
     this.obterBase();
+
+    //atalho
+    const state = history.state;
+    if (state.base) {
+
+      this.objeto.base = state.base;
+      this.processarBase(this.objeto.base);
+
+    }
   }
 
   processarBase(item: any) {
@@ -109,9 +118,17 @@ export class Dadosform {
           return item;
         });
 
-        if (this.listaEsquema?.length) {
-          this.objeto.esquema = String(this.listaEsquema[this.listaEsquema.length - 1].code);
-          this.obterTabela(this.objeto.esquema);
+        //atalho
+        const state = history.state;
+
+        if (state.esquema) {
+          this.objeto.esquema = state.esquema;
+        }
+        else {
+          if (this.listaEsquema?.length) {
+            this.objeto.esquema = String(this.listaEsquema[this.listaEsquema.length - 1].code);
+            this.obterTabela(this.objeto.esquema);
+          }
         }
 
         this.loadingEsquema = false;
@@ -178,7 +195,7 @@ export class Dadosform {
         let tabelaEsquema = !this.objeto.tabela ? this.objeto.esquema : this.objeto.tabela;
         this.continuarVerificacao(tabelaEsquema);
       },
-      error: (err) => {},
+      error: (err) => { },
     });
   }
 
@@ -276,7 +293,7 @@ export class Dadosform {
     this.baseService.findAll(`${this.endpointPrincipal}/cancelar`).subscribe({
       next: (resposta: any) => {
         this.listaErros = [];
-         this.ws.emitClearTerminal();
+        this.ws.emitClearTerminal();
         this.progressoSync.resetar();
         this.loadingSincronizacao = false;
         this.loadingVerificacao = false;

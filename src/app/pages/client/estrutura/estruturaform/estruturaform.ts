@@ -67,17 +67,27 @@ export class Estruturaform {
   ngOnInit() {
     this.progressoSync.vazioProgressoLocal();
     this.obterBase();
+
+    //atalho
+    const state = history.state;
+    if (state.base) {
+
+      this.objeto.base = state.base;
+      this.processarBase(this.objeto.base);
+
+    }
+
   }
 
-  abrirDetalhes()
-  {
-      this.visibleDetail = true;
+  abrirDetalhes() {
+    this.visibleDetail = true;
   }
 
   processarBase(item: any) {
     if (!item) return;
 
     this.obterEsquema(item);
+
   }
 
   processarEsquema(item: any) {
@@ -118,9 +128,17 @@ export class Estruturaform {
           return item;
         });
 
-        if (this.listaEsquema?.length) {
-          this.objeto.esquema = String(this.listaEsquema[this.listaEsquema.length - 1].code);
-          this.obterTabela(this.objeto.esquema);
+        //atalho
+        const state = history.state;
+
+        if (state.esquema) {
+          this.objeto.esquema = state.esquema;
+        }
+        else {
+          if (this.listaEsquema?.length) {
+            this.objeto.esquema = String(this.listaEsquema[this.listaEsquema.length - 1].code);
+            this.obterTabela(this.objeto.esquema);
+          }
         }
 
         this.loadingEsquema = false;

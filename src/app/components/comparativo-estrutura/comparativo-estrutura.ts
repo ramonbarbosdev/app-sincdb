@@ -4,20 +4,26 @@ import { TreeTableModule } from 'primeng/treetable';
 import { TagModule } from 'primeng/tag';
 import { CommonModule } from '@angular/common';
 import { SkeletonModule } from 'primeng/skeleton';
+import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
+import { Popover, PopoverModule } from 'primeng/popover';
+import { ViewChild } from '@angular/core';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-comparativo-estrutura',
-  imports: [TreeTableModule, TagModule, CommonModule, SkeletonModule],
+  imports: [TreeTableModule, TagModule, CommonModule, SkeletonModule, ButtonModule, TooltipModule, PopoverModule],
   templateUrl: './comparativo-estrutura.html',
   styleUrl: './comparativo-estrutura.scss',
 })
 export class ComparativoEstrutura {
-private baseService = inject(BaseService);
+  private baseService = inject(BaseService);
   private cd = inject(ChangeDetectorRef);
 
   nodes: any[] = [];
   loading = true;
   endpoint = 'info';
+  router = inject(Router);
 
   ngOnInit() {
     this.loadBases();
@@ -66,23 +72,19 @@ private baseService = inject(BaseService);
   onNodeExpand(event: any) {
     const node = event.node;
 
-    // Se já carregou schemas reais, não recarregar
     if (node.children && node.children.length > 0 && !node.loading) {
       return;
     }
 
-    // Marca o nó como em carregamento
     node.loading = true;
 
-    // Insere placeholders para skeleton
     node.children = [
-  {
-    key: node.key + '-loading',
-    data: { nome: 'Carregando...', status: '', cor: '', isLoadingMessage: true },
-    leaf: true
-  }
-];
-    // Dispara renderização
+      {
+        key: node.key + '-loading',
+        data: { nome: 'Carregando...', status: '', cor: '', isLoadingMessage: true },
+        leaf: true
+      }
+    ];
     this.nodes = [...this.nodes];
 
     this.baseService.findAll(`${this.endpoint}/comparativo/bases/${node.key}`).subscribe({
@@ -103,6 +105,50 @@ private baseService = inject(BaseService);
         node.loading = false;
       }
     });
+  }
+
+  @ViewChild('op') op!: Popover;
+  selectedRow: any;
+
+  toggle(event: Event, row: any) {
+    this.selectedRow = row;
+    this.op.toggle(event);
+  }
+
+  abrirSincEstrutura(row: any) {
+    let schema = row.node.key
+    let banco = row.parent.key
+    // let status = row.node.data.status;
+
+    if (schema && banco) {
+      this.router.navigate(['/client/estrutura'], {
+        state: {
+          base: banco,
+          esquema: schema,
+        }
+      });
+    }
+
+    this.op.hide();
+
+  }
+
+  abrirSincDados(row: any) {
+    let schema = row.node.key
+    let banco = row.parent.key
+    // let status = row.node.data.status;
+
+    if (schema && banco) {
+      this.router.navigate(['/client/dados'], {
+        state: {
+          base: banco,
+          esquema: schema,
+        }
+      });
+    }
+
+    this.op.hide();
+
   }
 
 }
