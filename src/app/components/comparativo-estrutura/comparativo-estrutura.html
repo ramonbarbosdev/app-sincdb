@@ -8,9 +8,10 @@
 
       <ng-template #header>
         <tr>
-          <th width="50px"></th>
           <th width="100px">Base</th>
           <th width="100px">Status</th>
+          <th width="50px"></th>
+
         </tr>
       </ng-template>
 
@@ -32,12 +33,6 @@
       <ng-template #body let-rowNode let-rowData="rowData">
         <tr [ttRow]="rowNode">
 
-          <td width="50px">
-
-            <p-button    *ngIf="rowNode.level > 0 && rowNode.node.data.status === 'OK'"  type="button" [label]="''" [icon]="'pi pi-ellipsis-h'" (onClick)="toggle($event, rowNode)"
-              [text]="true" severity="secondary" />
-           
-          </td>
 
           <td width="100px">
             <div class="flex items-center gap-2">
@@ -49,8 +44,15 @@
           <td width="100px">
             <p-tag *ngIf="rowData" [severity]="rowData.cor" [value]="rowData.status"></p-tag>
           </td>
+          <td width="50px">
+            <p-button *ngIf="rowNode.level > 0 && rowNode.node.data.status === 'OK'" type="button" [label]="''"
+              [icon]="'pi pi-ellipsis-h'" (onClick)="toggle($event, rowNode)" [text]="true" severity="secondary"   pTooltip="Opções" />
 
+          </td>
         </tr>
+
+
+
       </ng-template>
 
     </p-treetable>
@@ -64,8 +66,8 @@
 <p-popover #op>
   <div class="flex flex-col gap-2">
 
-    <p-button icon="pi pi-sitemap" label="Sincronizar estrutura" [text]="true"
-      (click)="abrirSincEstrutura(selectedRow)" severity="secondary">
+    <p-button icon="pi pi-sitemap" label="Sincronizar estrutura" [text]="true" (click)="abrirSincEstrutura(selectedRow)"
+      severity="secondary">
     </p-button>
 
     <p-button icon="pi pi-database" label="Sincronizar dados" [text]="true" (click)="abrirSincDados(selectedRow)"
