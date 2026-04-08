@@ -224,12 +224,12 @@ export class Estruturaform {
       .findAll(`${this.endpointPrincipal}/verificar/${base}/${esquema}/${tabela}`)
       .subscribe({
         next: (res) => {
-          console.log(res)
           this.response = res;
           this.loadingVerificacao = false;
           this.loadingSincronizacao = false;
         },
         error: (err) => {
+
           this.loadingSincronizacao = false;
           this.loadingVerificacao = false;
         },
@@ -256,7 +256,8 @@ export class Estruturaform {
           this.loadingVerificacao = false;
           this.execultarSincronizacao();
         },
-        error: () => {
+        error: (err) => {
+          console.log(err)
           this.loadingVerificacao = false;
           this.loadingSincronizacao = false;
           // this.progressoSync.atualizarMensagem('Verificação falhou');

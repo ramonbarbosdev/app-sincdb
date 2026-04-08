@@ -12,7 +12,7 @@ export class BaseService {
   private readonly apiUrl = `${environment.apiUrl}`;
   private messageService = inject(MessageService);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   obterObjetoOpcoes(
     endpoint: string,
@@ -199,7 +199,7 @@ export class BaseService {
   verificarStatus(endpoint: string): Observable<any> {
     const url = `${this.apiUrl}/${endpoint}`;
 
-   
+
     return this.http.get<any>(url).pipe(
       tap((res) => {
         return res;
@@ -212,10 +212,31 @@ export class BaseService {
   }
 
   exibirErros(e: any) {
+    const error = e?.error;
+
+    let summary = 'Erro';
+    let detail = 'Ocorreu um erro inesperado';
+
+    if (error?.sucesso === false) {
+      summary = 'Erro de validação';
+      detail = error?.resumo?.mensagem ?? detail;
+    }
+    else if (error?.error) {
+      summary = 'Erro interno';
+      detail = error?.error ?? detail;
+    }
+    else if (e?.error) {
+      summary = 'Erro';
+      detail = error?.message ?? detail;
+    }
+    else if (e?.message) {
+      detail = e.message;
+    }
+
     this.messageService.add({
       severity: 'error',
-      summary: e.error.message,
-      detail: e.error.codeDescription,
+      summary,
+      detail,
     });
   }
   exibirSucesso(res: any) {

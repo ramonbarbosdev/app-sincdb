@@ -33,7 +33,6 @@
       <ng-template #body let-rowNode let-rowData="rowData">
         <tr [ttRow]="rowNode">
 
-
           <td width="100px">
             <div class="flex items-center gap-2">
               <p-treetable-toggler [rowNode]="rowNode"></p-treetable-toggler>
@@ -45,13 +44,11 @@
             <p-tag *ngIf="rowData" [severity]="rowData.cor" [value]="rowData.status"></p-tag>
           </td>
           <td width="50px">
-            <p-button *ngIf="rowNode.level > 0 && rowNode.node.data.status === 'OK' || rowNode.node.data.status === 'Somente Cloud'" type="button" [label]="''"
+            <p-button *ngIf="rowNode.level > 0 && (rowNode.node.data.status === 'OK' || rowNode.node.data.status === 'Somente Cloud')" type="button" [label]="''"
               [icon]="'pi pi-ellipsis-h'" (onClick)="toggle($event, rowNode)" [text]="true" severity="secondary"   pTooltip="Opções" />
 
           </td>
         </tr>
-
-
 
       </ng-template>
 
