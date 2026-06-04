@@ -78,6 +78,11 @@ export class AppMenu {
           label: 'Operações',
           items: [
             {
+              label: 'Explorador Visual',
+              icon: 'pi pi-wifi',
+              routerLink: ['/client/explorador'],
+            },
+            {
               label: 'Conexão',
               icon: 'pi pi-wifi',
               routerLink: ['/client/conexao'],

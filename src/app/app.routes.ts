@@ -12,6 +12,7 @@ import { Estruturaform } from './pages/client/estrutura/estruturaform/estruturaf
 import { Dadosform } from './pages/dados/dadosform/dadosform';
 import { Perfil } from './pages/client/perfil/perfil';
 import { ParametroMasterList } from './pages/dev/parametros/parametro-master-list/parametro-master-list';
+import { ExploradorVisual } from './components/explorador-visual/explorador-visual';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
@@ -39,6 +40,7 @@ export const routes: Routes = [
     children: [
       { path: 'home', component: HomeClient },
       { path: 'perfil', component: Perfil },
+      { path: 'explorador', component: ExploradorVisual },
       { path: 'conexao', component: Conexaoform },
       { path: 'estrutura', component: Estruturaform },
       { path: 'dados', component: Dadosform }
