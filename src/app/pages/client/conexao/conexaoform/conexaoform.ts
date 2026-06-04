@@ -57,7 +57,6 @@ export class Conexaoform {
     this.baseService.findAll(this.endpoint).subscribe({
       next: (res: any) => {
         this.listaConexoes = this.normalizarConexoes(res);
-        console.log(this.listaConexoes)
         this.loading = false;
         this.cd.markForCheck();
       },
@@ -99,9 +98,7 @@ export class Conexaoform {
       }
     });
   }
-
   salvarConexao() {
-    console.log(this.validarItens())
     if (!this.validarItens()) {
       return;
     }
@@ -169,6 +166,8 @@ export class Conexaoform {
       this.objeto.nm_conexao = dados.nm_conexao;
     }
 
+    this.aplicarDadosConexao(this.objeto, dados);
+
     this.cd.markForCheck();
   }
 
@@ -200,6 +199,21 @@ export class Conexaoform {
       nm_conexao: conexao.nm_conexao,
       fl_padrao: conexao.fl_padrao,
       fl_ativo: conexao.fl_ativo,
+
+      cloud: {
+        db_cloud_host: conexao.db_cloud_host,
+        db_cloud_port: conexao.db_cloud_port,
+        db_cloud_user: conexao.db_cloud_user,
+        db_cloud_password: conexao.db_cloud_password,
+        fl_admin: conexao.fl_admin,
+      },
+
+      local: {
+        db_local_host: conexao.db_local_host,
+        db_local_port: conexao.db_local_port,
+        db_local_user: conexao.db_local_user,
+        db_local_password: conexao.db_local_password,
+      },
     };
   }
 
@@ -211,7 +225,7 @@ export class Conexaoform {
       return this.aplicarPadraoVisual(conexoes);
     }
 
-    if (res?.cloud || res?.local) {
+    if (res?.cloud || res?.local || res?.db_cloud_host || res?.db_local_host) {
       return this.aplicarPadraoVisual([this.normalizarConexao(res)]);
     }
 
@@ -226,9 +240,40 @@ export class Conexaoform {
     conexao.nm_conexao = res?.nm_conexao || res?.nome || '';
     conexao.fl_padrao = !!res?.fl_padrao;
     conexao.fl_ativo = res?.fl_ativo ?? true;
-    conexao.arquivoValidado = !!res?.arquivoValidado || !!res?.cloud?.fl_admin;
-
+    conexao.arquivoValidado = !!res?.arquivoValidado || !!res?.fl_admin || !!res?.cloud?.fl_admin;
+    this.aplicarDadosConexao(conexao, res);
     return conexao;
+  }
+
+  private aplicarDadosConexao(conexao: Conexao, dados: any) {
+    const cloud = dados?.cloud || {};
+    const local = dados?.local || {};
+
+    conexao.db_cloud_host = dados?.db_cloud_host ?? cloud.db_cloud_host ?? conexao.db_cloud_host;
+    conexao.db_cloud_port = dados?.db_cloud_port ?? cloud.db_cloud_port ?? conexao.db_cloud_port;
+    conexao.db_cloud_user = dados?.db_cloud_user ?? cloud.db_cloud_user ?? conexao.db_cloud_user;
+    conexao.db_cloud_password =
+      dados?.db_cloud_password ?? cloud.db_cloud_password ?? conexao.db_cloud_password;
+    conexao.fl_admin = dados?.fl_admin ?? cloud.fl_admin ?? conexao.fl_admin;
+    conexao.db_local_host = dados?.db_local_host ?? local.db_local_host ?? conexao.db_local_host;
+    conexao.db_local_port = dados?.db_local_port ?? local.db_local_port ?? conexao.db_local_port;
+    conexao.db_local_user = dados?.db_local_user ?? local.db_local_user ?? conexao.db_local_user;
+    conexao.db_local_password =
+      dados?.db_local_password ?? local.db_local_password ?? conexao.db_local_password;
+
+    conexao.cloud = {
+      db_cloud_host: conexao.db_cloud_host,
+      db_cloud_port: conexao.db_cloud_port,
+      db_cloud_user: conexao.db_cloud_user,
+      db_cloud_password: conexao.db_cloud_password,
+      fl_admin: conexao.fl_admin,
+    };
+    conexao.local = {
+      db_local_host: conexao.db_local_host,
+      db_local_port: conexao.db_local_port,
+      db_local_user: conexao.db_local_user,
+      db_local_password: conexao.db_local_password,
+    };
   }
 
   private aplicarPadraoVisual(conexoes: Conexao[]): Conexao[] {

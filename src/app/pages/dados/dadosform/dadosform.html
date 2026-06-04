@@ -14,8 +14,8 @@
           {{ conexaoPadrao?.nm_conexao || 'Nenhuma conexao padrao configurada' }}
         </div>
         <div class="text-sm text-muted-color" *ngIf="conexaoPadrao">
-          Cloud: {{ conexaoPadrao.cloud.db_cloud_host }} | Local:
-          {{ conexaoPadrao.local.db_local_host }}
+          Cloud: {{ conexaoPadrao.db_cloud_host || '-' }} | Local:
+          {{ conexaoPadrao.db_local_host || '-' }}
         </div>
         <div class="text-sm text-muted-color" *ngIf="!conexaoPadrao && !loadingConexaoPadrao">
           Cadastre uma conexao e marque-a como padrao antes de sincronizar.

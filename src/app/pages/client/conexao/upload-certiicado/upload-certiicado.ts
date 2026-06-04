@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
-import { BaseService } from '../../../../services/base.service';
+import { HttpClient } from '@angular/common/http';
 import { FileUpload, FileUploadModule } from 'primeng/fileupload';
 import { ButtonModule } from 'primeng/button';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-upload-certiicado',
@@ -17,7 +18,7 @@ export class UploadCertiicado {
   selectedFile!: File | null;
   mensagem: string = '';
   carregando: boolean = false;
-  private baseService = inject(BaseService);
+  private http = inject(HttpClient);
 
   ngOnInit(): void {}
 
@@ -30,7 +31,7 @@ export class UploadCertiicado {
 
     this.carregando = true;
 
-    this.baseService.uploadFile(`conexao/certificado/upload`, formData).subscribe({
+    this.http.post(`${environment.apiUrl}/conexao/certificado/upload`, formData).subscribe({
       next: (res) => {
         this.mensagem = this.obterMensagem(res);
         this.carregando = false;

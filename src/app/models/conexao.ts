@@ -32,5 +32,17 @@ export class Conexao {
   public db_local_port: string = '5432';
   public db_local_user: string = '';
   public db_local_password: string = '';
-  
+  public cloud: ConexaoCloud = {
+    db_cloud_host: '',
+    db_cloud_port: '5432',
+    db_cloud_user: '',
+    db_cloud_password: '',
+    fl_admin: false,
+  };
+  public local: ConexaoLocal = {
+    db_local_host: '',
+    db_local_port: '5432',
+    db_local_user: '',
+    db_local_password: '',
+  };
 }
