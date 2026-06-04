@@ -18,6 +18,7 @@ import { OperacoeSchema } from '../../../../schema/operacao-schema';
 import { SyncConsole } from "../../../../components/sync-console/sync-console";
 import { WebsocketService } from '../../../../services/websocket.service';
 import { EstruturaPreview, EstruturaResponse } from "../../../../components/estrutura-preview/estrutura-preview";
+import { Conexao } from '../../../../models/conexao';
 
 @Component({
   selector: 'app-estruturaform',
@@ -63,9 +64,12 @@ export class Estruturaform {
   loadingTabela = false;
   loadingVerificacao = false;
   loadingSincronizacao = false;
+  loadingConexaoPadrao = false;
+  conexaoPadrao?: Conexao;
 
   ngOnInit() {
     this.progressoSync.vazioProgressoLocal();
+    this.obterConexaoPadrao();
     this.obterBase();
 
     //atalho
@@ -111,6 +115,22 @@ export class Estruturaform {
       },
       error: (err) => {
         this.loadingBase = false;
+      },
+    });
+  }
+
+  obterConexaoPadrao() {
+    this.loadingConexaoPadrao = true;
+    this.baseService.findAll('conexao').subscribe({
+      next: (res: any) => {
+        const lista = Array.isArray(res) ? res : res?.conexoes || res?.items || res?.content || [];
+        this.conexaoPadrao = lista.find((item: Conexao) => item.fl_padrao) || lista[0];
+        this.loadingConexaoPadrao = false;
+        this.cd.markForCheck();
+      },
+      error: () => {
+        this.loadingConexaoPadrao = false;
+        this.cd.markForCheck();
       },
     });
   }

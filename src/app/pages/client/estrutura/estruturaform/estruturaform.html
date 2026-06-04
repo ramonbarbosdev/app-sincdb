@@ -9,6 +9,22 @@
   </ng-template>
 
   <ng-template #content>
+    <div class="mb-4 p-3 border border-surface rounded-md flex items-center gap-3">
+      <i class="pi pi-server text-primary"></i>
+      <div class="flex-1">
+        <div class="font-medium">
+          {{ conexaoPadrao?.nm_conexao || 'Nenhuma conexao padrao configurada' }}
+        </div>
+        <div class="text-sm text-muted-color" *ngIf="conexaoPadrao">
+          Cloud: {{ conexaoPadrao.cloud.db_cloud_host }} | Local:
+          {{ conexaoPadrao.local.db_local_host }}
+        </div>
+        <div class="text-sm text-muted-color" *ngIf="!conexaoPadrao && !loadingConexaoPadrao">
+          Cadastre uma conexao e marque-a como padrao antes de sincronizar.
+        </div>
+      </div>
+    </div>
+
     <div class="flex-row-responsive w-full">
       <app-layout-campo [label]="'Bases: (*)'" [width]="'md:w-6/12'" [error]="errorValidacao['base']">
         <p-select

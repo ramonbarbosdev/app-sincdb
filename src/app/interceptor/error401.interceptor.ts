@@ -1,14 +1,10 @@
-import { inject, Injectable } from '@angular/core';
+import { inject } from '@angular/core';
 import {
-  HttpEvent,
-  HttpHandler,
-  HttpInterceptor,
   HttpRequest,
-  HttpErrorResponse,
   HttpInterceptorFn,
   HttpHandlerFn,
 } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api'; 

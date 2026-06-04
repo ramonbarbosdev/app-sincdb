@@ -2,16 +2,19 @@
   <label class="font-medium">Arquivo de Certificado</label>
   <p-fileupload
     #fileUpload
-    customUpload="true"
-    chooseLabel="Selecionar Arquivo"
+    [customUpload]="true"
     chooseIcon="pi pi-upload"
     name="certificado"
     mode="advanced"
     accept=".pfx,.pem, .enc"
-    maxFileSize="1000000"
+    [maxFileSize]="1000000"
     (uploadHandler)="onUpload($event, fileUpload)"
     chooseLabel="Selecionar"
     uploadLabel="Enviar"
     cancelLabel="Cancelar"
   />
+  <span class="text-sm text-muted-color" *ngIf="arquivoValido && !mensagem">
+    Certificado enviado.
+  </span>
+  <span class="text-sm text-muted-color" *ngIf="mensagem">{{ mensagem }}</span>
 </div>

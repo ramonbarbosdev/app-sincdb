@@ -1,11 +1,16 @@
 export class Auth {
-  public id_usuario!: number;
-  public nm_usuario: string = '';
-  public login: string = '';
-  public senha: string = '';
-  public role: string = '';
-  public imd: string = '';
-  public id_tenant!: string;
-  public isAreaDev!: boolean;
-  public tempToken: string = '';
+  public nuCpf: string = '';
+  public dsSenha: string = '';
+  public accessToken?: string;
+  public tokenTemporario?: string;
+  public token?: string;
+  public tpGlobal?: string;
+  public precisaSelecionarOrganizacao: boolean = false;
+  public trocarSenha: boolean = false;
+  public organizacoes: any[] = [];
+  public idOrganizacao?: string;
+  public dsRole?: string;
+  public permissoes: any[] = [];
+  public nmUsuario?: string;
+  public nmEmail?: string;
 }

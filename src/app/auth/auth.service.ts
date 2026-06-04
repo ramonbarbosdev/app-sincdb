@@ -1,11 +1,11 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, catchError, Observable, of, tap, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { LoadingService } from '../services/loading.service';
-import { BaseService } from '../services/base.service';
 import { MessageService } from 'primeng/api';
+import { criarAuthHeader } from './auth-header';
 
 @Injectable({
   providedIn: 'root',
@@ -14,7 +14,6 @@ export class AuthService {
   private readonly apiUrl = `${environment.apiUrl}`;
 
   private router = inject(Router);
-  private baseService = inject(BaseService);
   private messageService = inject(MessageService);
 
   private userSubject = new BehaviorSubject<any | null>(null);
@@ -28,46 +27,25 @@ export class AuthService {
     }
   }
 
-  findByLogin(login: string): Observable<any> {
-    const url = `${this.apiUrl}/usuario/obter-login/${login}`;
+  login(credenciais: { nuCpf: string; dsSenha: string }): Observable<any> {
+    const payload = {
+      nuCpf: this.removerMascaraCpf(credenciais.nuCpf),
+      dsSenha: credenciais.dsSenha,
+    };
 
-    return this.http.get<any>(url).pipe(
-      tap((res) => {
-        return res;
-      }),
-      catchError((e) => {
-        console.log(e);
+    return this.http.post(`${this.apiUrl}/auth/login`, payload).pipe(
+      tap((res: any) => {
+        const userInfo = {
+          tokenTemporario: res.accessToken,
+          token: res.precisaSelecionarOrganizacao ? undefined : res.accessToken,
+          accessToken: res.accessToken,
+          tpGlobal: res.tpGlobal,
+          precisaSelecionarOrganizacao: !!res.precisaSelecionarOrganizacao,
+          trocarSenha: !!res.trocarSenha,
+          organizacoes: res.organizacoes ?? [],
+        };
 
-        return throwError(() => e);
-      })
-    );
-  }
-
-  obterOrganizacao(credenciais: any): Observable<any> {
-    return this.http
-      .post(`${this.apiUrl}/auth/obter-organizacao`, credenciais, { withCredentials: true })
-      .pipe(
-        tap((user: any) => {
-          const userInfo = {
-            token: user.tempToken,
-          };
-
-          this.userSubject.next(userInfo);
-          sessionStorage.setItem('user', JSON.stringify(userInfo));
-        }),
-        catchError((e) => {
-          console.log(e);
-          this.exibirErros(e);
-          return throwError(() => e);
-        })
-      );
-  }
-
-  login(credenciais: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/login`, credenciais, { withCredentials: true }).pipe(
-      tap((user) => {
-        this.userSubject.next(user);
-        sessionStorage.setItem('user', JSON.stringify(user));
+        this.salvarSessao(userInfo);
       }),
       catchError((e) => {
         console.log(e);
@@ -77,41 +55,78 @@ export class AuthService {
     );
   }
 
+  selecionarOrganizacao(idOrganizacao: string): Observable<any> {
+    const tokenTemporario = this.getUserSubbject()?.tokenTemporario;
+
+    return this.http
+      .post(
+        `${this.apiUrl}/auth/selecionar-organizacao`,
+        { idOrganizacao },
+        { headers: criarAuthHeader(tokenTemporario) }
+      )
+      .pipe(
+        tap((res: any) => {
+          const userInfo = {
+            ...this.getUserSubbject(),
+            tokenTemporario: undefined,
+            token: res.accessToken,
+            accessToken: res.accessToken,
+            idOrganizacao: res.idOrganizacao,
+            dsRole: res.dsRole,
+            role: res.dsRole,
+            permissoes: res.permissoes ?? [],
+            precisaSelecionarOrganizacao: false,
+          };
+
+          this.salvarSessao(userInfo);
+        }),
+        catchError((e) => {
+          console.log(e);
+          this.exibirErros(e);
+          return throwError(() => e);
+        })
+      );
+  }
+
   checkAuth(): Observable<any> {
     const userJson = sessionStorage.getItem('user');
     if (!userJson) return of();
 
-    return this.http.get(`${this.apiUrl}/auth/me`, { withCredentials: true }).pipe(
-      tap((user) => {}),
+    return this.http.get(`${this.apiUrl}/auth/me`).pipe(
+      tap((res: any) => {
+        this.salvarSessao({
+          ...this.getUserSubbject(),
+          idUsuario: res.idUsuario,
+          tpGlobal: res.tpGlobal,
+          idOrganizacao: res.idOrganizacao,
+          dsRole: res.dsRole,
+          role: res.dsRole,
+          nmUsuario: res.nmUsuario,
+          nmEmail: res.nmEmail,
+          permissoes: res.permissoes ?? [],
+        });
+      }),
       catchError((error) => {
-        this.userSubject.next(null);
-        sessionStorage.removeItem('user');
+        this.limparSessao();
         return throwError(() => error);
       })
     );
   }
 
   logout(): void {
-    this.http.post(`${this.apiUrl}/auth/logout`, {}, { withCredentials: true }).subscribe({
-      next: (res) => {
-        this.router.navigate(['/auth/login']);
-        this.userSubject.next(null);
-        sessionStorage.removeItem('user');
-        // ExibirSucesso(res);
-      },
-      error: (e) => {
-        this.router.navigate(['/auth/login']);
-        this.userSubject.next(null);
-        sessionStorage.removeItem('user');
-        // ExibirErros(e);
-      },
-    });
+    this.limparSessao();
+    this.router.navigate(['/auth/login']);
   }
 
   cadastrar(data: any): Observable<any> {
     const url = `${this.apiUrl}/auth/register`;
 
     return this.http.post(url, data).pipe(catchError((error) => throwError(() => error)));
+  }
+
+  getAccessToken(): string | undefined {
+    const user = this.userSubject.value;
+    return user?.token;
   }
 
   getUser() {
@@ -121,33 +136,32 @@ export class AuthService {
   getUserSubbject() {
     return this.userSubject.value;
   }
+
   isAuthenticated(): boolean {
-    return !!this.userSubject.value;
+    return !!this.getAccessToken();
   }
 
   updateUserAvatar(url: string) {
     const user = this.userSubject.value;
     if (user) {
       const updatedUser = { ...user, img: url };
-      this.userSubject.next(updatedUser);
-      sessionStorage.setItem('user', JSON.stringify(updatedUser));
+      this.salvarSessao(updatedUser);
     }
   }
 
   updateUserNome(nome: string) {
     const user = this.userSubject.value;
     if (user) {
-      const updatedUser = { ...user, nome: nome };
-      this.userSubject.next(updatedUser);
-      sessionStorage.setItem('user', JSON.stringify(updatedUser));
+      const updatedUser = { ...user, nome, nmUsuario: nome };
+      this.salvarSessao(updatedUser);
     }
   }
 
   exibirErros(e: any) {
     this.messageService.add({
       severity: 'error',
-      summary: e.error.message,
-      detail: e.error.codeDescription,
+      summary: e?.error?.message || 'Erro',
+      detail: e?.error?.codeDescription || e?.error?.error || 'Nao foi possivel autenticar',
     });
   }
 
@@ -157,5 +171,19 @@ export class AuthService {
       summary: 'Sucesso',
       detail: res.message,
     });
+  }
+
+  private salvarSessao(user: any) {
+    this.userSubject.next(user);
+    sessionStorage.setItem('user', JSON.stringify(user));
+  }
+
+  private limparSessao() {
+    this.userSubject.next(null);
+    sessionStorage.removeItem('user');
+  }
+
+  private removerMascaraCpf(cpf: string): string {
+    return cpf?.replace(/\D/g, '') ?? '';
   }
 }

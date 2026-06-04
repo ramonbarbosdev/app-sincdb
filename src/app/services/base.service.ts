@@ -72,7 +72,7 @@ export class BaseService {
     const url = `${this.apiUrl}/${endpoint}`;
 
     const headers = {
-      Authorization: token || '',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
 
     return this.http.get<any>(url, { headers }).pipe(
@@ -164,13 +164,20 @@ export class BaseService {
     );
   }
 
-  uploadFile(endpoint: string, data: any): Observable<string> {
+  uploadFile(endpoint: string, data: any): Observable<any> {
     const url = `${this.apiUrl}/${endpoint}`;
 
     return this.http.post(url, data, { responseType: 'text' as 'text' }).pipe(
       tap((res: string) => {
         console.log(res);
-        this.exibirSucesso(res);
+        this.exibirSucesso(typeof res === 'string' ? { message: res } : res);
+      }),
+      map((res: string) => {
+        try {
+          return JSON.parse(res);
+        } catch {
+          return res;
+        }
       }),
       catchError((e) => {
         console.error(e);
@@ -217,7 +224,19 @@ export class BaseService {
     let summary = 'Erro';
     let detail = 'Ocorreu um erro inesperado';
 
-    if (error?.sucesso === false) {
+    if (e?.status === 400) {
+      summary = 'Dados invalidos';
+      detail = error?.resumo?.mensagem || error?.message || error?.error || detail;
+    }
+    else if (e?.status === 404) {
+      summary = 'Registro nao encontrado';
+      detail = error?.resumo?.mensagem || error?.message || 'Nao foi possivel encontrar o recurso solicitado';
+    }
+    else if (e?.status === 409) {
+      summary = 'Conflito';
+      detail = error?.resumo?.mensagem || error?.message || 'Ja existe um registro conflitante com estes dados';
+    }
+    else if (error?.sucesso === false) {
       summary = 'Erro de validação';
       detail = error?.resumo?.mensagem ?? detail;
     }

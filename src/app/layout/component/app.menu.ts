@@ -22,10 +22,9 @@ export class AppMenu {
   auth = inject(AuthService);
 
   ngOnInit() {
-    const role = this.auth.getUserSubbject().role;
-    const isAreaDev = this.auth.getUserSubbject().isAreaDev;
+    const role = this.auth.getUserSubbject()?.dsRole || this.auth.getUserSubbject()?.role;
 
-    if (isAreaDev && role === 'ROLE_DEV') {
+    if (role === 'ROLE_DEV') {
       this.model.push({
         label: 'Administração',
         items: [

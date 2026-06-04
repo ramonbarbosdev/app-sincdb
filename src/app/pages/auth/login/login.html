@@ -1,85 +1,76 @@
-<!-- <app-floating-configurator></app-floating-configurator> -->
-
 <div class="flex min-h-screen overflow-hidden">
-  <!-- LADO ESQUERDO: formulário -->
-  <div
-    class="flex flex-col items-center justify-center w-full md:w-1/2  px-8 py-12"
-  >
+  <div class="flex flex-col items-center justify-center w-full md:w-1/2 px-8 py-12">
     <div class="w-full max-w-md">
       <div class="text-center mb-8">
-        <div class="flex justify-center items-center mb-4">
-          <!-- <img src="/icone.png" alt="Logo" class="w-24 sm:w-32 lg:w-40" /> -->
-        </div>
-        <div class="text-surface-900  text-2xl sm:text-3xl font-medium mb-2">
-          Bem-vindo
-        </div>
+        <div class="flex justify-center items-center mb-4"></div>
+        <div class="text-surface-900 text-2xl sm:text-3xl font-medium mb-2">Bem-vindo</div>
         <span class="text-muted-color text-sm sm:text-base font-medium">
-          Faça login para continuar
+          Faca login para continuar
         </span>
       </div>
 
       <form #f="ngForm" class="flex flex-col gap-4" (ngSubmit)="entrar()">
         <app-layout-campo
-          [error]="errorValidacao['login']"
-          [label]="'Login:'"
+          [error]="errorValidacao['nuCpf']"
+          [label]="'CPF:'"
           [width]="'w-full'"
-          [sublabel]="'Informe o seu CPF como login'"
-          [describedby]="'cd_areavisita'"
+          [sublabel]="'Informe o seu CPF'"
+          [describedby]="'nuCpf'"
         >
           <input
-            title="login"
-            name="login"
+            title="CPF"
+            name="nuCpf"
             pInputText
-            id="login"
+            id="nuCpf"
             type="text"
             placeholder="000.000.000-00"
             class="w-full"
-            [(ngModel)]="objeto.login"
-            [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['login'] }"
+            [(ngModel)]="objeto.nuCpf"
+            [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['nuCpf'] }"
             mask="000.000.000-00"
           />
         </app-layout-campo>
 
         <app-layout-campo
-          [error]="errorValidacao['senha']"
+          [error]="errorValidacao['dsSenha']"
           [label]="'Senha:'"
           [width]="'w-full'"
-          [sublabel]="'Informe a sua Senha para autenticar'"
-          [describedby]="'senha'"
+          [sublabel]="'Informe a sua senha para autenticar'"
+          [describedby]="'dsSenha'"
         >
           <p-password
-            name="senha"
-            id="senha"
-            [(ngModel)]="objeto.senha"
+            name="dsSenha"
+            id="dsSenha"
+            [(ngModel)]="objeto.dsSenha"
             placeholder="Senha"
             [toggleMask]="true"
-            [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['senha'] }"
+            [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['dsSenha'] }"
             [fluid]="true"
             [feedback]="false"
           ></p-password>
         </app-layout-campo>
 
-        <div class="flex items-center justify-between mt-2 mb-6">
-          <!-- <div class="flex items-center gap-2 text-sm">
-       
-            <p-checkbox name="checked" [(ngModel)]="checked" id="rememberme1" binary></p-checkbox>
-            <label for="rememberme1">Lembre-me</label>
-          </div>
-         -->
-        </div>
+        <div class="flex items-center justify-between mt-2 mb-6"></div>
 
         <p-button type="submit" label="Entrar" styleClass="w-full mt-4" [loading]="loading" />
       </form>
     </div>
   </div>
 
-  <!-- LADO DIREITO: gradiente zinc -->
- <div class="hidden md:flex w-1/2 items-center justify-center "   style="background: linear-gradient(135deg, #8E44AD 0%, #6C63FF 100%);">
-  <div class="flex flex-col items-center">
-    <img src="new-logo.png" alt="SyncDB Logo" class="w-100 h-auto mb-4" />
-  
+  <div
+    class="hidden md:flex w-1/2 items-center justify-center"
+    style="background: linear-gradient(135deg, #8E44AD 0%, #6C63FF 100%)"
+  >
+    <div class="flex flex-col items-center">
+      <img src="new-logo.png" alt="SyncDB Logo" class="w-100 h-auto mb-4" />
+    </div>
   </div>
 </div>
 
-<app-selecionar-organizacao [visible]="visibleOrganizacao" (cancel)="hideDialog()" [objeto]="objeto" [listaEmpresa]="listaEmpresa">
+<app-selecionar-organizacao
+  [visible]="visibleOrganizacao"
+  (cancel)="hideDialog()"
+  [objeto]="objeto"
+  [listaEmpresa]="listaEmpresa"
+>
 </app-selecionar-organizacao>

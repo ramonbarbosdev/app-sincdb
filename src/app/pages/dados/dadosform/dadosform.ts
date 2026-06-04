@@ -17,6 +17,7 @@ import { SyncProgressoBar } from '../../../components/sync-progresso-bar/sync-pr
 import { SyncErros } from '../../../components/sync-erros/sync-erros';
 import { SyncConsole } from "../../../components/sync-console/sync-console";
 import { WebsocketService } from '../../../services/websocket.service';
+import { Conexao } from '../../../models/conexao';
 
 @Component({
   selector: 'app-dadosform',
@@ -59,9 +60,12 @@ export class Dadosform {
   loadingTabela = false;
   loadingVerificacao = false;
   loadingSincronizacao = false;
+  loadingConexaoPadrao = false;
+  conexaoPadrao?: Conexao;
 
   ngOnInit() {
     this.progressoSync.vazioProgressoLocal();
+    this.obterConexaoPadrao();
     this.obterBase();
 
     //atalho
@@ -101,6 +105,22 @@ export class Dadosform {
       },
       error: (err) => {
         this.loadingBase = false;
+      },
+    });
+  }
+
+  obterConexaoPadrao() {
+    this.loadingConexaoPadrao = true;
+    this.baseService.findAll('conexao').subscribe({
+      next: (res: any) => {
+        const lista = Array.isArray(res) ? res : res?.conexoes || res?.items || res?.content || [];
+        this.conexaoPadrao = lista.find((item: Conexao) => item.fl_padrao) || lista[0];
+        this.loadingConexaoPadrao = false;
+        this.cd.markForCheck();
+      },
+      error: () => {
+        this.loadingConexaoPadrao = false;
+        this.cd.markForCheck();
       },
     });
   }

@@ -1,7 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from './auth.service';
-import { FormatarNomeRole } from '../utils/FormatarNomeRole';
 import { ConverterNomeRoleMinusculo } from '../utils/ConverterNomeRole';
 
 export const authGuard: CanActivateFn = (route, state) => {
@@ -11,25 +10,23 @@ export const authGuard: CanActivateFn = (route, state) => {
   const rolesPermitidos = route.parent?.data?.['roles'] as string[] | undefined;
   const user = auth.getUserSubbject();
 
-  if (!user?.login) {
+  if (!auth.getAccessToken()) {
     router.navigate(['/auth/access']);
     return false;
   }
 
-  // OBS: lembrar de configurar o papel nas rotas
-  const userRole = ConverterNomeRoleMinusculo(user.role);
+  const role = user?.dsRole || user?.role || '';
+  const userRole = ConverterNomeRoleMinusculo(role);
 
-  if(userRole === '')
-  {
-    console.error('Não existe formatação equivalente para o ' + user.role);
+  if (userRole === '') {
+    console.error('Nao existe formatacao equivalente para o ' + role);
   }
 
-  const roles = rolesPermitidos?.map((r) => r.toLowerCase()) ?? [ 'dev'];
-
+  const roles = rolesPermitidos?.map((r) => r.toLowerCase()) ?? ['dev'];
   const permitido = roles.includes(userRole);
 
   if (!permitido) {
-    console.error('Usuario não permitido [AUTH GUARD] ');
+    console.error('Usuario nao permitido [AUTH GUARD]');
     router.navigate(['/auth/access']);
     return false;
   }

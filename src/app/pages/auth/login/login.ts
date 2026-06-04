@@ -1,5 +1,4 @@
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
-import { AppFloatingConfigurator } from '../../../layout/component/app.floatingconfigurator';
 import { RippleModule } from 'primeng/ripple';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -48,6 +47,7 @@ export class Login {
   visibleOrganizacao: boolean = false;
 
   private auth = inject(AuthService);
+  private router = inject(Router);
   public errorValidacao: Record<string, string> = {};
   private messageService = inject(MessageService);
   private cd = inject(ChangeDetectorRef);
@@ -64,26 +64,29 @@ export class Login {
 
   entrar() {
     if (!this.validarItens()) return;
-     this.loading = true;
-    this.auth.obterOrganizacao(this.objeto).subscribe({
-      next: (res) => {
-      
-        this.visibleOrganizacao = true;
-        this.listaEmpresa = (res.tenants as any).map((index: any) => {
-          const item = new FlagOption();
-          item.code = String(index.id_tenant);
-          item.name = index.nm_empresa;
-          return item;
-        });
 
-        this.objeto.role = res.role;
+    this.loading = true;
+    this.auth.login(this.objeto).subscribe({
+      next: (res: any) => {
+        if (res.precisaSelecionarOrganizacao) {
+          this.visibleOrganizacao = true;
+          this.listaEmpresa = (res.organizacoes as any[]).map((index: any) => {
+            const item = new FlagOption();
+            item.code = String(index.idOrganizacao);
+            item.name = index.nmOrganizacao;
+            return item;
+          });
+        } else {
+          this.redirecionarPorRole(res.dsRole);
+        }
 
-         this.loading = false;
+        this.loading = false;
+        this.cd.markForCheck();
       },
-      error: (e) => {
+      error: () => {
         this.visibleOrganizacao = false;
-         this.loading = false;
-
+        this.loading = false;
+        this.cd.markForCheck();
       },
     });
   }
@@ -107,9 +110,20 @@ export class Login {
 
   verificarUsuarioLogado() {
     this.auth.checkAuth().subscribe({
-      next: (res) => {
-        console.log('Usuário logado');
+      next: (res: any) => {
+        if (res) {
+          this.redirecionarPorRole(this.auth.getUserSubbject()?.dsRole);
+        }
       },
     });
+  }
+
+  redirecionarPorRole(role?: string) {
+    if (role === 'ROLE_DEV') {
+      this.router.navigate(['dev/home']);
+      return;
+    }
+
+    this.router.navigate(['client/home']);
   }
 }
