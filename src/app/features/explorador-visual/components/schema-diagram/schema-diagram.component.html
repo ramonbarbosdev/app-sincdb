@@ -1,0 +1,51 @@
+<main class="diagram-panel">
+  <app-explorador-diagram-toolbar [totalNodes]="nodes.length" [totalEdges]="edges.length" />
+
+  <div class="loading" *ngIf="loading">
+    <p-progress-spinner />
+  </div>
+
+  <div class="empty" *ngIf="!loading && !nodes.length">
+    Escolha um schema para montar o diagrama.
+  </div>
+
+  <vflow
+    *ngIf="!loading && nodes.length"
+    view="auto"
+    [nodes]="nodes"
+    [edges]="edges"
+    [minZoom]="0.35"
+    [maxZoom]="1.4"
+    background="dots"
+  >
+    <ng-template let-ctx nodeHtml>
+      <ng-container *ngIf="$any(ctx.node).data()?.node as node">
+        <button
+          type="button"
+          class="table-node"
+          [class.selected]="node.id === selectedNodeId"
+          [ngClass]="node.status"
+          (click)="tableSelected.emit(node)"
+        >
+          <div class="node-head">
+            <div>
+              <small>{{ node.schema }}</small>
+              <strong>{{ node.nome }}</strong>
+            </div>
+            <p-tag [value]="node.status" [severity]="severity(node.status)" />
+          </div>
+
+          <div class="node-metrics">
+            <span>{{ node.totalColunas }} colunas</span>
+            <span>{{ node.totalDiferencas }} diferencas</span>
+            <span>{{ node.totalFks }} FKs</span>
+          </div>
+        </button>
+      </ng-container>
+    </ng-template>
+
+    <ng-template let-ctx edgeLabelHtml>
+      <span class="edge-label">{{ ctx.label.data.label }}</span>
+    </ng-template>
+  </vflow>
+</main>

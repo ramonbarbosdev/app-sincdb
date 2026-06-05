@@ -1,38 +1,64 @@
 <aside class="details-panel">
-  <p-card>
-    <ng-template #title>Detalhes</ng-template>
+  <p-card styleClass="details-card">
+    <ng-template pTemplate="title">Detalhes</ng-template>
+
     <div *ngIf="table; else noTable" class="details-content">
-      <div class="details-title">
-        <span>{{ table.schema }}</span>
-        <strong>{{ table.nome }}</strong>
-      </div>
-      <p-tag
-        [value]="statusLabel(comparison?.status || table.status)"
-        [severity]="tagSeverity(comparison?.status || table.status)"
-      />
+      <div class="details-header">
+        <div class="details-title">
+          <span>{{ table.schema }}</span>
+          <strong>{{ table.nome }}</strong>
+        </div>
 
-      <h3>Colunas</h3>
-      <div class="detail-row" *ngFor="let coluna of table.colunas">
-        <span>{{ coluna.nome }}</span>
-        <small>{{ coluna.tipo }}</small>
+        <p-tag
+          [value]="statusLabel(comparison?.status || table.status)"
+          [severity]="tagSeverity(comparison?.status || table.status)"
+        />
       </div>
 
-      <h3>Indices</h3>
-      <div class="detail-row" *ngFor="let indice of table.indices">
-        <span>{{ indice.nome }}</span>
-        <small>{{ indice.colunas.join(', ') }}</small>
-      </div>
+      <section class="details-section">
+        <h3>Colunas</h3>
 
-      <h3>Foreign keys</h3>
-      <div class="detail-row" *ngFor="let fk of table.foreignKeys">
-        <span>{{ fk.nome }}</span>
-        <small>{{ fk.coluna }} -> {{ fk.tabelaReferencia }}</small>
-      </div>
+        <div class="detail-list">
+          <div class="detail-row" *ngFor="let coluna of table.colunas">
+            <span class="detail-name" [title]="coluna.nome">{{ coluna.nome }}</span>
+            <small class="detail-type" [title]="coluna.tipo">{{ coluna.tipo }}</small>
+          </div>
+        </div>
+      </section>
 
-      <h3 *ngIf="comparison?.observacoes?.length">Diferencas</h3>
-      <div class="observation" *ngFor="let obs of comparison?.observacoes">
-        {{ obs }}
-      </div>
+      <section class="details-section">
+        <h3>Índices</h3>
+
+        <div class="detail-list">
+          <div class="detail-row" *ngFor="let indice of table.indices">
+            <span class="detail-name" [title]="indice.nome">{{ indice.nome }}</span>
+            <small class="detail-type" [title]="indice.colunas.join(', ')">
+              {{ indice.colunas.join(', ') }}
+            </small>
+          </div>
+        </div>
+      </section>
+
+      <section class="details-section">
+        <h3>Foreign Keys</h3>
+
+        <div class="detail-list">
+          <div class="detail-row" *ngFor="let fk of table.foreignKeys">
+            <span class="detail-name" [title]="fk.nome">{{ fk.nome }}</span>
+            <small class="detail-type" [title]="fk.coluna + ' -> ' + fk.tabelaReferencia">
+              {{ fk.coluna }} → {{ fk.tabelaReferencia }}
+            </small>
+          </div>
+        </div>
+      </section>
+
+      <section class="details-section" *ngIf="comparison?.observacoes?.length">
+        <h3>Diferenças</h3>
+
+        <div class="observation" *ngFor="let obs of comparison?.observacoes">
+          {{ obs }}
+        </div>
+      </section>
     </div>
 
     <ng-template #noTable>

@@ -1,0 +1,31 @@
+.summary-panel {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.summary-item {
+  padding: 0.8rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  background: var(--surface-card);
+
+  span {
+    display: block;
+    color: var(--text-color-secondary);
+    font-size: 0.78rem;
+  }
+
+  strong {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--text-color);
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .summary-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

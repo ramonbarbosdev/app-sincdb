@@ -1,0 +1,14 @@
+<section class="sql-panel">
+  <div class="sql-title">
+    <strong>SQL Preview</strong>
+    <span>Gerado pelo detalhe da tabela</span>
+  </div>
+
+  <pre *ngIf="sql; else emptySql"><code>{{ sql }}</code></pre>
+
+  <ng-template #emptySql>
+    <div class="empty-sql">
+      {{ loading ? 'Carregando SQL...' : 'Selecione uma tabela para carregar o SQL.' }}
+    </div>
+  </ng-template>
+</section>

@@ -1,0 +1,53 @@
+<aside class="details-panel">
+  <div class="loading" *ngIf="loading">
+    <p-progress-spinner />
+  </div>
+
+  <div class="empty" *ngIf="!loading && !detalhe">
+    Selecione uma tabela para ver os detalhes.
+  </div>
+
+  <ng-container *ngIf="!loading && detalhe">
+    <div class="details-header">
+      <div>
+        <span>{{ detalhe.schema }}</span>
+        <strong>{{ detalhe.nome }}</strong>
+      </div>
+      <p-tag [value]="detalhe.status" [severity]="severity(detalhe.status)" />
+    </div>
+
+    <section>
+      <h3>Colunas</h3>
+      <div class="detail-row" *ngFor="let coluna of detalhe.colunas">
+        <span>
+          <b *ngIf="coluna.primaryKey">PK</b>
+          {{ coluna.nome }}
+        </span>
+        <small>{{ coluna.tipo }}</small>
+      </div>
+    </section>
+
+    <section>
+      <h3>Indices</h3>
+      <div class="detail-row" *ngFor="let indice of detalhe.indices">
+        <span>{{ indice.nome }}</span>
+        <small>{{ indice.colunas.join(', ') }}</small>
+      </div>
+      <p class="muted" *ngIf="!detalhe.indices.length">Nenhum indice retornado.</p>
+    </section>
+
+    <section>
+      <h3>Foreign Keys</h3>
+      <div class="detail-row" *ngFor="let fk of detalhe.foreignKeys">
+        <span>{{ fk.nome }}</span>
+        <small>{{ fk.coluna }} -> {{ fk.tabelaReferencia }}</small>
+      </div>
+      <p class="muted" *ngIf="!detalhe.foreignKeys.length">Nenhuma FK retornada.</p>
+    </section>
+
+    <section *ngIf="detalhe.observacoes.length">
+      <h3>Observacoes</h3>
+      <div class="observation" *ngFor="let obs of detalhe.observacoes">{{ obs }}</div>
+    </section>
+  </ng-container>
+</aside>

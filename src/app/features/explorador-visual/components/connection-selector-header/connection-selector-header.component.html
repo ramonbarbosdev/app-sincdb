@@ -1,0 +1,82 @@
+<header class="explorer-header">
+  <div>
+    <h1>Explorador Visual</h1>
+    <p>Explore tabelas por ambiente ou compare Cloud x Local.</p>
+  </div>
+
+  <div class="explorer-actions">
+    <p-select
+      [ngModel]="conexao"
+      (ngModelChange)="conexaoChange.emit($event)"
+      [options]="conexoes"
+      optionLabel="label"
+      optionValue="value"
+      placeholder="Conexao"
+      aria-label="Conexao"
+      [loading]="loadingConexoes"
+      [filter]="true"
+      filterPlaceholder="Buscar conexao..."
+      styleClass="selector"
+    />
+
+    <p-select
+      [ngModel]="modoOperacao"
+      (ngModelChange)="modoOperacaoChange.emit($event)"
+      [options]="modosOperacao"
+      optionLabel="label"
+      optionValue="value"
+      aria-label="Modo"
+      styleClass="selector compact-selector"
+    />
+
+    <p-select
+      [ngModel]="base"
+      (ngModelChange)="baseChange.emit($event)"
+      [options]="bases"
+      optionLabel="label"
+      optionValue="value"
+      placeholder="Base"
+      aria-label="Base"
+      [disabled]="!conexao"
+      [loading]="loadingBases"
+      [filter]="true"
+      filterPlaceholder="Buscar base..."
+      styleClass="selector"
+    />
+
+    <p-select
+      [ngModel]="schema"
+      (ngModelChange)="schemaChange.emit($event)"
+      [options]="schemas"
+      optionLabel="label"
+      optionValue="value"
+      placeholder="Schema"
+      aria-label="Schema"
+      [disabled]="!conexao || !base"
+      [loading]="loadingSchemas"
+      [filter]="true"
+      filterPlaceholder="Buscar schema..."
+      styleClass="selector"
+    />
+
+    <p-select
+      *ngIf="modoOperacao === 'comparar'"
+      [ngModel]="modoVisualizacao"
+      (ngModelChange)="modoVisualizacaoChange.emit($event)"
+      [options]="modosVisualizacao"
+      optionLabel="label"
+      optionValue="value"
+      aria-label="Modo de visualizacao"
+      styleClass="selector mode-selector"
+    />
+
+    <p-button
+      label="Comparar"
+      icon="pi pi-search"
+      (click)="comparar.emit()"
+      [loading]="loadingComparacao"
+      [disabled]="!conexao || !base || !schema"
+      *ngIf="modoOperacao === 'comparar'"
+    />
+  </div>
+</header>

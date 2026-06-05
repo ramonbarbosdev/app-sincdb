@@ -1,0 +1,41 @@
+.sql-panel {
+  min-height: 13rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  background: #101418;
+  overflow: hidden;
+}
+
+.sql-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+  strong {
+    color: #f8fafc;
+  }
+
+  span {
+    color: #94a3b8;
+    font-size: 0.8rem;
+  }
+}
+
+pre {
+  max-height: 17rem;
+  margin: 0;
+  padding: 0.9rem;
+  overflow: auto;
+  color: #d1fae5;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.empty-sql {
+  min-height: 9rem;
+  display: grid;
+  place-items: center;
+  color: #94a3b8;
+}

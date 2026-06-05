@@ -1,0 +1,53 @@
+<aside class="sidebar-tree">
+  <div class="sidebar-title">
+    <strong>{{ modoOperacao === 'comparar' ? 'Schemas' : 'Tabelas' }}</strong>
+    <span>{{ modoOperacao === 'comparar' ? schemas.length : tabelas.length }} itens</span>
+  </div>
+
+  <div class="loading" *ngIf="loading">
+    <p-progress-spinner />
+  </div>
+
+  <div class="empty" *ngIf="!loading && modoOperacao === 'explorar' && !tabelas.length">
+    Selecione base e schema para listar tabelas.
+  </div>
+
+  <div class="empty" *ngIf="!loading && modoOperacao === 'comparar' && !schemas.length">
+    Selecione uma base para carregar schemas.
+  </div>
+
+  <ng-container *ngIf="!loading && modoOperacao === 'comparar'">
+    <button
+      type="button"
+      class="tree-card"
+      *ngFor="let schema of schemas"
+      [class.active]="schema.schema === selectedSchema"
+      (click)="schemaSelected.emit(schema.schema)"
+    >
+      <div class="tree-head">
+        <strong>{{ schema.schema }}</strong>
+        <p-tag [value]="schema.status" [severity]="severity(schema.status)" />
+      </div>
+      <div class="tree-counters">
+        <span>{{ schema.totalTabelas }} tabelas</span>
+        <span>{{ schema.tabelasDiferentes }} dif.</span>
+        <span>{{ schema.ausentesDestino }} ausentes</span>
+        <span>{{ schema.novasDestino }} novas</span>
+      </div>
+    </button>
+  </ng-container>
+
+  <ng-container *ngIf="!loading && modoOperacao === 'explorar'">
+    <button
+      type="button"
+      class="table-row"
+      *ngFor="let tabela of tabelas"
+      [class.active]="tabela.id === selectedTableId"
+      (click)="tableSelected.emit(tabela)"
+    >
+      <i class="pi pi-table"></i>
+      <span>{{ tabela.nome }}</span>
+      <small *ngIf="tabela.totalColunas !== undefined">{{ tabela.totalColunas }}</small>
+    </button>
+  </ng-container>
+</aside>

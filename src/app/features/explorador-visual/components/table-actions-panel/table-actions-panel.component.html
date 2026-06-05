@@ -1,0 +1,24 @@
+<section class="actions-panel">
+  <div class="actions-title">
+    <strong>Acoes</strong>
+    <span>{{ ambiente === 'cloud' ? 'Cloud' : 'Local' }}</span>
+  </div>
+
+  <div class="actions-grid">
+    <p-button icon="pi pi-list" label="Estrutura" severity="secondary" [disabled]="!detalhe" />
+    <p-button
+      icon="pi pi-database"
+      label="Registros"
+      severity="secondary"
+      [loading]="loadingDados"
+      [disabled]="!detalhe"
+      (click)="visualizarDados.emit()"
+    />
+    <p-button icon="pi pi-play" label="SELECT" severity="secondary" [disabled]="!detalhe" />
+    <p-button icon="pi pi-code" label="Gerar SQL" severity="secondary" [disabled]="!detalhe" />
+    <p-button icon="pi pi-download" label="Exportar" severity="secondary" [disabled]="!detalhe" />
+    <p-button icon="pi pi-sync" label="Sincronizar" severity="secondary" [disabled]="!detalhe" />
+    <p-button icon="pi pi-copy" label="Copiar estrutura" severity="secondary" [disabled]="!detalhe" />
+    <p-button icon="pi pi-arrows-h" label="Comparar tabela" severity="secondary" [disabled]="!detalhe" />
+  </div>
+</section>

@@ -1,0 +1,34 @@
+<aside class="schema-sidebar">
+  <div class="sidebar-title">
+    <strong>Schemas</strong>
+    <span>{{ schemas.length }} encontrados</span>
+  </div>
+
+  <div class="loading" *ngIf="loading">
+    <p-progress-spinner />
+  </div>
+
+  <div class="empty" *ngIf="!loading && !schemas.length">
+    Selecione uma base para carregar os schemas.
+  </div>
+
+  <button
+    type="button"
+    class="schema-card"
+    *ngFor="let schema of schemas"
+    [class.active]="schema.schema === selectedSchema"
+    (click)="schemaSelected.emit(schema.schema)"
+  >
+    <div class="schema-head">
+      <strong>{{ schema.schema }}</strong>
+      <p-tag [value]="schema.status" [severity]="severity(schema.status)" />
+    </div>
+
+    <div class="schema-counters">
+      <span>{{ schema.totalTabelas }} tabelas</span>
+      <span>{{ schema.tabelasDiferentes }} dif.</span>
+      <span>{{ schema.ausentesDestino }} ausentes</span>
+      <span>{{ schema.novasDestino }} novas</span>
+    </div>
+  </button>
+</aside>

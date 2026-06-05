@@ -1,4 +1,23 @@
 <main class="diagram-panel">
+  <div class="diagram-guides">
+    <div class="guide-card">
+      <strong>Explorador Visual</strong>
+      <span>Arraste, aproxime e selecione uma tabela</span>
+    </div>
+
+    <div class="guide-legend">
+      <span><i class="equal"></i> Igual</span>
+      <span><i class="different"></i> Diferente</span>
+      <span><i class="missing"></i> Ausente</span>
+      <span><i class="new"></i> Novo</span>
+    </div>
+  </div>
+
+  <div class="diagram-footer-guide">
+    <span>{{ nodes.length }} tabelas</span>
+    <span>{{ edges.length }} relacionamentos</span>
+  </div>
+
   <vflow
     view="auto"
     [nodes]="nodes"
@@ -20,6 +39,7 @@
               <small>{{ data.tabela.schema }}</small>
               <strong>{{ data.tabela.nome }}</strong>
             </div>
+
             <p-tag
               [value]="statusLabel(data.comparacao?.status || data.tabela.status)"
               [severity]="tagSeverity(data.comparacao?.status || data.tabela.status)"

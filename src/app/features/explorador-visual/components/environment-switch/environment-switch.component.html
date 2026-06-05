@@ -1,0 +1,27 @@
+<section class="environment-switch" [class.local]="ambiente === 'local'">
+  <div>
+    <span>Ambiente ativo</span>
+    <strong>{{ ambiente === 'cloud' ? 'Cloud' : 'Local' }}</strong>
+  </div>
+
+  <div class="switch-actions">
+    <button
+      type="button"
+      [class.active]="ambiente === 'cloud'"
+      [disabled]="disabled"
+      (click)="ambienteChange.emit('cloud')"
+    >
+      <i class="pi pi-cloud"></i>
+      Cloud
+    </button>
+    <button
+      type="button"
+      [class.active]="ambiente === 'local'"
+      [disabled]="disabled"
+      (click)="ambienteChange.emit('local')"
+    >
+      <i class="pi pi-desktop"></i>
+      Local
+    </button>
+  </div>
+</section>

@@ -1,0 +1,98 @@
+.sidebar-tree {
+  min-height: 36rem;
+  padding: 0.85rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  background: var(--surface-card);
+  overflow: auto;
+}
+
+.sidebar-title,
+.tree-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.sidebar-title {
+  margin-bottom: 0.85rem;
+
+  span {
+    color: var(--text-color-secondary);
+    font-size: 0.8rem;
+  }
+}
+
+.loading,
+.empty {
+  min-height: 10rem;
+  display: grid;
+  place-items: center;
+  color: var(--text-color-secondary);
+  text-align: center;
+}
+
+.tree-card {
+  width: 100%;
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.75rem;
+  margin-bottom: 0.65rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  background: var(--surface-ground);
+  color: var(--text-color);
+  text-align: left;
+  cursor: pointer;
+
+  &.active {
+    border-color: var(--primary-color);
+  }
+}
+
+.tree-counters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem;
+
+  span {
+    padding: 0.35rem 0.45rem;
+    border-radius: 6px;
+    background: var(--surface-card);
+    color: var(--text-color-secondary);
+    font-size: 0.76rem;
+  }
+}
+
+.table-row {
+  width: 100%;
+  min-height: 2.6rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0 0.7rem;
+  margin-bottom: 0.45rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  background: var(--surface-ground);
+  color: var(--text-color);
+  cursor: pointer;
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  small {
+    color: var(--text-color-secondary);
+  }
+
+  &.active {
+    border-color: var(--primary-color);
+    background: color-mix(in srgb, var(--primary-color) 10%, var(--surface-ground));
+  }
+}

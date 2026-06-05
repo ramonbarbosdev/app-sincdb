@@ -1,0 +1,59 @@
+.explorer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  background: var(--surface-card);
+
+  h1 {
+    margin: 0;
+    font-size: 1.35rem;
+    color: var(--text-color);
+  }
+
+  p {
+    margin: 0.25rem 0 0;
+    color: var(--text-color-secondary);
+    font-size: 0.9rem;
+  }
+}
+
+.explorer-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+:host ::ng-deep .selector {
+  width: 13rem;
+}
+
+:host ::ng-deep .mode-selector {
+  width: 11.5rem;
+}
+
+:host ::ng-deep .compact-selector {
+  width: 9rem;
+}
+
+@media (max-width: 900px) {
+  .explorer-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .explorer-actions {
+    justify-content: stretch;
+  }
+
+  :host ::ng-deep .selector,
+  :host ::ng-deep .mode-selector,
+  :host ::ng-deep .p-button {
+    width: 100%;
+  }
+}

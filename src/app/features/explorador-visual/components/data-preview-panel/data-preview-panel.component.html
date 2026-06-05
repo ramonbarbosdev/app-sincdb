@@ -1,0 +1,29 @@
+<section class="data-panel">
+  <div class="data-title">
+    <strong>Registros</strong>
+    <span>Preview limitado</span>
+  </div>
+
+  <div class="loading" *ngIf="loading">
+    <p-progress-spinner />
+  </div>
+
+  <div class="empty" *ngIf="!loading && !dados">
+    Use a acao Registros para carregar dados da tabela.
+  </div>
+
+  <div class="table-wrap" *ngIf="!loading && dados">
+    <table>
+      <thead>
+        <tr>
+          <th *ngFor="let coluna of dados.colunas">{{ coluna }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let linha of dados.linhas">
+          <td *ngFor="let coluna of dados.colunas">{{ linha[coluna] }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>

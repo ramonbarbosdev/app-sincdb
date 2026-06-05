@@ -1,0 +1,56 @@
+.environment-switch {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in srgb, #3b82f6 45%, var(--surface-border));
+  border-radius: 8px;
+  background: color-mix(in srgb, #3b82f6 10%, var(--surface-card));
+
+  &.local {
+    border-color: color-mix(in srgb, #22c55e 45%, var(--surface-border));
+    background: color-mix(in srgb, #22c55e 10%, var(--surface-card));
+  }
+
+  span {
+    display: block;
+    color: var(--text-color-secondary);
+    font-size: 0.8rem;
+  }
+
+  strong {
+    display: block;
+    color: var(--text-color);
+    font-size: 1.05rem;
+  }
+}
+
+.switch-actions {
+  display: flex;
+  gap: 0.5rem;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 2.4rem;
+    padding: 0 0.85rem;
+    border: 1px solid var(--surface-border);
+    border-radius: 8px;
+    background: var(--surface-card);
+    color: var(--text-color-secondary);
+    cursor: pointer;
+  }
+
+  button.active {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: color-mix(in srgb, var(--primary-color) 12%, var(--surface-card));
+  }
+
+  button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
