@@ -1,38 +1,31 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { TagModule } from 'primeng/tag';
-import {
-  ModoOperacao,
-  SchemaResumo,
-  StatusComparacao,
-  TabelaResumo,
-} from '../../models/explorador-visual.model';
+import { BaseTreeNode, SchemaTreeNode, TabelaResumo } from '../../models/explorador-visual.model';
 
 @Component({
   selector: 'app-explorador-sidebar-tree',
   standalone: true,
-  imports: [CommonModule, TagModule, ProgressSpinnerModule],
+  imports: [CommonModule, ProgressSpinnerModule],
   templateUrl: './sidebar-tree.component.html',
   styleUrl: './sidebar-tree.component.scss',
 })
 export class SidebarTreeComponent {
-  @Input() modoOperacao: ModoOperacao = 'explorar';
-  @Input() schemas: SchemaResumo[] = [];
-  @Input() tabelas: TabelaResumo[] = [];
+  @Input() bases: BaseTreeNode[] = [];
+  @Input() selectedBase = '';
   @Input() selectedSchema = '';
   @Input() selectedTableId = '';
-  @Input() loading = false;
-  @Output() schemaSelected = new EventEmitter<string>();
-  @Output() tableSelected = new EventEmitter<TabelaResumo>();
-
-  severity(status?: StatusComparacao): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
-    const map: Record<StatusComparacao, 'success' | 'info' | 'warn' | 'danger'> = {
-      igual: 'success',
-      diferente: 'warn',
-      ausente_destino: 'danger',
-      novo_destino: 'info',
-    };
-    return status ? map[status] : 'secondary';
+  @Input() loadingBases = false;
+  @Output() baseToggle = new EventEmitter<BaseTreeNode>();
+  @Output() schemaToggle = new EventEmitter<{ base: BaseTreeNode; schema: SchemaTreeNode }>();
+  @Output() tableSelected = new EventEmitter<{
+    base: BaseTreeNode;
+    schema: SchemaTreeNode;
+    tabela: TabelaResumo;
+  }>();
+  @Output() schemaSelected = new EventEmitter<{ base: BaseTreeNode; schema: SchemaTreeNode }>();
+  
+  ngOnInit() {
+    console.log('SidebarTreeComponent initialized with bases:', this.bases);
   }
 }

@@ -1,53 +1,71 @@
 <aside class="sidebar-tree">
   <div class="sidebar-title">
-    <strong>{{ modoOperacao === 'comparar' ? 'Schemas' : 'Tabelas' }}</strong>
-    <span>{{ modoOperacao === 'comparar' ? schemas.length : tabelas.length }} itens</span>
+    <strong>Navegacao</strong>
+    <span>{{ bases.length }} bases</span>
   </div>
 
-  <div class="loading" *ngIf="loading">
+  <div class="search-shell">
+    <i class="pi pi-search"></i>
+    <input type="text" placeholder="Buscar objetos..." />
+    <button type="button"><i class="pi pi-filter"></i></button>
+  </div>
+
+  <div class="loading" *ngIf="loadingBases">
     <p-progress-spinner />
   </div>
 
-  <div class="empty" *ngIf="!loading && modoOperacao === 'explorar' && !tabelas.length">
-    Selecione base e schema para listar tabelas.
-  </div>
+  <div class="empty" *ngIf="!loadingBases && !bases.length">Selecione conexao e ambiente.</div>
 
-  <div class="empty" *ngIf="!loading && modoOperacao === 'comparar' && !schemas.length">
-    Selecione uma base para carregar schemas.
-  </div>
+  <div class="tree" *ngIf="!loadingBases">
+    <div class="tree-group" *ngFor="let base of bases">
+      <button
+        type="button"
+        class="tree-row base-row"
+        [class.active]="base.nome === selectedBase && !selectedSchema"
+        (click)="baseToggle.emit(base)"
+      >
+        <i class="pi" [ngClass]="base.expanded ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+        <i class="pi pi-database"></i>
+        <span>{{ base.nome }}</span>
+        <small *ngIf="base.loading">...</small>
+      </button>
 
-  <ng-container *ngIf="!loading && modoOperacao === 'comparar'">
-    <button
-      type="button"
-      class="tree-card"
-      *ngFor="let schema of schemas"
-      [class.active]="schema.schema === selectedSchema"
-      (click)="schemaSelected.emit(schema.schema)"
-    >
-      <div class="tree-head">
-        <strong>{{ schema.schema }}</strong>
-        <p-tag [value]="schema.status" [severity]="severity(schema.status)" />
+      <div class="tree-children" *ngIf="base.expanded">
+        <button type="button" class="tree-row muted-row">
+          <i class="pi pi-chevron-down"></i>
+          <i class="pi pi-folder"></i>
+          <span>Schemas ({{ base.schemas.length }})</span>
+        </button>
+
+        <div class="schema-block" *ngFor="let schema of base.schemas">
+          <button
+            type="button"
+            class="tree-row schema-row"
+            [class.active]="base.nome === selectedBase && schema.nome === selectedSchema && !selectedTableId"
+            (click)="schemaToggle.emit({ base, schema })"
+          >
+            <i class="pi" [ngClass]="schema.expanded ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+            <i class="pi pi-table"></i>
+            <span>{{ schema.nome }}</span>
+            <small *ngIf="schema.loading">...</small>
+          </button>
+
+          <div class="tree-children table-list" *ngIf="schema.expanded">
+            <button
+              type="button"
+              class="tree-row table-row"
+              *ngFor="let tabela of schema.tabelas"
+              [class.active]="tabela.id === selectedTableId"
+              (click)="tableSelected.emit({ base, schema, tabela })"
+            >
+              <i></i>
+              <i class="pi pi-th-large"></i>
+              <span>{{ tabela.nome }}</span>
+              <small *ngIf="tabela.totalColunas !== undefined">{{ tabela.totalColunas }}</small>
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="tree-counters">
-        <span>{{ schema.totalTabelas }} tabelas</span>
-        <span>{{ schema.tabelasDiferentes }} dif.</span>
-        <span>{{ schema.ausentesDestino }} ausentes</span>
-        <span>{{ schema.novasDestino }} novas</span>
-      </div>
-    </button>
-  </ng-container>
-
-  <ng-container *ngIf="!loading && modoOperacao === 'explorar'">
-    <button
-      type="button"
-      class="table-row"
-      *ngFor="let tabela of tabelas"
-      [class.active]="tabela.id === selectedTableId"
-      (click)="tableSelected.emit(tabela)"
-    >
-      <i class="pi pi-table"></i>
-      <span>{{ tabela.nome }}</span>
-      <small *ngIf="tabela.totalColunas !== undefined">{{ tabela.totalColunas }}</small>
-    </button>
-  </ng-container>
+    </div>
+  </div>
 </aside>

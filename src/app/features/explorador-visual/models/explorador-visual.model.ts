@@ -84,13 +84,37 @@ export interface TabelaResumo {
   status?: StatusComparacao;
   totalColunas?: number;
   totalFks?: number;
+  registrosEstimados?: number;
+  tamanho?: string;
+  atualizadoEm?: string;
 }
 
 export interface DadosTabelaPreview {
   colunas: string[];
   linhas: Record<string, unknown>[];
-  limit?: number;
+  page?: number;
+  size?: number;
+  totalElements?: number;
+  totalPages?: number;
 }
+
+export interface BaseTreeNode {
+  nome: string;
+  expanded: boolean;
+  loading: boolean;
+  schemasLoaded: boolean;
+  schemas: SchemaTreeNode[];
+}
+
+export interface SchemaTreeNode {
+  nome: string;
+  expanded: boolean;
+  loading: boolean;
+  tabelasLoaded: boolean;
+  tabelas: TabelaResumo[];
+}
+
+export type ExplorerView = 'bases' | 'schemas' | 'tables' | 'table-detail' | 'diagram' | 'comparison';
 
 export interface ColunaDetalhe {
   nome: string;

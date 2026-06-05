@@ -5,6 +5,7 @@ import { environment } from '../../../../environments/environment';
 import {
   DiagramResponse,
   AmbienteExplorador,
+  BaseTreeNode,
   ConexaoExplorador,
   DadosTabelaPreview,
   SchemaResumo,
@@ -18,15 +19,26 @@ export class ExploradorVisualService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = environment.apiUrl;
 
-  listarBases(): Observable<SelectOption[]> {
-    return this.http.get<unknown[]>(`${this.apiUrl}/sincronizacao/bases/`).pipe(
-      map((res) =>
-        (Array.isArray(res) ? res : []).map((base) => ({
-          label: String(base),
-          value: String(base),
-        }))
+  listarAmbientes(idConexao?: string): Observable<SelectOption[]> {
+    return this.http
+      .get<Array<string | { label?: string; value?: string; nome?: string; ambiente?: string }>>(
+        `${this.apiUrl}/explorador/ambientes`,
+        { params: this.criarParams(idConexao) }
       )
-    );
+      .pipe(
+        map((res) =>
+          (Array.isArray(res) ? res : []).map((ambiente) => {
+            const value =
+              typeof ambiente === 'string'
+                ? ambiente
+                : ambiente.value || ambiente.ambiente || ambiente.nome || '';
+            return {
+              label: typeof ambiente === 'string' ? this.formatarAmbiente(value) : ambiente.label || this.formatarAmbiente(value),
+              value,
+            };
+          })
+        )
+      );
   }
 
   listarConexoes(): Observable<SelectOption[]> {
@@ -43,10 +55,7 @@ export class ExploradorVisualService {
     );
   }
 
-  listarBasesAmbiente(
-    ambiente: AmbienteExplorador,
-    idConexao?: string
-  ): Observable<SelectOption[]> {
+  listarBasesAmbiente(ambiente: AmbienteExplorador, idConexao?: string): Observable<BaseTreeNode[]> {
     return this.http
       .get<unknown[]>(`${this.apiUrl}/explorador/${ambiente}/bases`, {
         params: this.criarParams(idConexao),
@@ -54,8 +63,11 @@ export class ExploradorVisualService {
       .pipe(
         map((res) =>
           (Array.isArray(res) ? res : []).map((base) => ({
-            label: String(base),
-            value: String(base),
+            nome: this.extrairNome(base, ['nome', 'name', 'base', 'database', 'datname', 'nm_base']),
+            expanded: false,
+            loading: false,
+            schemasLoaded: false,
+            schemas: [],
           }))
         )
       );
@@ -73,8 +85,8 @@ export class ExploradorVisualService {
       .pipe(
         map((res) =>
           (Array.isArray(res) ? res : []).map((schema) => ({
-            label: String(schema),
-            value: String(schema),
+            label: this.extrairNome(schema, ['schema', 'nome', 'name', 'nspname', 'nm_schema']),
+            value: this.extrairNome(schema, ['schema', 'nome', 'name', 'nspname', 'nm_schema']),
           }))
         )
       );
@@ -96,7 +108,7 @@ export class ExploradorVisualService {
           (Array.isArray(res) ? res : []).map((tabela) =>
             typeof tabela === 'string'
               ? { id: `${schema}.${tabela}`, schema, nome: tabela }
-              : tabela
+              : this.normalizarTabela(tabela, schema)
           )
         )
       );
@@ -120,36 +132,20 @@ export class ExploradorVisualService {
     base: string,
     schema: string,
     tabela: string,
-    limit = 100,
+    page = 0,
+    size = 100,
     idConexao?: string
   ): Observable<DadosTabelaPreview> {
-    const params = this.criarParams(idConexao).set('limit', String(limit));
+    const params = this.criarParams(idConexao).set('page', String(page)).set('size', String(size));
     return this.http.get<DadosTabelaPreview>(
       `${this.apiUrl}/explorador/${ambiente}/${encodeURIComponent(base)}/${encodeURIComponent(schema)}/tabelas/${encodeURIComponent(tabela)}/dados`,
       { params }
     );
   }
 
-  compararSchemas(base: string, idConexao?: string): Observable<SchemaResumo[]> {
-    return this.http
-      .get<Array<SchemaResumo | any> | { schemas?: Array<SchemaResumo | any> }>(
-        `${this.apiUrl}/explorador/${encodeURIComponent(base)}/schemas/comparar`,
-        { params: this.criarParams(idConexao) }
-      )
-      .pipe(
-        map((res) => (Array.isArray(res) ? res : res.schemas || [])),
-        map((res) =>
-          res.map((schema) => ({
-            ...schema,
-            schema: schema.schema || schema.nome,
-          }))
-        )
-      );
-  }
-
   compararSchema(base: string, schema: string, idConexao?: string): Observable<DiagramResponse> {
     return this.http.get<DiagramResponse>(
-      `${this.apiUrl}/explorador/${encodeURIComponent(base)}/${encodeURIComponent(schema)}/comparar`,
+      `${this.apiUrl}/explorador/comparacao/${encodeURIComponent(base)}/${encodeURIComponent(schema)}`,
       { params: this.criarParams(idConexao) }
     );
   }
@@ -161,24 +157,52 @@ export class ExploradorVisualService {
     idConexao?: string
   ): Observable<TabelaDetalhe> {
     return this.http.get<TabelaDetalhe>(
-      `${this.apiUrl}/explorador/${encodeURIComponent(base)}/${encodeURIComponent(schema)}/tabelas/${encodeURIComponent(tabela)}/detalhe`,
+      `${this.apiUrl}/explorador/comparacao/${encodeURIComponent(base)}/${encodeURIComponent(schema)}/${encodeURIComponent(tabela)}`,
       { params: this.criarParams(idConexao) }
     );
   }
 
-  grafoTabela(
+  grafoSchemaAmbiente(
+    ambiente: AmbienteExplorador,
     base: string,
     schema: string,
-    tabela: string,
     idConexao?: string
   ): Observable<DiagramResponse> {
     return this.http.get<DiagramResponse>(
-      `${this.apiUrl}/explorador/${encodeURIComponent(base)}/${encodeURIComponent(schema)}/tabelas/${encodeURIComponent(tabela)}/grafo`,
+      `${this.apiUrl}/explorador/${ambiente}/${encodeURIComponent(base)}/${encodeURIComponent(schema)}/grafo`,
       { params: this.criarParams(idConexao) }
     );
   }
 
   private criarParams(idConexao?: string): HttpParams {
     return idConexao ? new HttpParams().set('idConexao', idConexao) : new HttpParams();
+  }
+
+  private formatarAmbiente(ambiente: string): string {
+    return ambiente === 'cloud' ? 'Cloud' : ambiente === 'local' ? 'Local' : ambiente;
+  }
+
+  private extrairNome(valor: unknown, campos: string[]): string {
+    if (valor === null || valor === undefined) {
+      return '';
+    }
+
+    if (typeof valor !== 'object') {
+      return String(valor);
+    }
+
+    const objeto = valor as Record<string, unknown>;
+    const campo = campos.find((key) => objeto[key] !== null && objeto[key] !== undefined);
+    return campo ? String(objeto[campo]) : JSON.stringify(objeto);
+  }
+
+  private normalizarTabela(tabela: TabelaResumo | any, schema: string): TabelaResumo {
+    const nome = this.extrairNome(tabela, ['nome', 'name', 'tabela', 'tableName', 'relname']);
+    return {
+      ...tabela,
+      id: tabela.id || tabela.nomeCompleto || tabela.nome_completo || `${schema}.${nome}`,
+      schema: tabela.schema || schema,
+      nome,
+    };
   }
 }
