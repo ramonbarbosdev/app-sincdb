@@ -1,0 +1,36 @@
+.details-content {
+  display: grid;
+  gap: .75rem;
+}
+
+.details-title {
+  display: grid;
+
+  span {
+    color: var(--text-color-secondary);
+    font-size: .8rem;
+  }
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--surface-border);
+  padding-bottom: .35rem;
+
+  small {
+    color: var(--text-color-secondary);
+  }
+}
+
+.observation {
+  border: 1px solid #f59e0b;
+  border-radius: 6px;
+  padding: .5rem;
+  color: #fbbf24;
+}
+
+.muted {
+  color: var(--text-color-secondary);
+}

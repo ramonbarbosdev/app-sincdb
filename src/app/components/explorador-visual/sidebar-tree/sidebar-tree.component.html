@@ -1,0 +1,15 @@
+<aside class="sidebar">
+  <h2>Schemas</h2>
+  <div class="schema-block" *ngFor="let schema of schemas">
+    <div class="schema-name">{{ schema.nome }}</div>
+    <button
+      type="button"
+      class="table-link"
+      *ngFor="let tabela of tabelas(schema)"
+      (click)="tabelaSelecionada.emit(tabela)"
+    >
+      <span>{{ tabela.nome }}</span>
+      <small>{{ statusLabel(comparacaoTabela(tabela)?.status || tabela.status) }}</small>
+    </button>
+  </div>
+</aside>

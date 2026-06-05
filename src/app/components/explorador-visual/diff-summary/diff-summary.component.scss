@@ -1,0 +1,21 @@
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .75rem;
+
+  div {
+    border: 1px solid var(--surface-border);
+    border-radius: 8px;
+    padding: .75rem;
+  }
+
+  span {
+    display: block;
+    color: var(--text-color-secondary);
+    font-size: .82rem;
+  }
+
+  strong {
+    font-size: 1.25rem;
+  }
+}

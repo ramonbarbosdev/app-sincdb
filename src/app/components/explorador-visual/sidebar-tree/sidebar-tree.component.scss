@@ -1,0 +1,45 @@
+.sidebar {
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  padding: 1rem;
+  overflow: auto;
+  min-height: 40rem;
+
+  h2 {
+    margin: 0 0 1rem;
+    font-size: 1rem;
+  }
+}
+
+.schema-block {
+  display: grid;
+  gap: .35rem;
+  margin-bottom: 1rem;
+}
+
+.schema-name {
+  font-size: .78rem;
+  color: var(--text-color-secondary);
+  text-transform: uppercase;
+}
+
+.table-link {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  padding: .55rem .65rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  gap: .75rem;
+}
+
+.table-link:hover {
+  background: var(--surface-hover);
+}
+
+small {
+  color: var(--text-color-secondary);
+}

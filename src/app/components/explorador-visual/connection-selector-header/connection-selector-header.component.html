@@ -1,0 +1,43 @@
+<header class="explorer-header">
+  <div>
+    <h1>Explorador Visual</h1>
+    <p>Comparacao visual entre banco de origem e banco de destino.</p>
+  </div>
+
+  <div class="explorer-actions">
+    <p-select
+      [ngModel]="base"
+      (ngModelChange)="baseChange.emit($event)"
+      [options]="bases"
+      optionLabel="name"
+      optionValue="code"
+      placeholder="Base"
+      aria-label="Base"
+      [loading]="loadingBases"
+      [filter]="true"
+      filterPlaceholder="Buscar base..."
+      styleClass="selector"
+    />
+    <p-select
+      [ngModel]="esquema"
+      (ngModelChange)="esquemaChange.emit($event)"
+      [options]="esquemas"
+      optionLabel="name"
+      optionValue="code"
+      placeholder="Esquema"
+      aria-label="Esquema"
+      [loading]="loadingEsquemas"
+      [disabled]="!base"
+      [filter]="true"
+      filterPlaceholder="Buscar esquema..."
+      styleClass="selector"
+    />
+    <p-button
+      label="Comparar"
+      icon="pi pi-search"
+      (click)="comparar.emit()"
+      [loading]="loading"
+      [disabled]="!base || !esquema"
+    />
+  </div>
+</header>

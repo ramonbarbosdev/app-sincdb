@@ -79,7 +79,7 @@ export class AppMenu {
           items: [
             {
               label: 'Explorador Visual',
-              icon: 'pi pi-wifi',
+              icon: 'pi pi-share-alt',
               routerLink: ['/client/explorador'],
             },
             {

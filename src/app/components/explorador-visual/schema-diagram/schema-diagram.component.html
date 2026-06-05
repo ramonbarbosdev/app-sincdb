@@ -1,0 +1,46 @@
+<main class="diagram-panel">
+  <vflow
+    view="auto"
+    [nodes]="nodes"
+    [edges]="edges"
+    [minZoom]="0.35"
+    [maxZoom]="1.4"
+    background="dots"
+  >
+    <ng-template let-ctx nodeHtml>
+      <ng-container *ngIf="$any(ctx.node).data() as data">
+        <button
+          type="button"
+          class="table-node"
+          [ngClass]="statusClass(data.comparacao?.status || data.tabela?.status)"
+          (click)="tabelaSelecionada.emit({ tabela: data.tabela, comparacao: data.comparacao })"
+        >
+          <div class="node-head">
+            <div>
+              <small>{{ data.tabela.schema }}</small>
+              <strong>{{ data.tabela.nome }}</strong>
+            </div>
+            <p-tag
+              [value]="statusLabel(data.comparacao?.status || data.tabela.status)"
+              [severity]="tagSeverity(data.comparacao?.status || data.tabela.status)"
+            />
+          </div>
+
+          <div class="node-columns">
+            <div *ngFor="let coluna of data.tabela.colunas | slice: 0:5">
+              <span>
+                <b *ngIf="$any(coluna).primaryKey">PK</b>
+                {{ $any(coluna).nome }}
+              </span>
+              <small>{{ $any(coluna).tipo }}</small>
+            </div>
+          </div>
+        </button>
+      </ng-container>
+    </ng-template>
+
+    <ng-template let-ctx edgeLabelHtml>
+      <span class="edge-label">{{ ctx.label.data }}</span>
+    </ng-template>
+  </vflow>
+</main>

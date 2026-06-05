@@ -1,0 +1,39 @@
+.explorer-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-end;
+
+  h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  p {
+    margin: .25rem 0 0;
+    color: var(--text-color-secondary);
+  }
+}
+
+.explorer-actions {
+  display: flex;
+  gap: .75rem;
+  align-items: center;
+
+  .selector {
+    width: 12rem;
+  }
+}
+
+@media (max-width: 1180px) {
+  .explorer-header,
+  .explorer-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .explorer-actions .selector {
+    width: 100%;
+  }
+}

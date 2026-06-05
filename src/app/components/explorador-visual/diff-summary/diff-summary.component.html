@@ -1,0 +1,9 @@
+<p-card>
+  <ng-template #title>Resumo</ng-template>
+  <div class="summary-grid">
+    <div *ngFor="let item of itens()">
+      <span>{{ item.label }}</span>
+      <strong>{{ item.value }}</strong>
+    </div>
+  </div>
+</p-card>

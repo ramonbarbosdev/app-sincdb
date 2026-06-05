@@ -1,0 +1,42 @@
+<aside class="details-panel">
+  <p-card>
+    <ng-template #title>Detalhes</ng-template>
+    <div *ngIf="table; else noTable" class="details-content">
+      <div class="details-title">
+        <span>{{ table.schema }}</span>
+        <strong>{{ table.nome }}</strong>
+      </div>
+      <p-tag
+        [value]="statusLabel(comparison?.status || table.status)"
+        [severity]="tagSeverity(comparison?.status || table.status)"
+      />
+
+      <h3>Colunas</h3>
+      <div class="detail-row" *ngFor="let coluna of table.colunas">
+        <span>{{ coluna.nome }}</span>
+        <small>{{ coluna.tipo }}</small>
+      </div>
+
+      <h3>Indices</h3>
+      <div class="detail-row" *ngFor="let indice of table.indices">
+        <span>{{ indice.nome }}</span>
+        <small>{{ indice.colunas.join(', ') }}</small>
+      </div>
+
+      <h3>Foreign keys</h3>
+      <div class="detail-row" *ngFor="let fk of table.foreignKeys">
+        <span>{{ fk.nome }}</span>
+        <small>{{ fk.coluna }} -> {{ fk.tabelaReferencia }}</small>
+      </div>
+
+      <h3 *ngIf="comparison?.observacoes?.length">Diferencas</h3>
+      <div class="observation" *ngFor="let obs of comparison?.observacoes">
+        {{ obs }}
+      </div>
+    </div>
+
+    <ng-template #noTable>
+      <p class="muted">Selecione uma tabela no diagrama.</p>
+    </ng-template>
+  </p-card>
+</aside>

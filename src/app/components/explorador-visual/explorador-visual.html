@@ -1,159 +1,66 @@
-<div class="min-h-screen bg-slate-950 text-slate-100 p-6">
-  <div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-    <div>
-      <h1 class="text-2xl font-semibold">Explorador Visual</h1>
-      <p class="text-sm text-slate-400">
-        Visualize estrutura, relacionamentos e diferenças entre origem e destino.
-      </p>
-    </div>
+<div class="explorer-shell">
+  <app-connection-selector-header
+    [base]="base"
+    [esquema]="esquema"
+    [bases]="bases"
+    [esquemas]="esquemas"
+    [loading]="loading"
+    [loadingBases]="loadingBases"
+    [loadingEsquemas]="loadingEsquemas"
+    (baseChange)="onBaseChange($event)"
+    (esquemaChange)="onEsquemaChange($event)"
+    (comparar)="comparar()"
+  />
 
-    <div class="flex flex-col gap-3 md:flex-row md:items-center">
-      <p-select
-        [options]="conexoes"
-        [(ngModel)]="origemSelecionada"
-        placeholder="Origem"
-        styleClass="w-full md:w-56"
-      />
-
-      <span class="hidden md:block text-slate-500">→</span>
-
-      <p-select
-        [options]="conexoes"
-        [(ngModel)]="destinoSelecionado"
-        placeholder="Destino"
-        styleClass="w-full md:w-56"
-      />
-
-      <p-button label="Comparar" icon="pi pi-search" />
-      <p-button label="Sincronizar" icon="pi pi-sync" severity="success" />
-    </div>
+  <div class="empty-state" *ngIf="!response && !loading">
+    <i class="pi pi-sitemap"></i>
+    <strong>Informe base e esquema para carregar a comparacao.</strong>
   </div>
 
-  <div class="grid grid-cols-12 gap-5">
-    <aside class="col-span-12 lg:col-span-2 rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-      <h2 class="mb-4 text-sm font-semibold text-slate-300">Schemas</h2>
-
-      <div class="space-y-2 text-sm">
-        <div class="rounded-lg bg-slate-800 px-3 py-2">public</div>
-        <div class="rounded-lg px-3 py-2 text-slate-400 hover:bg-slate-800">contrato</div>
-        <div class="rounded-lg px-3 py-2 text-slate-400 hover:bg-slate-800">produtos</div>
-        <div class="rounded-lg px-3 py-2 text-slate-400 hover:bg-slate-800">auditoria</div>
-      </div>
-
-      <div class="mt-6 space-y-3 text-sm">
-        <div class="flex items-center justify-between">
-          <span class="text-slate-400">Iguais</span>
-          <span class="text-emerald-300">8</span>
-        </div>
-
-        <div class="flex items-center justify-between">
-          <span class="text-slate-400">Diferentes</span>
-          <span class="text-amber-300">3</span>
-        </div>
-
-        <div class="flex items-center justify-between">
-          <span class="text-slate-400">Ausentes</span>
-          <span class="text-red-300">2</span>
-        </div>
-      </div>
-    </aside>
-
-    <main class="col-span-12 lg:col-span-7 rounded-2xl border border-slate-800 bg-slate-900/50 relative overflow-hidden">
-      <div class="absolute inset-0 diagram-grid"></div>
-
-      <svg class="absolute inset-0 h-full w-full pointer-events-none">
-        <line x1="260" y1="165" x2="420" y2="205" class="relation-line" />
-        <line x1="600" y1="205" x2="760" y2="175" class="relation-line relation-warning" />
-        <line x1="340" y1="430" x2="420" y2="250" class="relation-line relation-new" />
-      </svg>
-
-      <div class="relative h-[660px]">
-        <div
-          *ngFor="let tabela of tabelas"
-          class="table-node absolute w-64 rounded-xl border bg-slate-950/95 shadow-xl cursor-pointer transition hover:-translate-y-1"
-          [ngClass]="statusClass(tabela.status)"
-          [style.left.px]="tabela.x"
-          [style.top.px]="tabela.y"
-          (click)="selecionarTabela(tabela)"
-        >
-          <div class="flex items-center justify-between border-b border-slate-800 px-4 py-3">
-            <div>
-              <div class="text-xs text-slate-500">{{ tabela.schema }}</div>
-              <div class="font-semibold text-slate-100">{{ tabela.name }}</div>
-            </div>
-
-            <p-tag
-              [value]="statusLabel(tabela.status)"
-              [severity]="tabela.status === 'equal' ? 'success' : tabela.status === 'different' ? 'warn' : tabela.status === 'missing' ? 'danger' : 'info'"
-            />
-          </div>
-
-          <div class="divide-y divide-slate-800">
-            <div
-              *ngFor="let coluna of tabela.columns"
-              class="flex items-center justify-between px-4 py-2 text-sm"
-            >
-              <div class="flex items-center gap-2">
-                <span *ngIf="coluna.pk" class="text-amber-300">🔑</span>
-                <span *ngIf="coluna.fk" class="text-indigo-300">◆</span>
-                <span>{{ coluna.name }}</span>
-              </div>
-
-              <span class="text-xs text-slate-500">{{ coluna.type }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-
-    <aside class="col-span-12 lg:col-span-3 space-y-5">
-      <section class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-        <h2 class="mb-3 text-sm font-semibold text-slate-300">Detalhes</h2>
-
-        <div class="space-y-2 text-sm">
-          <div>
-            <span class="text-slate-500">Tabela:</span>
-            <span class="ml-2">{{ selectedTable.schema }}.{{ selectedTable.name }}</span>
-          </div>
-
-          <div>
-            <span class="text-slate-500">Status:</span>
-            <span class="ml-2">{{ statusLabel(selectedTable.status) }}</span>
-          </div>
-
-          <div>
-            <span class="text-slate-500">Colunas:</span>
-            <span class="ml-2">{{ selectedTable.columns.length }}</span>
-          </div>
-        </div>
-      </section>
-
-      <section class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-        <h2 class="mb-3 text-sm font-semibold text-slate-300">Diferenças</h2>
-
-        <div class="space-y-2 text-sm">
-          <div class="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-amber-200">
-            Coluna nu_cnpj diferente
-          </div>
-
-          <div class="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-red-200">
-            Tabela contrato ausente no destino
-          </div>
-
-          <div class="rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-3 py-2 text-indigo-200">
-            Tabela produto nova na origem
-          </div>
-        </div>
-      </section>
-
-      <section class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-        <div class="mb-3 flex items-center justify-between">
-          <h2 class="text-sm font-semibold text-slate-300">SQL Preview</h2>
-          <p-button label="Copiar" size="small" [text]="true" />
-        </div>
-
-        <pre class="rounded-xl bg-slate-950 p-4 text-xs text-emerald-300 overflow-auto">{{ sqlPreview }}</pre>
-      </section>
-    </aside>
+  <div class="loading-state" *ngIf="loading">
+    <p-progress-spinner />
   </div>
+
+  <ng-container *ngIf="response && !loading">
+    <section class="connection-strip">
+      <div>
+        <span>Origem</span>
+        <strong>{{ response.origem.nome }}</strong>
+        <p-tag [value]="response.origem.status" severity="success" />
+      </div>
+      <div>
+        <span>Destino</span>
+        <strong>{{ response.destino.nome }}</strong>
+        <p-tag [value]="response.destino.status" severity="success" />
+      </div>
+      <div>
+        <span>Base</span>
+        <strong>{{ response.base }} / {{ response.esquema }}</strong>
+      </div>
+    </section>
+
+    <section class="workspace">
+      <app-sidebar-tree
+        [schemas]="response.origem.schemas"
+        [comparacoes]="response.comparacao.tabelas"
+        (tabelaSelecionada)="selecionarTabela($event)"
+      />
+
+      <app-schema-diagram
+        [nodes]="nodes"
+        [edges]="edges"
+        (tabelaSelecionada)="selecionarTabelaDiagrama($event)"
+      />
+
+      <app-table-details-panel
+        [table]="selectedTable"
+        [comparison]="selectedComparison"
+      />
+    </section>
+
+    <section class="bottom-grid">
+      <app-diff-summary [resumo]="response.comparacao.resumo" />
+      <app-sql-preview-panel [sql]="response.comparacao.sqlPreview" />
+    </section>
+  </ng-container>
 </div>
