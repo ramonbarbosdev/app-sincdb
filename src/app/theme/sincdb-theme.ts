@@ -5,41 +5,53 @@ export const SyncDBTheme = definePreset(Aura, {
   primitive: {
     colorScheme: 'dark',
   },
+
   semantic: {
     primary: {
-      50: '#efeaff',
-      100: '#d8c9ff',
-      200: '#b08cff',
-      300: '#9366ff',
-      400: '#8552ff',
-      500: '#7f5af0', // BOTÕES / COR PRINCIPAL
-      600: '#6b46d9',
-      700: '#5533b4',
-      800: '#3d1f80',
-      900: '#2a1359',
+      50: '#ECFDF5',
+      100: '#D1FAE5',
+      200: '#A7F3D0',
+      300: '#6EE7B7',
+      400: '#34D399',
+      500: '#10B981', // COR PRINCIPAL
+      600: '#059669',
+      700: '#047857',
+      800: '#065F46',
+      900: '#064E3B',
     },
+
     surface: {
-      0: '#16161a', // FUNDO GERAL
-      50: '#1a1a1d',
-      100: '#1f1f23', // CONTÊINER / CARDS
-      200: '#212126',
+      0: '#0B0F14', // Fundo principal
+      50: '#0F141B',
+      100: '#111827', // Cards
+      200: '#1A2332', // Hover
+      300: '#243041',
     },
+
     text: {
-      primary: '#fffffe', // HEADLINE
-      secondary: '#94a1b2', // PARAGRAPH
-      disabled: '#72757e',
+      primary: '#F8FAFC',
+      secondary: '#94A3B8',
+      disabled: '#64748B',
     },
+
     border: {
-      default: '#010101', // Stroke
+      default: '#233044',
     },
+
     success: {
-      500: '#2cb67d',
+      500: '#22C55E',
     },
+
     warning: {
-      500: '#f4d35e',
+      500: '#F59E0B',
     },
+
     danger: {
-      500: '#ef3e36',
+      500: '#EF4444',
+    },
+
+    info: {
+      500: '#38BDF8',
     },
   },
 });
