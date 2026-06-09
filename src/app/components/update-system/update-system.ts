@@ -20,6 +20,7 @@ export class UpdateSystem {
   downloading$ = this.updateService.downloading;
   progress$ = this.updateService.progress;
   downloaded$ = this.updateService.downloaded;
+  error$ = this.updateService.error;
   showUpdateDialog = false;
 
 
@@ -27,6 +28,12 @@ export class UpdateSystem {
     
     this.updateAvailable$.subscribe(avail => {
       if (avail) {
+        this.showUpdateDialog = true;
+      }
+    });
+
+    this.error$.subscribe(error => {
+      if (error) {
         this.showUpdateDialog = true;
       }
     });
