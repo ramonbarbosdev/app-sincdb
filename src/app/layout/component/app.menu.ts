@@ -77,11 +77,11 @@ export class AppMenu {
         {
           label: 'Operações',
           items: [
-            {
-              label: 'Explorador Visual',
-              icon: 'pi pi-share-alt',
-              routerLink: ['/client/explorador'],
-            },
+            // {
+            //   label: 'Explorador Visual',
+            //   icon: 'pi pi-share-alt',
+            //   routerLink: ['/client/explorador'],
+            // },
             {
               label: 'Conexão',
               icon: 'pi pi-wifi',
