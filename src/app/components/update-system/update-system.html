@@ -1,83 +1,67 @@
 <p-dialog
-  header="Atualizacao do sistema"
+  header="Atualizacao disponivel"
   [(visible)]="showUpdateDialog"
   [modal]="true"
   [closable]="true"
   [draggable]="false"
-  [style]="{ width: '420px' }">
+  styleClass="update-dialog"
+  [style]="{ width: '460px' }">
 
   <ng-container *ngIf="error$ | async as error">
-    <div class="flex align-items-start gap-3 mb-3">
-      <i class="pi pi-exclamation-triangle text-red-500 text-2xl"></i>
-
+    <div class="update-alert update-alert-error">
+      <i class="pi pi-exclamation-triangle"></i>
       <div>
-        <p class="font-medium mb-1">
-          Nao foi possivel atualizar
-        </p>
-        <small class="text-color-secondary">
-          {{ error }}
-        </small>
+        <strong>Nao foi possivel atualizar</strong>
+        <span>{{ error }}</span>
       </div>
     </div>
   </ng-container>
 
   <ng-container *ngIf="updateAvailable$ | async">
-    <div class="flex align-items-start gap-3 mb-3">
-      <i class="pi pi-info-circle text-blue-500 text-2xl"></i>
+    <section class="update-hero">
+      <div class="update-icon">
+        <i class="pi pi-download"></i>
+      </div>
 
       <div>
-        <p class="font-medium mb-1">
-          Nova versao disponivel
+        <h2>Nova versao do SyncDB Desktop</h2>
+        <p>
+          Uma atualizacao esta disponivel. No macOS, a instalacao e feita manualmente
+          pela pagina oficial da release.
         </p>
-        <small class="text-color-secondary">
-          Recomendamos atualizar para obter melhorias e correcoes.
-        </small>
       </div>
+    </section>
+
+    <dl class="update-versions" *ngIf="versionInfo$ | async as versionInfo">
+      <div>
+        <dt>Versao atual</dt>
+        <dd>{{ versionInfo.currentVersion }}</dd>
+      </div>
+
+      <div>
+        <dt>Versao disponivel</dt>
+        <dd>{{ versionInfo.availableVersion }}</dd>
+      </div>
+    </dl>
+
+    <div class="update-note">
+      <i class="pi pi-apple"></i>
+      <span>Baixe o instalador mais recente, substitua o aplicativo atual e abra novamente.</span>
     </div>
 
-    <div class="flex justify-end">
+    <div class="update-actions">
       <p-button
-        label="Atualizar agora"
-        icon="pi pi-refresh"
-        (onClick)="update()">
+        label="Agora Nao"
+        icon="pi pi-times"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="dismiss()">
       </p-button>
-    </div>
-  </ng-container>
 
-  <ng-container *ngIf="downloading$ | async">
-    <div class="flex align-items-center gap-2 mb-4">
-      <i class="pi pi-download text-primary"></i>
-      <small class="text-color-secondary">
-        Baixando atualizacao...
-      </small>
-    </div>
-
-    <p-progressBar
-      [value]="progress$ | async"
-      [showValue]="true">
-    </p-progressBar>
-  </ng-container>
-
-  <ng-container *ngIf="downloaded$ | async">
-    <div class="flex align-items-start gap-3 mb-3 mt-3">
-      <i class="pi pi-check-circle text-green-500 text-2xl"></i>
-
-      <div>
-        <p class="font-medium mb-1">
-          Atualizacao pronta
-        </p>
-        <small class="text-color-secondary">
-          O aplicativo sera reiniciado para concluir a instalacao.
-        </small>
-      </div>
-    </div>
-
-    <div class="flex justify-end">
       <p-button
-        label="Instalar e reiniciar"
-        icon="pi pi-check"
-        severity="success"
-        (onClick)="install()">
+        label="Baixar Atualizacao"
+        icon="pi pi-external-link"
+        (onClick)="update()">
       </p-button>
     </div>
   </ng-container>

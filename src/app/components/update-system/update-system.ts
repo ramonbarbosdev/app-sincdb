@@ -4,11 +4,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
-import { ProgressBar } from 'primeng/progressbar';
 
 @Component({
   selector: 'app-update-system',
-  imports: [CommonModule, FormsModule, ButtonModule, DialogModule, ProgressBar],
+  imports: [CommonModule, FormsModule, ButtonModule, DialogModule],
   templateUrl: './update-system.html',
   styleUrl: './update-system.scss',
 })
@@ -17,9 +16,7 @@ export class UpdateSystem {
   private updateService = inject(UpdateService);
 
   updateAvailable$ = this.updateService.updateAvailable;
-  downloading$ = this.updateService.downloading;
-  progress$ = this.updateService.progress;
-  downloaded$ = this.updateService.downloaded;
+  versionInfo$ = this.updateService.versionInfo;
   error$ = this.updateService.error;
   showUpdateDialog = false;
 
@@ -40,10 +37,10 @@ export class UpdateSystem {
   }
 
   update() {
-    this.updateService.startUpdate();
+    this.updateService.openLatestRelease();
   }
 
-  install() {
-    this.updateService.installUpdate();
+  dismiss() {
+    this.showUpdateDialog = false;
   }
 }
