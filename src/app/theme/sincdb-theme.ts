@@ -5,53 +5,41 @@ export const SyncDBTheme = definePreset(Aura, {
   primitive: {
     colorScheme: 'dark',
   },
-
   semantic: {
     primary: {
-      50: '#ECFDF5',
-      100: '#D1FAE5',
-      200: '#A7F3D0',
-      300: '#6EE7B7',
-      400: '#34D399',
-      500: '#10B981', // COR PRINCIPAL
-      600: '#059669',
-      700: '#047857',
-      800: '#065F46',
-      900: '#064E3B',
+      50: '#efeaff',
+      100: '#d8c9ff',
+      200: '#b08cff',
+      300: '#9366ff',
+      400: '#8552ff',
+      500: '#7f5af0', // BOTÕES / COR PRINCIPAL
+      600: '#6b46d9',
+      700: '#5533b4',
+      800: '#3d1f80',
+      900: '#2a1359',
     },
-
     surface: {
-      0: '#0B0F14', // Fundo principal
-      50: '#0F141B',
-      100: '#111827', // Cards
-      200: '#1A2332', // Hover
-      300: '#243041',
+      0: '#16161a', // FUNDO GERAL
+      50: '#1a1a1d',
+      100: '#1f1f23', // CONTÊINER / CARDS
+      200: '#212126',
     },
-
     text: {
-      primary: '#F8FAFC',
-      secondary: '#94A3B8',
-      disabled: '#64748B',
+      primary: '#fffffe', // HEADLINE
+      secondary: '#94a1b2', // PARAGRAPH
+      disabled: '#72757e',
     },
-
     border: {
-      default: '#233044',
+      default: '#010101', // Stroke
     },
-
     success: {
-      500: '#22C55E',
+      500: '#2cb67d',
     },
-
     warning: {
-      500: '#F59E0B',
+      500: '#f4d35e',
     },
-
     danger: {
-      500: '#EF4444',
-    },
-
-    info: {
-      500: '#38BDF8',
+      500: '#ef3e36',
     },
   },
 });
