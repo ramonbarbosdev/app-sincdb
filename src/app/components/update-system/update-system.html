@@ -17,6 +17,52 @@
     </div>
   </ng-container>
 
+  <ng-container *ngIf="downloading$ | async">
+    <section class="update-hero">
+      <div class="update-icon">
+        <i class="pi pi-cloud-download"></i>
+      </div>
+
+      <div>
+        <h2>Baixando atualizacao</h2>
+        <p>Aguarde enquanto a nova versao e baixada.</p>
+      </div>
+    </section>
+
+    <div class="update-progress">
+      <p-progressBar [value]="(progress$ | async) || 0"></p-progressBar>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="downloaded$ | async">
+    <section class="update-hero">
+      <div class="update-icon">
+        <i class="pi pi-check-circle"></i>
+      </div>
+
+      <div>
+        <h2>Atualizacao pronta para instalar</h2>
+        <p>O aplicativo sera reiniciado para concluir a instalacao.</p>
+      </div>
+    </section>
+
+    <div class="update-actions">
+      <p-button
+        label="Agora Nao"
+        icon="pi pi-times"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="dismiss()">
+      </p-button>
+
+      <p-button
+        label="Instalar Agora"
+        icon="pi pi-refresh"
+        (onClick)="install()">
+      </p-button>
+    </div>
+  </ng-container>
+
   <ng-container *ngIf="updateAvailable$ | async">
     <section class="update-hero">
       <div class="update-icon">
@@ -25,7 +71,11 @@
 
       <div>
         <h2>Nova versao do SyncDB Desktop</h2>
-        <p>
+        <p *ngIf="!isMacOS">
+          Uma atualizacao esta disponivel. No Windows e Linux, o aplicativo pode baixar
+          e instalar automaticamente.
+        </p>
+        <p *ngIf="isMacOS">
           Uma atualizacao esta disponivel. No macOS, a instalacao e feita manualmente
           pela pagina oficial da release.
         </p>
@@ -44,7 +94,12 @@
       </div>
     </dl>
 
-    <div class="update-note">
+    <div class="update-note" *ngIf="!isMacOS">
+      <i class="pi pi-info-circle"></i>
+      <span>Se o download automatico falhar, abra a pagina da release e baixe o instalador manualmente.</span>
+    </div>
+
+    <div class="update-note" *ngIf="isMacOS">
       <i class="pi pi-apple"></i>
       <span>Baixe o instalador mais recente, substitua o aplicativo atual e abra novamente.</span>
     </div>
@@ -59,8 +114,17 @@
       </p-button>
 
       <p-button
-        label="Baixar Atualizacao"
+        [label]="isMacOS ? 'Baixar no macOS' : 'Abrir Release'"
         icon="pi pi-external-link"
+        [severity]="isMacOS ? undefined : 'secondary'"
+        [outlined]="!isMacOS"
+        (onClick)="openLatestRelease()">
+      </p-button>
+
+      <p-button
+        *ngIf="!isMacOS"
+        label="Baixar Atualizacao"
+        icon="pi pi-download"
         (onClick)="update()">
       </p-button>
     </div>
