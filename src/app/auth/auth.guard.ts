@@ -8,14 +8,13 @@ export const authGuard: CanActivateFn = (route, state) => {
   const auth = inject(AuthService);
 
   const rolesPermitidos = route.parent?.data?.['roles'] as string[] | undefined;
-  const user = auth.getUserSubbject();
 
   if (!auth.getAccessToken()) {
     router.navigate(['/auth/access']);
     return false;
   }
 
-  const role = user?.dsRole || user?.role || '';
+  const role = auth.getRole() || '';
   const userRole = ConverterNomeRoleMinusculo(role);
 
   if (userRole === '') {
@@ -23,7 +22,8 @@ export const authGuard: CanActivateFn = (route, state) => {
   }
 
   const roles = rolesPermitidos?.map((r) => r.toLowerCase()) ?? ['dev'];
-  const permitido = roles.includes(userRole);
+  const permitido =
+    roles.includes(userRole) || (roles.includes('client') && userRole !== 'dev');
 
   if (!permitido) {
     console.error('Usuario nao permitido [AUTH GUARD]');

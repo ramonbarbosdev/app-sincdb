@@ -58,7 +58,7 @@ export class SelecionarOrganizacao {
       next: (res: any) => {
         this.loading = false;
         this.visible = false;
-        this.gerenciarRotaUsuario(res);
+        this.gerenciarRotaUsuario();
         this.cd.markForCheck();
       },
       error: () => {
@@ -68,8 +68,8 @@ export class SelecionarOrganizacao {
     });
   }
 
-  gerenciarRotaUsuario(res: any) {
-    if (res.dsRole === 'ROLE_DEV') {
+  gerenciarRotaUsuario() {
+    if (this.auth.getRole() === 'ROLE_DEV') {
       this.router.navigate(['dev/home']);
       return;
     }

@@ -77,7 +77,7 @@ export class Login {
             return item;
           });
         } else {
-          this.redirecionarPorRole(res.dsRole);
+          this.redirecionarPorRole(this.auth.getRole());
         }
 
         this.loading = false;
@@ -112,7 +112,7 @@ export class Login {
     this.auth.checkAuth().subscribe({
       next: (res: any) => {
         if (res) {
-          this.redirecionarPorRole(this.auth.getUserSubbject()?.dsRole);
+          this.redirecionarPorRole(this.auth.getRole());
         }
       },
     });

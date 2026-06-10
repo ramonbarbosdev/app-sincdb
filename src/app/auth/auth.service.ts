@@ -35,14 +35,22 @@ export class AuthService {
 
     return this.http.post(`${this.apiUrl}/auth/login`, payload).pipe(
       tap((res: any) => {
+        const role = this.extrairRole(res);
         const userInfo = {
-          tokenTemporario: res.accessToken,
+          tokenTemporario: res.precisaSelecionarOrganizacao ? res.accessToken : undefined,
           token: res.precisaSelecionarOrganizacao ? undefined : res.accessToken,
           accessToken: res.accessToken,
           tpGlobal: res.tpGlobal,
           precisaSelecionarOrganizacao: !!res.precisaSelecionarOrganizacao,
           trocarSenha: !!res.trocarSenha,
           organizacoes: res.organizacoes ?? [],
+          idUsuario: res.idUsuario,
+          idOrganizacao: res.idOrganizacao,
+          dsRole: role,
+          role,
+          nmUsuario: res.nmUsuario,
+          nmEmail: res.nmEmail,
+          permissoes: res.permissoes ?? [],
         };
 
         this.salvarSessao(userInfo);
@@ -56,7 +64,7 @@ export class AuthService {
   }
 
   selecionarOrganizacao(idOrganizacao: string): Observable<any> {
-    const tokenTemporario = this.getUserSubbject()?.tokenTemporario;
+    const tokenTemporario = this.getTokenTemporario();
 
     return this.http
       .post(
@@ -66,14 +74,15 @@ export class AuthService {
       )
       .pipe(
         tap((res: any) => {
+          const role = this.extrairRole(res);
           const userInfo = {
             ...this.getUserSubbject(),
             tokenTemporario: undefined,
             token: res.accessToken,
             accessToken: res.accessToken,
             idOrganizacao: res.idOrganizacao,
-            dsRole: res.dsRole,
-            role: res.dsRole,
+            dsRole: role,
+            role,
             permissoes: res.permissoes ?? [],
             precisaSelecionarOrganizacao: false,
           };
@@ -92,15 +101,19 @@ export class AuthService {
     const userJson = sessionStorage.getItem('user');
     if (!userJson) return of();
 
+    const user = JSON.parse(userJson);
+    if (!user?.token || user?.precisaSelecionarOrganizacao) return of();
+
     return this.http.get(`${this.apiUrl}/auth/me`).pipe(
       tap((res: any) => {
+        const role = this.extrairRole(res);
         this.salvarSessao({
           ...this.getUserSubbject(),
           idUsuario: res.idUsuario,
           tpGlobal: res.tpGlobal,
           idOrganizacao: res.idOrganizacao,
-          dsRole: res.dsRole,
-          role: res.dsRole,
+          dsRole: role,
+          role,
           nmUsuario: res.nmUsuario,
           nmEmail: res.nmEmail,
           permissoes: res.permissoes ?? [],
@@ -127,6 +140,17 @@ export class AuthService {
   getAccessToken(): string | undefined {
     const user = this.userSubject.value;
     return user?.token;
+  }
+
+  getTokenTemporario(): string | undefined {
+    const user = this.userSubject.value;
+    return (
+      user?.tokenTemporario ?? (user?.precisaSelecionarOrganizacao ? user?.accessToken : undefined)
+    );
+  }
+
+  getRole(): string | undefined {
+    return this.extrairRole(this.userSubject.value);
   }
 
   getUser() {
@@ -181,6 +205,29 @@ export class AuthService {
   private limparSessao() {
     this.userSubject.next(null);
     sessionStorage.removeItem('user');
+  }
+
+  private extrairRole(data: any): string | undefined {
+    const role = data?.dsRole ?? data?.role ?? data?.nomeRole ?? data?.authority;
+    if (typeof role === 'string' && role.trim()) return role;
+
+    const roles = data?.roles ?? data?.authorities;
+    if (!Array.isArray(roles)) return undefined;
+
+    const primeiraRole = roles.find((item) => {
+      if (typeof item === 'string') return item.trim();
+      return item?.dsRole || item?.role || item?.nomeRole || item?.name || item?.authority;
+    });
+
+    if (typeof primeiraRole === 'string') return primeiraRole;
+
+    return (
+      primeiraRole?.dsRole ??
+      primeiraRole?.role ??
+      primeiraRole?.nomeRole ??
+      primeiraRole?.name ??
+      primeiraRole?.authority
+    );
   }
 
   private removerMascaraCpf(cpf: string): string {
