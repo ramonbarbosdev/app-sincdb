@@ -7,7 +7,6 @@ import { PasswordModule } from 'primeng/password';
 import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MessageModule } from 'primeng/message';
-import { Auth } from '../../../models/auth';
 import { CommonModule } from '@angular/common';
 import { LoginSchema } from '../../../schema/login-schema';
 import { ZodError } from 'zod';
@@ -41,7 +40,10 @@ import { SelecionarOrganizacao } from '../selecionar-organizacao/selecionar-orga
   styleUrl: './login.scss',
 })
 export class Login {
-  public objeto = new Auth();
+  public objeto: { nuCpf: string; dsSenha: string; idOrganizacao?: string } = {
+    nuCpf: '',
+    dsSenha: '',
+  };
   checked: boolean = false;
   loading: boolean = false;
   visibleOrganizacao: boolean = false;
