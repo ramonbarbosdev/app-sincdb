@@ -193,7 +193,16 @@
       [label]="'Senha: (*)'"
       [width]="'md:w-6/12'"
     >
+      <input
+        *ngIf="senhaCloudProtegidaPorCertificado"
+        pInputText
+        [value]="senhaCertificadoMascarada"
+        class="w-full"
+        readonly
+      />
+
       <p-password
+        *ngIf="!senhaCloudProtegidaPorCertificado"
         [(ngModel)]="objeto.db_cloud_password"
         [toggleMask]="true"
         [fluid]="true"
@@ -278,7 +287,16 @@
       [label]="'Senha: (*)'"
       [width]="'md:w-6/12'"
     >
+      <input
+        *ngIf="senhaLocalProtegidaPorCertificado"
+        pInputText
+        [value]="senhaCertificadoMascarada"
+        class="w-full"
+        readonly
+      />
+
       <p-password
+        *ngIf="!senhaLocalProtegidaPorCertificado"
         [(ngModel)]="objeto.db_local_password"
         [toggleMask]="true"
         [fluid]="true"

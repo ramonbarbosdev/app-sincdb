@@ -36,6 +36,7 @@ import { UploadCertiicado } from '../upload-certiicado/upload-certiicado';
   styleUrl: './conexaoform.scss',
 })
 export class Conexaoform {
+  private readonly senhaMascarada = '*****';
   public errorValidacao: Record<string, string> = {};
   public listaConexoes: Conexao[] = [];
   public objeto: Conexao = new Conexao();
@@ -43,6 +44,8 @@ export class Conexaoform {
   public loading = false;
   public salvando = false;
   public carregandoConexao = false;
+  public senhaCloudProtegidaPorCertificado = false;
+  public senhaLocalProtegidaPorCertificado = false;
 
   private baseService = inject(BaseService);
   private cd = inject(ChangeDetectorRef);
@@ -70,6 +73,7 @@ export class Conexaoform {
   novaConexao() {
     this.objeto = new Conexao();
     this.objeto.fl_padrao = this.listaConexoes.length === 0;
+    this.limparProtecaoSenhaCertificado();
     this.errorValidacao = {};
     this.dialogVisible = true;
   }
@@ -87,6 +91,7 @@ export class Conexaoform {
     this.baseService.findById(this.endpoint, id).subscribe({
       next: (res: any) => {
         this.objeto = this.normalizarConexao(res);
+        this.protegerSenhasCertificado(this.objeto);
         this.errorValidacao = {};
         this.dialogVisible = true;
         this.carregandoConexao = false;
@@ -167,6 +172,7 @@ export class Conexaoform {
     }
 
     this.aplicarDadosConexao(this.objeto, dados);
+    this.protegerSenhasCertificado(this.objeto);
 
     this.cd.markForCheck();
   }
@@ -191,6 +197,10 @@ export class Conexaoform {
 
   obterIdConexao(conexao: Conexao): string | undefined {
     return conexao.id || conexao.id_conexao;
+  }
+
+  get senhaCertificadoMascarada(): string {
+    return this.senhaMascarada;
   }
 
   private montarPayload(conexao: Conexao) {
@@ -281,5 +291,20 @@ export class Conexaoform {
       conexoes[0].fl_padrao = true;
     }
     return conexoes;
+  }
+
+  private protegerSenhasCertificado(conexao: Conexao) {
+    if (!conexao.arquivoValidado) {
+      this.limparProtecaoSenhaCertificado();
+      return;
+    }
+
+    this.senhaCloudProtegidaPorCertificado = !!conexao.db_cloud_password;
+    this.senhaLocalProtegidaPorCertificado = !!conexao.db_local_password;
+  }
+
+  private limparProtecaoSenhaCertificado() {
+    this.senhaCloudProtegidaPorCertificado = false;
+    this.senhaLocalProtegidaPorCertificado = false;
   }
 }
