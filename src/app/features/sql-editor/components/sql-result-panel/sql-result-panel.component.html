@@ -1,0 +1,58 @@
+<section class="result-panel">
+  <p-tabs value="results">
+    <p-tablist>
+      <p-tab value="results">Resultados</p-tab>
+      <p-tab value="messages">Mensagens</p-tab>
+    </p-tablist>
+
+    <p-tabpanels>
+      <p-tabpanel value="results">
+        <div class="loading-state" *ngIf="state === 'executing'">
+          <p-progress-spinner />
+          <span>Executando consulta...</span>
+        </div>
+
+        <div class="empty-state" *ngIf="state !== 'executing' && (!result || !result.rows.length)">
+          <i class="pi pi-table"></i>
+          <strong>Execute uma consulta para visualizar os resultados</strong>
+          <span>Use SELECT com LIMIT para carregar os dados com seguranca</span>
+        </div>
+
+        <div class="result-summary" *ngIf="state !== 'executing' && result">
+          <span>{{ result.rows.length }} linhas retornadas</span>
+          <span>{{ result.executionTimeMs }} ms</span>
+          <span *ngIf="result.affectedRows !== undefined">{{ result.affectedRows }} linhas afetadas</span>
+        </div>
+
+        <p-table
+          *ngIf="state !== 'executing' && result && result.rows.length"
+          [value]="result.rows"
+          [scrollable]="true"
+          scrollHeight="320px"
+          styleClass="p-datatable-sm"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th *ngFor="let column of result.columns">{{ columnLabel(column) }}</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr>
+              <td *ngFor="let column of result?.columns || []">{{ cellValue(row, column) }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabpanel>
+
+      <p-tabpanel value="messages">
+        <div class="messages">
+          <strong *ngIf="state === 'error'">Erro ao executar consulta</strong>
+          <strong *ngIf="state !== 'error'">{{ result?.message || 'Nenhuma mensagem disponivel.' }}</strong>
+          <span *ngIf="state === 'error'">{{ errorMessage }}</span>
+          <span *ngIf="result">Tempo: {{ result.executionTimeMs }} ms</span>
+          <span *ngIf="result?.affectedRows !== undefined">Linhas afetadas: {{ result?.affectedRows }}</span>
+        </div>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+</section>

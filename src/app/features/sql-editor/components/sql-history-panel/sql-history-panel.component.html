@@ -1,0 +1,13 @@
+<section class="side-panel">
+  <header>
+    <strong>History</strong>
+    <span>{{ items.length }} itens</span>
+  </header>
+
+  <div class="empty" *ngIf="!items.length">Historico de consultas vazio</div>
+
+  <button type="button" class="query-item" *ngFor="let item of items" (click)="selected.emit(item)">
+    <code>{{ item.sql }}</code>
+    <span>{{ item.base }} - {{ item.executionTimeMs || 0 }} ms</span>
+  </button>
+</section>

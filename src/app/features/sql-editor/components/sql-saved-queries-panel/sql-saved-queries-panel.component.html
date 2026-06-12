@@ -1,0 +1,13 @@
+<section class="side-panel">
+  <header>
+    <strong>Saved</strong>
+    <span>{{ items.length }} salvas</span>
+  </header>
+
+  <div class="empty" *ngIf="!items.length">Voce ainda nao possui consultas salvas</div>
+
+  <button type="button" class="query-item" *ngFor="let item of items" (click)="selected.emit(item)">
+    <strong>{{ item.name }}</strong>
+    <code>{{ item.sql }}</code>
+  </button>
+</section>

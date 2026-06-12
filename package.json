@@ -32,6 +32,7 @@
     "@stomp/stompjs": "^7.1.1",
     "@tailwindcss/postcss": "^4.1.17",
     "@types/socket.io-client": "^1.4.36",
+    "monaco-editor": "^0.55.1",
     "ngx-mask": "^19.0.7",
     "ngx-vflow": "^2.6.0",
     "postcss": "^8.5.6",

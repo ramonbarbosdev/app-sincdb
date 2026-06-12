@@ -13,6 +13,7 @@ import { Dadosform } from './pages/dados/dadosform/dadosform';
 import { Perfil } from './pages/client/perfil/perfil';
 import { ParametroMasterList } from './pages/dev/parametros/parametro-master-list/parametro-master-list';
 import { ExploradorVisualPage } from './features/explorador-visual/pages/explorador-visual.page';
+import { SqlEditorPage } from './features/sql-editor/pages/sql-editor.page';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
@@ -41,6 +42,7 @@ export const routes: Routes = [
       { path: 'home', component: HomeClient },
       { path: 'perfil', component: Perfil },
       { path: 'explorador', component: ExploradorVisualPage },
+      { path: 'sql-editor', component: SqlEditorPage },
       { path: 'conexao', component: Conexaoform },
       { path: 'estrutura', component: Estruturaform },
       { path: 'dados', component: Dadosform }

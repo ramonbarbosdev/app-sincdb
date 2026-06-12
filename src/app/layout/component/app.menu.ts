@@ -97,6 +97,11 @@ export class AppMenu {
               icon: 'pi pi-database',
               routerLink: ['/client/dados'],
             },
+            {
+              label: 'SQL Editor',
+              icon: 'pi pi-code',
+              routerLink: ['/client/sql-editor'],
+            },
           ],
         },
       ];

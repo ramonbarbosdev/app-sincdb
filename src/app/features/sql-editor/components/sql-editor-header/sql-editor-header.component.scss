@@ -1,0 +1,46 @@
+.sql-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  background: #16161a;
+}
+
+.title-block {
+  min-width: 0;
+
+  h1 {
+    margin: 0;
+    color: #fffffe;
+    font-size: 1.35rem;
+    line-height: 1.2;
+  }
+
+  p {
+    margin: 0.3rem 0 0;
+    color: #94a1b2;
+    font-size: 0.92rem;
+  }
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 780px) {
+  .sql-page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

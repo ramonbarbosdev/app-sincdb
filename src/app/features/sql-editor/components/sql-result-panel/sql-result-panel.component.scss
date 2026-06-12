@@ -1,0 +1,65 @@
+.result-panel {
+  min-height: 18rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #1f1f23;
+}
+
+:host ::ng-deep .p-tabs {
+  background: transparent;
+}
+
+:host ::ng-deep .p-tablist-tab-list,
+:host ::ng-deep .p-tabpanels {
+  background: transparent;
+}
+
+.empty-state,
+.loading-state {
+  min-height: 15rem;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.45rem;
+  color: #94a1b2;
+  text-align: center;
+}
+
+.empty-state i {
+  color: #7f5af0;
+  font-size: 1.7rem;
+}
+
+.empty-state strong,
+.messages strong {
+  color: #fffffe;
+}
+
+.messages {
+  min-height: 12rem;
+  display: grid;
+  align-content: start;
+  gap: 0.45rem;
+  color: #94a1b2;
+}
+
+.result-summary {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 0;
+  color: #94a1b2;
+  font-size: 0.82rem;
+}
+
+.result-summary span {
+  border: 1px solid rgba(127, 90, 240, 0.28);
+  border-radius: 999px;
+  padding: 0.28rem 0.6rem;
+  background: rgba(127, 90, 240, 0.12);
+}
+
+:host ::ng-deep .p-datatable {
+  font-size: 0.84rem;
+}

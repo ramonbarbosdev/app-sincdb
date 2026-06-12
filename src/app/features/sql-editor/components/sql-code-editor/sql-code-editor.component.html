@@ -1,0 +1,34 @@
+<section class="editor-panel">
+  <div class="editor-titlebar">
+    <div>
+      <strong>Editor SQL</strong>
+      <span>Ctrl + Enter para executar</span>
+    </div>
+    <span class="engine-pill">Monaco Editor ativo</span>
+  </div>
+
+  <div class="danger-message" *ngIf="danger.dangerous">
+    <p-message severity="warn" [text]="danger.reason" />
+  </div>
+
+  <div class="editor-body">
+    <div #monacoContainer class="monaco-container" aria-label="Editor SQL"></div>
+  </div>
+
+  <footer class="editor-footer">
+    <span class="ready-state"><i class="pi pi-circle-fill"></i> Pronto para executar</span>
+
+    <div class="editor-actions">
+      <p-button label="Formatar" icon="pi pi-align-left" severity="secondary" [outlined]="true" (click)="formatar.emit()" />
+      <p-button
+        label="Executar"
+        icon="pi pi-play"
+        [loading]="executing"
+        [disabled]="executing"
+        (click)="executar.emit()"
+      />
+      <p-button icon="pi pi-angle-down" severity="secondary" [outlined]="true" (click)="options.toggle($event)" />
+      <p-menu #options [model]="menuItems" [popup]="true" />
+    </div>
+  </footer>
+</section>

@@ -1,0 +1,51 @@
+<section class="context-toolbar">
+  <label>
+    <span>Ambiente</span>
+    <p-select
+      [ngModel]="ambiente"
+      (ngModelChange)="ambienteChange.emit($event)"
+      [options]="ambientes"
+      optionLabel="label"
+      optionValue="value"
+      styleClass="sql-selector"
+    />
+  </label>
+
+  <label>
+    <span>Conexao</span>
+    <p-select
+      [ngModel]="conexaoId"
+      (ngModelChange)="conexaoIdChange.emit($event)"
+      [options]="conexoes"
+      optionLabel="label"
+      optionValue="value"
+      styleClass="sql-selector wide"
+      [loading]="loadingConexoes"
+      [filter]="true"
+      filterPlaceholder="Buscar conexao..."
+    />
+  </label>
+
+  <label>
+    <span>Base de Dados</span>
+    <p-select
+      [ngModel]="base"
+      (ngModelChange)="baseChange.emit($event)"
+      [options]="bases"
+      optionLabel="label"
+      optionValue="value"
+      styleClass="sql-selector"
+      placeholder="w5i_homologacao"
+      [loading]="loadingBases"
+      [filter]="true"
+      filterPlaceholder="Buscar base..."
+    />
+  </label>
+
+  <div class="status-box">
+    <span>Status</span>
+    <p-tag [severity]="connected ? 'success' : 'danger'" [value]="connected ? 'Conectado' : 'Desconectado'" />
+  </div>
+
+  <p-button icon="pi pi-refresh" severity="secondary" [text]="true" (click)="refresh.emit()" />
+</section>
