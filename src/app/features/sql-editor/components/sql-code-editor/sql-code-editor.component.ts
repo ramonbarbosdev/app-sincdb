@@ -16,6 +16,7 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import type * as Monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
+import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import { DangerousSqlCheck } from '../../models/sql-editor.model';
 import { SqlToolbarComponent } from '../sql-toolbar/sql-toolbar.component';
 
@@ -124,18 +125,25 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
       theme: this.getMonacoTheme(),
       automaticLayout: true,
       minimap: { enabled: false },
-      fontFamily: '"Cascadia Code", "Consolas", "Monaco", monospace',
-      fontSize: 14,
-      lineHeight: 22,
+      fontFamily: '"JetBrains Mono", "Cascadia Code", Consolas, monospace',
+      fontSize: 13,
+      lineHeight: 20,
       tabSize: 2,
-      wordWrap: 'on',
+      wordWrap: 'off',
       scrollBeyondLastLine: false,
       renderLineHighlight: 'line',
-      roundedSelection: false,
-      padding: { top: 14, bottom: 14 },
+      roundedSelection: true,
+      padding: { top: 12, bottom: 12 },
+      lineNumbersMinChars: 3,
+      glyphMargin: false,
+      folding: true,
+      lineDecorationsWidth: 8,
+      overviewRulerBorder: false,
+      hideCursorInOverviewRuler: true,
       scrollbar: {
         verticalScrollbarSize: 10,
         horizontalScrollbarSize: 10,
+        alwaysConsumeMouseWheel: false,
       },
     });
 
@@ -160,14 +168,7 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
 
   private configureMonaco(monacoApi: MonacoApi): void {
     (globalThis as { MonacoEnvironment?: Monaco.Environment }).MonacoEnvironment = {
-      getWorker: () =>
-        new Worker(
-          new URL(
-            '../../../../../../node_modules/monaco-editor/esm/vs/editor/editor.worker.js',
-            import.meta.url
-          ),
-          { type: 'module' }
-        ),
+      getWorker: () => new EditorWorker(),
     };
 
     if (SqlCodeEditorComponent.themeRegistered) return;
@@ -255,7 +256,8 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
     const colorScheme = getComputedStyle(document.documentElement).colorScheme;
     const backgroundColor = getComputedStyle(document.documentElement)
       .getPropertyValue('--surface-ground')
-      .trim();
+      .trim()
+      .toLowerCase();
 
     return (
       html.classList.contains('light') ||
