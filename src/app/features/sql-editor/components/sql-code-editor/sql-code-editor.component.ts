@@ -16,7 +16,6 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import type * as Monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
-import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import { DangerousSqlCheck } from '../../models/sql-editor.model';
 import { SqlToolbarComponent } from '../sql-toolbar/sql-toolbar.component';
 
@@ -168,9 +167,16 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
 
   private configureMonaco(monacoApi: MonacoApi): void {
     (globalThis as { MonacoEnvironment?: Monaco.Environment }).MonacoEnvironment = {
-      getWorker: () => new EditorWorker(),
+      getWorker: () =>
+        new Worker(
+          new URL(
+            'monaco-editor/esm/vs/editor/editor.worker.js',
+            import.meta.url
+          ),
+          { type: 'module' }
+        ),
     };
-
+    
     if (SqlCodeEditorComponent.themeRegistered) return;
 
     monacoApi.editor.defineTheme('syncdb-sql-dark', {
