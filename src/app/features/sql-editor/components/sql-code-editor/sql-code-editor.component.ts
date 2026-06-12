@@ -34,6 +34,7 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
   @Input() sql = '';
   @Input() executing = false;
   @Input() danger: DangerousSqlCheck = { dangerous: false, reason: '' };
+
   @Output() sqlChange = new EventEmitter<string>();
   @Output() formatar = new EventEmitter<void>();
   @Output() executar = new EventEmitter<void>();
@@ -45,8 +46,11 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
   expanded = false;
 
   private static themeRegistered = false;
+
   private editor?: Monaco.editor.IStandaloneCodeEditor;
+  private monacoApi?: MonacoApi;
   private resizeObserver?: ResizeObserver;
+  private themeObserver?: MutationObserver;
   private updatingFromInput = false;
 
   ngAfterViewInit(): void {
@@ -57,6 +61,7 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
     if (!changes['sql'] || !this.editor) return;
 
     const model = this.editor.getModel();
+
     if (!model || model.getValue() === this.sql) return;
 
     this.updatingFromInput = true;
@@ -65,6 +70,7 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
   }
 
   ngOnDestroy(): void {
+    this.themeObserver?.disconnect();
     this.resizeObserver?.disconnect();
     this.editor?.dispose();
   }
@@ -82,7 +88,74 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
 
   toggleExpanded(): void {
     this.expanded = !this.expanded;
-    setTimeout(() => this.editor?.layout());
+
+    setTimeout(() => {
+      this.editor?.layout();
+    });
+  }
+
+  emitSelectedSql(): void {
+    const model = this.editor?.getModel();
+    const selection = this.editor?.getSelection();
+
+    if (!model || !selection || selection.isEmpty()) {
+      this.executarSelecionado.emit(this.editor?.getValue() || this.sql);
+      return;
+    }
+
+    this.executarSelecionado.emit(model.getValueInRange(selection));
+  }
+
+  private async createEditor(): Promise<void> {
+    if (!this.monacoContainer?.nativeElement) return;
+
+    const [monacoApi] = await Promise.all([
+      import('monaco-editor/esm/vs/editor/editor.api.js'),
+      import('monaco-editor/esm/vs/basic-languages/sql/sql.contribution.js'),
+    ]);
+
+    this.monacoApi = monacoApi;
+
+    this.configureMonaco(monacoApi);
+
+    this.editor = monacoApi.editor.create(this.monacoContainer.nativeElement, {
+      value: this.sql,
+      language: 'sql',
+      theme: this.getMonacoTheme(),
+      automaticLayout: true,
+      minimap: { enabled: false },
+      fontFamily: '"Cascadia Code", "Consolas", "Monaco", monospace',
+      fontSize: 14,
+      lineHeight: 22,
+      tabSize: 2,
+      wordWrap: 'on',
+      scrollBeyondLastLine: false,
+      renderLineHighlight: 'line',
+      roundedSelection: false,
+      padding: { top: 14, bottom: 14 },
+      scrollbar: {
+        verticalScrollbarSize: 10,
+        horizontalScrollbarSize: 10,
+      },
+    });
+
+    this.editor.onDidChangeModelContent(() => {
+      if (this.updatingFromInput) return;
+
+      this.sqlChange.emit(this.editor?.getValue() || '');
+    });
+
+    this.editor.addCommand(monacoApi.KeyMod.CtrlCmd | monacoApi.KeyCode.Enter, () => {
+      this.executar.emit();
+    });
+
+    this.resizeObserver = new ResizeObserver(() => {
+      this.editor?.layout();
+    });
+
+    this.resizeObserver.observe(this.monacoContainer.nativeElement);
+
+    this.observeThemeChanges();
   }
 
   private configureMonaco(monacoApi: MonacoApi): void {
@@ -146,61 +219,29 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
     SqlCodeEditorComponent.themeRegistered = true;
   }
 
+  private observeThemeChanges(): void {
+    this.themeObserver?.disconnect();
 
-  private async createEditor(): Promise<void> {
-    if (!this.monacoContainer?.nativeElement) return;
-
-    const [monacoApi] = await Promise.all([
-      import('monaco-editor/esm/vs/editor/editor.api.js'),
-      import('monaco-editor/esm/vs/basic-languages/sql/sql.contribution.js'),
-    ]);
-
-    this.configureMonaco(monacoApi);
-
-    this.editor = monacoApi.editor.create(this.monacoContainer.nativeElement, {
-      value: this.sql,
-      language: 'sql',
-      theme: this.getMonacoTheme(),
-      automaticLayout: true,
-      minimap: { enabled: false },
-      fontFamily: '"Cascadia Code", "Consolas", "Monaco", monospace',
-      fontSize: 14,
-      lineHeight: 22,
-      tabSize: 2,
-      wordWrap: 'on',
-      scrollBeyondLastLine: false,
-      renderLineHighlight: 'line',
-      roundedSelection: false,
-      padding: { top: 14, bottom: 14 },
-      scrollbar: {
-        verticalScrollbarSize: 10,
-        horizontalScrollbarSize: 10,
-      },
+    this.themeObserver = new MutationObserver(() => {
+      this.applyMonacoTheme();
     });
 
-    this.editor.onDidChangeModelContent(() => {
-      if (this.updatingFromInput) return;
-      this.sqlChange.emit(this.editor?.getValue() || '');
+    this.themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'style', 'data-theme'],
     });
 
-    this.editor.addCommand(monacoApi.KeyMod.CtrlCmd | monacoApi.KeyCode.Enter, () => {
-      this.executar.emit();
+    this.themeObserver.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['class', 'style', 'data-theme'],
     });
-
-    this.resizeObserver = new ResizeObserver(() => this.editor?.layout());
-    this.resizeObserver.observe(this.monacoContainer.nativeElement);
   }
 
-  emitSelectedSql(): void {
-    const model = this.editor?.getModel();
-    const selection = this.editor?.getSelection();
+  private applyMonacoTheme(): void {
+    if (!this.monacoApi || !this.editor) return;
 
-    if (!model || !selection || selection.isEmpty()) {
-      this.executarSelecionado.emit(this.editor?.getValue() || this.sql);
-      return;
-    }
-
-    this.executarSelecionado.emit(model.getValueInRange(selection));
+    this.monacoApi.editor.setTheme(this.getMonacoTheme());
+    this.editor.layout();
   }
 
   private getMonacoTheme(): string {
@@ -211,12 +252,25 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
     const html = document.documentElement;
     const body = document.body;
 
+    const colorScheme = getComputedStyle(document.documentElement).colorScheme;
+    const backgroundColor = getComputedStyle(document.documentElement)
+      .getPropertyValue('--surface-ground')
+      .trim();
+
     return (
       html.classList.contains('light') ||
       html.classList.contains('p-light') ||
+      html.classList.contains('light-mode') ||
+      html.classList.contains('theme-light') ||
+      html.getAttribute('data-theme') === 'light' ||
       body.classList.contains('light') ||
       body.classList.contains('p-light') ||
-      getComputedStyle(document.documentElement).colorScheme === 'light'
+      body.classList.contains('light-mode') ||
+      body.classList.contains('theme-light') ||
+      body.getAttribute('data-theme') === 'light' ||
+      colorScheme === 'light' ||
+      backgroundColor === '#ffffff' ||
+      backgroundColor === '#fff'
     );
   }
 }
