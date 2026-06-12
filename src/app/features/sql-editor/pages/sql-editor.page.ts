@@ -13,7 +13,6 @@ import { SqlEditorToolbarComponent } from '../components/sql-editor-toolbar/sql-
 import { SqlHistoryPanelComponent } from '../components/sql-history-panel/sql-history-panel.component';
 import { SqlMessagesPanelComponent } from '../components/sql-messages-panel/sql-messages-panel.component';
 import { SqlResultPanelComponent } from '../components/sql-result-panel/sql-result-panel.component';
-import { SqlSavedQueriesPanelComponent } from '../components/sql-saved-queries-panel/sql-saved-queries-panel.component';
 import {
   DangerousSqlCheck,
   PendingSqlExecution,
@@ -52,247 +51,14 @@ LIMIT 100;`;
     SqlMessagesPanelComponent,
     SqlResultPanelComponent,
     SqlHistoryPanelComponent,
-    SqlSavedQueriesPanelComponent,
   ],
-  template: `
-    <div class="sql-editor-shell">
-      <app-sql-editor-header
-        (novo)="novaConsulta()"
-        (salvar)="salvarConsulta()"
-        (historico)="toggleHistory()"
-      />
-
-      <app-sql-editor-toolbar
-        [ambiente]="ambiente"
-        [conexaoId]="conexaoId"
-        [base]="base"
-        [maxRows]="maxRows"
-        [timeoutSeconds]="timeoutSeconds"
-        [connected]="connected"
-        [ambientes]="ambientes"
-        [conexoes]="conexoes"
-        [bases]="bases"
-        [loadingConexoes]="loadingConexoes"
-        [loadingBases]="loadingBases"
-        (ambienteChange)="onAmbienteChange($event)"
-        (conexaoIdChange)="onConexaoChange($event)"
-        (baseChange)="base = $event"
-        (maxRowsChange)="maxRows = $event"
-        (timeoutSecondsChange)="timeoutSeconds = $event"
-        (refresh)="recarregarContexto()"
-      />
-
-      <div class="workspace">
-        <aside class="inner-sidebar" [class.compact]="!sidePanelOpen">
-          <app-sql-saved-queries-panel
-            *ngIf="sidePanelOpen"
-            [items]="savedQueries"
-            (selected)="aplicarConsultaSalva($event)"
-          />
-          <app-sql-history-panel
-            *ngIf="false"
-            [items]="history"
-            (selected)="aplicarHistorico($event)"
-          />
-        </aside>
-
-        <main class="editor-area">
-          <section class="cloud-block-alert" *ngIf="cloudBlockedMessage">
-            <div>
-              <strong>Execucao SQL no Cloud esta desabilitada</strong>
-              <p>{{ cloudBlockedMessage }}</p>
-              <span *ngIf="isAdmin">
-                Usuario administrador: habilite o parametro do sistema para permitir execucao SQL em Cloud.
-              </span>
-            </div>
-
-            <p-button
-              *ngIf="ambiente === 'cloud'"
-              label="Usar ambiente local"
-              icon="pi pi-desktop"
-              severity="secondary"
-              [outlined]="true"
-              (click)="usarAmbienteLocal()"
-            />
-          </section>
-
-          <app-sql-code-editor
-            [sql]="sql"
-            [executing]="state === 'executing'"
-            [danger]="dangerCheck"
-            (sqlChange)="onSqlChange($event)"
-            (formatar)="formatarSql()"
-            (executar)="executar()"
-            (executarSelecionado)="executar($event)"
-            (limpar)="limparEditor()"
-            (salvar)="salvarConsulta()"
-            (historico)="toggleHistory()"
-          />
-
-          <section class="bottom-panel">
-            <p-tabs value="results">
-              <p-tablist>
-                <p-tab value="results">Resultados</p-tab>
-                <p-tab value="messages">Mensagens</p-tab>
-                <p-tab value="history">Historico</p-tab>
-              </p-tablist>
-
-              <p-tabpanels>
-                <p-tabpanel value="results">
-                  <app-sql-result-panel [state]="state" [result]="result" [errorMessage]="errorMessage" />
-                </p-tabpanel>
-
-                <p-tabpanel value="messages">
-                  <app-sql-messages-panel [messages]="messages" />
-                </p-tabpanel>
-
-                <p-tabpanel value="history">
-                  <app-sql-history-panel [items]="history" (selected)="aplicarHistorico($event)" />
-                </p-tabpanel>
-              </p-tabpanels>
-            </p-tabs>
-          </section>
-        </main>
-      </div>
-
-      <app-sql-confirmation-dialog
-        [(visible)]="confirmationVisible"
-        [pending]="pendingExecution"
-        (confirm)="confirmarExecucaoPerigosa()"
-        (cancel)="cancelarExecucaoPerigosa()"
-      />
-
-      <footer class="sql-statusbar">
-        <span class="env-dot"></span>
-        <strong>{{ ambiente === 'cloud' ? 'Cloud' : 'Local' }}</strong>
-        <i class="pi pi-angle-right"></i>
-        <span>{{ conexaoLabel }}</span>
-        <i class="pi pi-angle-right"></i>
-        <span>{{ base }}</span>
-        <span class="spacer"></span>
-        <span>{{ statusLabel }}</span>
-      </footer>
-    </div>
-  `,
-  styles: [
-    `
-      .sql-editor-shell {
-        min-height: calc(100vh - 8rem);
-        display: grid;
-        grid-template-rows: auto auto minmax(0, 1fr) auto;
-        border: 1px solid rgba(148, 163, 184, 0.14);
-        border-radius: 8px;
-        overflow: hidden;
-        background:
-          radial-gradient(circle at top left, rgba(127, 90, 240, 0.12), transparent 31rem),
-          #16161a;
-      }
-
-      .workspace {
-        display: grid;
-        grid-template-columns: minmax(15rem, 18rem) minmax(0, 1fr);
-        gap: 0.85rem;
-        min-width: 0;
-        padding: 0.85rem;
-      }
-
-      .inner-sidebar {
-        display: grid;
-        align-content: start;
-        gap: 0.85rem;
-        min-width: 0;
-      }
-
-      .inner-sidebar.compact {
-        display: none;
-      }
-
-      .editor-area {
-        display: grid;
-        gap: 0.85rem;
-        min-width: 0;
-      }
-
-      .cloud-block-alert {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        border: 1px solid rgba(244, 211, 94, 0.34);
-        border-left: 3px solid #f4d35e;
-        border-radius: 8px;
-        padding: 0.85rem;
-        color: #94a1b2;
-        background: rgba(244, 211, 94, 0.1);
-      }
-
-      .cloud-block-alert strong {
-        color: #fffffe;
-      }
-
-      .cloud-block-alert p {
-        margin: 0.25rem 0 0;
-      }
-
-      .cloud-block-alert span {
-        display: block;
-        margin-top: 0.35rem;
-        color: #f4d35e;
-        font-size: 0.82rem;
-      }
-
-      .bottom-panel {
-        border: 1px solid rgba(148, 163, 184, 0.18);
-        border-radius: 8px;
-        overflow: hidden;
-        background: #1f1f23;
-      }
-
-      :host ::ng-deep .bottom-panel .p-tabs,
-      :host ::ng-deep .bottom-panel .p-tablist-tab-list,
-      :host ::ng-deep .bottom-panel .p-tabpanels {
-        background: transparent;
-      }
-
-      .sql-statusbar {
-        min-height: 2.6rem;
-        display: flex;
-        align-items: center;
-        gap: 0.55rem;
-        padding: 0 0.85rem;
-        border-top: 1px solid rgba(148, 163, 184, 0.14);
-        color: #94a1b2;
-        font-size: 0.82rem;
-        background: #16161a;
-      }
-
-      .sql-statusbar strong {
-        color: #fffffe;
-      }
-
-      .env-dot {
-        width: 0.55rem;
-        height: 0.55rem;
-        border-radius: 999px;
-        background: #2cb67d;
-      }
-
-      .spacer {
-        flex: 1;
-      }
-
-      @media (max-width: 1100px) {
-        .workspace {
-          grid-template-columns: 1fr;
-        }
-      }
-    `,
-  ],
+  templateUrl: `./sql-editor.page.html`,
+  styleUrl: './sql-editor.page.scss'
 })
 export class SqlEditorPage implements OnInit {
-  ambiente: SqlEnvironment = 'cloud';
+  ambiente: SqlEnvironment = 'local';
   conexaoId = '';
-  base = 'w5i_homologacao';
+  base = 'db_name';
   maxRows = 500;
   timeoutSeconds = 30;
   connected = true;
@@ -596,13 +362,13 @@ export class SqlEditorPage implements OnInit {
           const baseAtualExiste = items.some((item) => item.value === this.base);
           this.base = baseAtualExiste ? this.base : items[0]?.value || '';
         },
-        error: () => {
+        error: (error) => {
           this.bases = [];
           this.base = '';
           this.messageService.add({
             severity: 'error',
             summary: 'Erro',
-            detail: 'Nao foi possivel carregar os bancos de dados da conexao selecionada.',
+            detail: error?.error?.message || 'Nao foi possivel carregar os bancos de dados da conexao selecionada.',
           });
         },
       });

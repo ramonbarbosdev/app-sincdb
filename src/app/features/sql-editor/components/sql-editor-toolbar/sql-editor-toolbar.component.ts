@@ -15,9 +15,9 @@ import { SelectOption, SqlEnvironment } from '../../models/sql-editor.model';
   styleUrl: './sql-editor-toolbar.component.scss',
 })
 export class SqlEditorToolbarComponent {
-  @Input() ambiente: SqlEnvironment = 'cloud';
+  @Input() ambiente: SqlEnvironment = 'local';
   @Input() conexaoId = '';
-  @Input() base = 'neondb';
+  @Input() base = '';
   @Input() maxRows = 500;
   @Input() timeoutSeconds = 30;
   @Input() connected = true;

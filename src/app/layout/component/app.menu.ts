@@ -106,14 +106,7 @@ export class AppMenu {
         },
       ];
 
-      if (role === 'ROLE_DEV') {
-        this.model.push({
-          label: 'Administração',
-          items: [
-           
-          ],
-        });
-      }
+     
     }
   }
 }

@@ -12,7 +12,7 @@
   </label>
 
   <label>
-    <span>Conexao</span>
+    <span>Conexão</span>
     <p-select
       [ngModel]="conexaoId"
       (ngModelChange)="conexaoIdChange.emit($event)"
@@ -22,7 +22,7 @@
       styleClass="sql-selector wide"
       [loading]="loadingConexoes"
       [filter]="true"
-      filterPlaceholder="Buscar conexao..."
+      filterPlaceholder="Buscar conexão..."
     />
   </label>
 
@@ -35,7 +35,7 @@
       optionLabel="label"
       optionValue="value"
       styleClass="sql-selector"
-      placeholder="w5i_homologacao"
+      placeholder="db_name"
       [loading]="loadingBases"
       [filter]="true"
       filterPlaceholder="Buscar base..."
@@ -43,7 +43,7 @@
   </label>
 
   <label>
-    <span>Max rows</span>
+    <span>Máximo de linhas</span>
     <p-inputnumber
       [ngModel]="maxRows"
       (ngModelChange)="maxRowsChange.emit($event)"
@@ -55,7 +55,7 @@
   </label>
 
   <label>
-    <span>Timeout</span>
+    <span>Tempo esgotado</span>
     <p-inputnumber
       [ngModel]="timeoutSeconds"
       (ngModelChange)="timeoutSecondsChange.emit($event)"
