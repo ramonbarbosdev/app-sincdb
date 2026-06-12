@@ -36,11 +36,18 @@
 }
 
 .engine-pill {
-  border: 1px solid rgba(127, 90, 240, 0.36);
+  border: 1px solid rgba(44, 182, 125, 0.36);
   border-radius: 999px;
   padding: 0.25rem 0.55rem;
   color: #8fffe0;
-  background: rgba(127, 90, 240, 0.14);
+  background: rgba(44, 182, 125, 0.14);
+}
+
+.title-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
 }
 
 .danger-message {
@@ -51,12 +58,25 @@
 .editor-body {
   min-height: 320px;
   background: #101014;
+  transition: min-height 160ms ease;
 }
 
 .monaco-container {
   width: 100%;
   height: 320px;
   min-height: 320px;
+  transition:
+    height 160ms ease,
+    min-height 160ms ease;
+}
+
+.editor-panel.expanded .editor-body {
+  min-height: min(68vh, 760px);
+}
+
+.editor-panel.expanded .monaco-container {
+  height: min(68vh, 760px);
+  min-height: 520px;
 }
 
 :host ::ng-deep .monaco-editor,

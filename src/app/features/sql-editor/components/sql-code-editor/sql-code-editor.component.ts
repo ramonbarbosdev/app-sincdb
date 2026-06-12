@@ -42,6 +42,8 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
   @Output() salvar = new EventEmitter<void>();
   @Output() historico = new EventEmitter<void>();
 
+  expanded = false;
+
   private static themeRegistered = false;
   private editor?: Monaco.editor.IStandaloneCodeEditor;
   private resizeObserver?: ResizeObserver;
@@ -76,6 +78,11 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
   @HostListener('window:resize')
   onWindowResize(): void {
     this.editor?.layout();
+  }
+
+  toggleExpanded(): void {
+    this.expanded = !this.expanded;
+    setTimeout(() => this.editor?.layout());
   }
 
   private configureMonaco(monacoApi: MonacoApi): void {

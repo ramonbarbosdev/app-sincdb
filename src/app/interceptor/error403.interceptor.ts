@@ -13,7 +13,7 @@ export const Error403Interceptor: HttpInterceptorFn = (req: HttpRequest<any>, ne
 
   return next(req).pipe(
     catchError(err => {
-      if (err.status === 403) {
+      if (err.status === 403 && !req.url.includes('/sql/executar')) {
         // messageService.add({ severity: 'error', summary: 'Acesso negado', detail: 'Você não tem permissão.' });
         router.navigate(['/auth/access']);
       }

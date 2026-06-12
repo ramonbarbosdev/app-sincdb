@@ -2,8 +2,10 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { finalize } from 'rxjs';
 import { MessageService } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
 import { TabsModule } from 'primeng/tabs';
 import { format } from 'sql-formatter';
+import { AuthService } from '../../../auth/auth.service';
 import { SqlCodeEditorComponent } from '../components/sql-code-editor/sql-code-editor.component';
 import { SqlConfirmationDialogComponent } from '../components/sql-confirmation-dialog/sql-confirmation-dialog.component';
 import { SqlEditorHeaderComponent } from '../components/sql-editor-header/sql-editor-header.component';
@@ -41,6 +43,7 @@ LIMIT 100;`;
   standalone: true,
   imports: [
     CommonModule,
+    ButtonModule,
     TabsModule,
     SqlEditorHeaderComponent,
     SqlEditorToolbarComponent,
@@ -94,6 +97,25 @@ LIMIT 100;`;
         </aside>
 
         <main class="editor-area">
+          <section class="cloud-block-alert" *ngIf="cloudBlockedMessage">
+            <div>
+              <strong>Execucao SQL no Cloud esta desabilitada</strong>
+              <p>{{ cloudBlockedMessage }}</p>
+              <span *ngIf="isAdmin">
+                Usuario administrador: habilite o parametro do sistema para permitir execucao SQL em Cloud.
+              </span>
+            </div>
+
+            <p-button
+              *ngIf="ambiente === 'cloud'"
+              label="Usar ambiente local"
+              icon="pi pi-desktop"
+              severity="secondary"
+              [outlined]="true"
+              (click)="usarAmbienteLocal()"
+            />
+          </section>
+
           <app-sql-code-editor
             [sql]="sql"
             [executing]="state === 'executing'"
@@ -191,6 +213,34 @@ LIMIT 100;`;
         min-width: 0;
       }
 
+      .cloud-block-alert {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        border: 1px solid rgba(244, 211, 94, 0.34);
+        border-left: 3px solid #f4d35e;
+        border-radius: 8px;
+        padding: 0.85rem;
+        color: #94a1b2;
+        background: rgba(244, 211, 94, 0.1);
+      }
+
+      .cloud-block-alert strong {
+        color: #fffffe;
+      }
+
+      .cloud-block-alert p {
+        margin: 0.25rem 0 0;
+      }
+
+      .cloud-block-alert span {
+        display: block;
+        margin-top: 0.35rem;
+        color: #f4d35e;
+        font-size: 0.82rem;
+      }
+
       .bottom-panel {
         border: 1px solid rgba(148, 163, 184, 0.18);
         border-radius: 8px;
@@ -250,6 +300,7 @@ export class SqlEditorPage implements OnInit {
   state: SqlEditorState = 'initial';
   result?: SqlExecutionResponse;
   errorMessage = '';
+  cloudBlockedMessage = '';
   sidePanelOpen = true;
   loadingConexoes = false;
   loadingBases = false;
@@ -271,6 +322,7 @@ export class SqlEditorPage implements OnInit {
 
   private readonly service = inject(SqlEditorService);
   private readonly messageService = inject(MessageService);
+  private readonly auth = inject(AuthService);
   private readonly cd = inject(ChangeDetectorRef);
 
   get conexaoLabel(): string {
@@ -286,6 +338,11 @@ export class SqlEditorPage implements OnInit {
     return 'Inicial';
   }
 
+  get isAdmin(): boolean {
+    const role = this.auth.getRole();
+    return role === 'ROLE_ADMIN' || role === 'ROLE_DEV';
+  }
+
   ngOnInit(): void {
     this.carregarConexoes();
     this.recarregarPaineis();
@@ -294,6 +351,7 @@ export class SqlEditorPage implements OnInit {
 
   onAmbienteChange(ambiente: SqlEnvironment): void {
     this.ambiente = ambiente;
+    if (ambiente === 'local') this.cloudBlockedMessage = '';
     this.carregarBases();
   }
 
@@ -311,6 +369,7 @@ export class SqlEditorPage implements OnInit {
     this.sql = INITIAL_SQL;
     this.result = undefined;
     this.errorMessage = '';
+    this.cloudBlockedMessage = '';
     this.state = 'initial';
     this.dangerCheck = this.checkDangerousSql(this.sql);
   }
@@ -390,7 +449,7 @@ export class SqlEditorPage implements OnInit {
     }
 
     const danger = this.checkDangerousSql(sql);
-    if (danger.dangerous && !confirmado) {
+    if (danger.dangerous && !confirmado && this.ambiente !== 'cloud') {
       this.pendingExecution = {
         sql,
         reason: danger.reason,
@@ -403,6 +462,7 @@ export class SqlEditorPage implements OnInit {
 
     this.state = 'executing';
     this.errorMessage = '';
+    this.cloudBlockedMessage = '';
     this.service
       .executar({
         ambiente: this.ambiente,
@@ -436,6 +496,24 @@ export class SqlEditorPage implements OnInit {
           this.registrarHistorico(sql, res);
         },
         error: (error) => {
+          if (error?.status === 403) {
+            this.state = 'error';
+            this.confirmationVisible = false;
+            this.pendingExecution = undefined;
+            this.errorMessage =
+              error?.error?.message ||
+              'Execucao SQL no ambiente cloud esta bloqueada pelas configuracoes do sistema.';
+            this.cloudBlockedMessage =
+              'Execucao SQL no Cloud esta desabilitada. Use o ambiente Local ou solicite habilitacao ao administrador.';
+            this.messageService.add({
+              severity: 'warn',
+              summary: 'Cloud bloqueado',
+              detail: this.cloudBlockedMessage,
+            });
+            this.adicionarMensagem('warn', 'Bloqueio por configuracao do sistema', this.errorMessage);
+            return;
+          }
+
           this.result = undefined;
           this.state = 'error';
           this.errorMessage = error?.error?.message || 'Erro ao executar consulta SQL.';
@@ -443,6 +521,13 @@ export class SqlEditorPage implements OnInit {
           this.adicionarMensagem('error', 'Erro ao executar consulta SQL', this.errorMessage);
         },
       });
+  }
+
+  usarAmbienteLocal(): void {
+    this.ambiente = 'local';
+    this.cloudBlockedMessage = '';
+    this.carregarBases();
+    this.adicionarMensagem('info', 'Ambiente alterado', 'Ambiente Local selecionado para a proxima execucao.');
   }
 
   confirmarExecucaoPerigosa(): void {
