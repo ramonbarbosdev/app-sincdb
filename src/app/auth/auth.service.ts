@@ -36,6 +36,11 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/auth/login`, payload).pipe(
       tap((res: any) => {
         const role = this.extrairRole(res);
+        const idOrganizacao =
+          res.idOrganizacao ??
+          (!res.precisaSelecionarOrganizacao && res.organizacoes?.length === 1
+            ? res.organizacoes[0]?.idOrganizacao
+            : undefined);
         const userInfo = {
           tokenTemporario: res.precisaSelecionarOrganizacao ? res.accessToken : undefined,
           token: res.precisaSelecionarOrganizacao ? undefined : res.accessToken,
@@ -45,7 +50,7 @@ export class AuthService {
           trocarSenha: !!res.trocarSenha,
           organizacoes: res.organizacoes ?? [],
           idUsuario: res.idUsuario,
-          idOrganizacao: res.idOrganizacao,
+          idOrganizacao,
           dsRole: role,
           role,
           nmUsuario: res.nmUsuario,
@@ -74,13 +79,18 @@ export class AuthService {
       )
       .pipe(
         tap((res: any) => {
-          const role = this.extrairRole(res);
+          const sessaoAtual = this.getUserSubbject();
+          const role = this.extrairRole({
+            ...res,
+            organizacoes: sessaoAtual?.organizacoes,
+            idOrganizacao: res.idOrganizacao ?? idOrganizacao,
+          });
           const userInfo = {
-            ...this.getUserSubbject(),
+            ...sessaoAtual,
             tokenTemporario: undefined,
             token: res.accessToken,
             accessToken: res.accessToken,
-            idOrganizacao: res.idOrganizacao,
+            idOrganizacao: res.idOrganizacao ?? idOrganizacao,
             dsRole: role,
             role,
             permissoes: res.permissoes ?? [],
@@ -153,6 +163,18 @@ export class AuthService {
     return this.extrairRole(this.userSubject.value);
   }
 
+  temOrganizacaoSelecionada(): boolean {
+    const user = this.userSubject.value;
+    return !!user?.token && user?.precisaSelecionarOrganizacao === false;
+  }
+
+  getRoleOrganizacaoAtiva(): string | undefined {
+    const user = this.userSubject.value;
+    if (!user || user.precisaSelecionarOrganizacao) return undefined;
+
+    return this.extrairRole(user);
+  }
+
   getUser() {
     return this.userSubject.value;
   }
@@ -212,9 +234,19 @@ export class AuthService {
     if (typeof role === 'string' && role.trim()) return role;
 
     const roles = data?.roles ?? data?.authorities;
-    if (!Array.isArray(roles)) return undefined;
+    const roleLista = this.extrairRoleDeLista(roles);
+    if (roleLista) return roleLista;
 
-    const primeiraRole = roles.find((item) => {
+    const roleOrganizacao = this.extrairRoleDeLista(data?.organizacoes);
+    if (roleOrganizacao) return roleOrganizacao;
+
+    return this.extrairRoleDoToken(data?.accessToken ?? data?.token);
+  }
+
+  private extrairRoleDeLista(lista: any): string | undefined {
+    if (!Array.isArray(lista)) return undefined;
+
+    const primeiraRole = lista.find((item) => {
       if (typeof item === 'string') return item.trim();
       return item?.dsRole || item?.role || item?.nomeRole || item?.name || item?.authority;
     });
@@ -228,6 +260,21 @@ export class AuthService {
       primeiraRole?.name ??
       primeiraRole?.authority
     );
+  }
+
+  private extrairRoleDoToken(token?: string): string | undefined {
+    if (!token) return undefined;
+
+    try {
+      const payload = token.split('.')[1];
+      if (!payload) return undefined;
+
+      const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const decoded = JSON.parse(atob(base64));
+      return decoded?.dsRole ?? decoded?.role ?? decoded?.authority;
+    } catch {
+      return undefined;
+    }
   }
 
   private removerMascaraCpf(cpf: string): string {

@@ -339,7 +339,14 @@ export class SqlEditorPage implements OnInit {
   }
 
   get isAdmin(): boolean {
-    const role = this.auth.getRole();
+    const user = this.auth.getUserSubbject();
+    if (!user || user.precisaSelecionarOrganizacao) return false;
+
+    const organizacaoAtiva = Array.isArray(user.organizacoes)
+      ? user.organizacoes.find((item: any) => item.idOrganizacao === user.idOrganizacao)
+      : undefined;
+    const role = user.dsRole ?? user.role ?? organizacaoAtiva?.dsRole ?? organizacaoAtiva?.role;
+
     return role === 'ROLE_ADMIN' || role === 'ROLE_DEV';
   }
 

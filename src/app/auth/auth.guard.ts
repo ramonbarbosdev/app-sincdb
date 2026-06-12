@@ -9,12 +9,12 @@ export const authGuard: CanActivateFn = (route, state) => {
 
   const rolesPermitidos = route.parent?.data?.['roles'] as string[] | undefined;
 
-  if (!auth.getAccessToken()) {
+  if (!auth.temOrganizacaoSelecionada()) {
     router.navigate(['/auth/access']);
     return false;
   }
 
-  const role = auth.getRole() || '';
+  const role = auth.getRoleOrganizacaoAtiva() || '';
   const userRole = ConverterNomeRoleMinusculo(role);
 
   if (userRole === '') {

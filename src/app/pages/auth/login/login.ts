@@ -79,7 +79,7 @@ export class Login {
             return item;
           });
         } else {
-          this.redirecionarPorRole(this.auth.getRole());
+          this.redirecionarPorOrganizacaoAtiva();
         }
 
         this.loading = false;
@@ -114,13 +114,15 @@ export class Login {
     this.auth.checkAuth().subscribe({
       next: (res: any) => {
         if (res) {
-          this.redirecionarPorRole(this.auth.getRole());
+          this.redirecionarPorOrganizacaoAtiva();
         }
       },
     });
   }
 
-  redirecionarPorRole(role?: string) {
+  redirecionarPorOrganizacaoAtiva() {
+    const role = this.auth.getRoleOrganizacaoAtiva();
+
     if (role === 'ROLE_DEV') {
       this.router.navigate(['dev/home']);
       return;

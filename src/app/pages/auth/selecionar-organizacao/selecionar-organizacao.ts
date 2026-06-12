@@ -69,7 +69,7 @@ export class SelecionarOrganizacao {
   }
 
   gerenciarRotaUsuario() {
-    if (this.auth.getRole() === 'ROLE_DEV') {
+    if (this.auth.getRoleOrganizacaoAtiva() === 'ROLE_DEV') {
       this.router.navigate(['dev/home']);
       return;
     }
