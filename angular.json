@@ -20,20 +20,32 @@
             "outputPath": "dist/browser",
             "index": "src/index.html",
             "browser": "src/main.ts",
-            "polyfills": ["zone.js"],
+            "polyfills": [
+              "zone.js"
+            ],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "node_modules/monaco-editor/min/vs",
+                "output": "assets/monaco/vs"
               }
             ],
-            "styles": ["src/styles.scss"],
+            "styles": [
+              "src/styles.scss"
+            ],
             "loader": {
               ".ttf": "file"
             },
-            "allowedCommonJsDependencies": ["sockjs-client", "nearley"]
+            "allowedCommonJsDependencies": [
+              "sockjs-client",
+              "nearley"
+            ]
           },
           "configurations": {
             "production": {

@@ -166,17 +166,12 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
   }
 
   private configureMonaco(monacoApi: MonacoApi): void {
-    (globalThis as { MonacoEnvironment?: Monaco.Environment }).MonacoEnvironment = {
-      getWorker: () =>
-        new Worker(
-          new URL(
-            'monaco-editor/esm/vs/editor/editor.worker.js',
-            import.meta.url
-          ),
-          { type: 'module' }
-        ),
+
+    (globalThis as any).MonacoEnvironment = {
+      getWorkerUrl: () => './assets/monaco/vs/base/worker/workerMain.js',
     };
-    
+
+
     if (SqlCodeEditorComponent.themeRegistered) return;
 
     monacoApi.editor.defineTheme('syncdb-sql-dark', {
