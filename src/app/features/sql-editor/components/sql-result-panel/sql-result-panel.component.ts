@@ -2,13 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TableModule } from 'primeng/table';
-import { TabsModule } from 'primeng/tabs';
 import { SqlEditorState, SqlExecutionResponse, SqlResultColumn } from '../../models/sql-editor.model';
 
 @Component({
   selector: 'app-sql-result-panel',
   standalone: true,
-  imports: [CommonModule, ProgressSpinnerModule, TableModule, TabsModule],
+  imports: [CommonModule, ProgressSpinnerModule, TableModule],
   templateUrl: './sql-result-panel.component.html',
   styleUrl: './sql-result-panel.component.scss',
 })

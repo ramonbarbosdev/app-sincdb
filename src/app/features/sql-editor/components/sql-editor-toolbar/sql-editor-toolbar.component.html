@@ -42,6 +42,31 @@
     />
   </label>
 
+  <label>
+    <span>Max rows</span>
+    <p-inputnumber
+      [ngModel]="maxRows"
+      (ngModelChange)="maxRowsChange.emit($event)"
+      [min]="1"
+      [max]="10000"
+      [showButtons]="true"
+      inputStyleClass="number-input"
+    />
+  </label>
+
+  <label>
+    <span>Timeout</span>
+    <p-inputnumber
+      [ngModel]="timeoutSeconds"
+      (ngModelChange)="timeoutSecondsChange.emit($event)"
+      suffix="s"
+      [min]="1"
+      [max]="300"
+      [showButtons]="true"
+      inputStyleClass="number-input"
+    />
+  </label>
+
   <div class="status-box">
     <span>Status</span>
     <p-tag [severity]="connected ? 'success' : 'danger'" [value]="connected ? 'Conectado' : 'Desconectado'" />

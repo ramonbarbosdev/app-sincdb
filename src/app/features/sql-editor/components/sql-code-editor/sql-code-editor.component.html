@@ -18,17 +18,14 @@
   <footer class="editor-footer">
     <span class="ready-state"><i class="pi pi-circle-fill"></i> Pronto para executar</span>
 
-    <div class="editor-actions">
-      <p-button label="Formatar" icon="pi pi-align-left" severity="secondary" [outlined]="true" (click)="formatar.emit()" />
-      <p-button
-        label="Executar"
-        icon="pi pi-play"
-        [loading]="executing"
-        [disabled]="executing"
-        (click)="executar.emit()"
-      />
-      <p-button icon="pi pi-angle-down" severity="secondary" [outlined]="true" (click)="options.toggle($event)" />
-      <p-menu #options [model]="menuItems" [popup]="true" />
-    </div>
+    <app-sql-toolbar
+      [executing]="executing"
+      (executar)="executar.emit()"
+      (executarSelecionado)="emitSelectedSql()"
+      (formatar)="formatar.emit()"
+      (limpar)="limpar.emit()"
+      (salvar)="salvar.emit()"
+      (historico)="historico.emit()"
+    />
   </footer>
 </section>

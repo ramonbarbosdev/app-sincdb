@@ -2,20 +2,26 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { finalize } from 'rxjs';
 import { MessageService } from 'primeng/api';
+import { TabsModule } from 'primeng/tabs';
+import { format } from 'sql-formatter';
 import { SqlCodeEditorComponent } from '../components/sql-code-editor/sql-code-editor.component';
+import { SqlConfirmationDialogComponent } from '../components/sql-confirmation-dialog/sql-confirmation-dialog.component';
 import { SqlEditorHeaderComponent } from '../components/sql-editor-header/sql-editor-header.component';
 import { SqlEditorToolbarComponent } from '../components/sql-editor-toolbar/sql-editor-toolbar.component';
 import { SqlHistoryPanelComponent } from '../components/sql-history-panel/sql-history-panel.component';
+import { SqlMessagesPanelComponent } from '../components/sql-messages-panel/sql-messages-panel.component';
 import { SqlResultPanelComponent } from '../components/sql-result-panel/sql-result-panel.component';
 import { SqlSavedQueriesPanelComponent } from '../components/sql-saved-queries-panel/sql-saved-queries-panel.component';
 import {
   DangerousSqlCheck,
+  PendingSqlExecution,
   SavedSqlQuery,
   SelectOption,
   SqlEditorState,
   SqlEnvironment,
   SqlExecutionResponse,
   SqlHistoryItem,
+  SqlMessage,
 } from '../models/sql-editor.model';
 import { SqlEditorService } from '../services/sql-editor.service';
 
@@ -35,9 +41,12 @@ LIMIT 100;`;
   standalone: true,
   imports: [
     CommonModule,
+    TabsModule,
     SqlEditorHeaderComponent,
     SqlEditorToolbarComponent,
     SqlCodeEditorComponent,
+    SqlConfirmationDialogComponent,
+    SqlMessagesPanelComponent,
     SqlResultPanelComponent,
     SqlHistoryPanelComponent,
     SqlSavedQueriesPanelComponent,
@@ -54,6 +63,8 @@ LIMIT 100;`;
         [ambiente]="ambiente"
         [conexaoId]="conexaoId"
         [base]="base"
+        [maxRows]="maxRows"
+        [timeoutSeconds]="timeoutSeconds"
         [connected]="connected"
         [ambientes]="ambientes"
         [conexoes]="conexoes"
@@ -63,6 +74,8 @@ LIMIT 100;`;
         (ambienteChange)="onAmbienteChange($event)"
         (conexaoIdChange)="onConexaoChange($event)"
         (baseChange)="base = $event"
+        (maxRowsChange)="maxRows = $event"
+        (timeoutSecondsChange)="timeoutSeconds = $event"
         (refresh)="recarregarContexto()"
       />
 
@@ -74,7 +87,7 @@ LIMIT 100;`;
             (selected)="aplicarConsultaSalva($event)"
           />
           <app-sql-history-panel
-            *ngIf="sidePanelOpen"
+            *ngIf="false"
             [items]="history"
             (selected)="aplicarHistorico($event)"
           />
@@ -88,11 +101,44 @@ LIMIT 100;`;
             (sqlChange)="onSqlChange($event)"
             (formatar)="formatarSql()"
             (executar)="executar()"
+            (executarSelecionado)="executar($event)"
+            (limpar)="limparEditor()"
+            (salvar)="salvarConsulta()"
+            (historico)="toggleHistory()"
           />
 
-          <app-sql-result-panel [state]="state" [result]="result" [errorMessage]="errorMessage" />
+          <section class="bottom-panel">
+            <p-tabs value="results">
+              <p-tablist>
+                <p-tab value="results">Resultados</p-tab>
+                <p-tab value="messages">Mensagens</p-tab>
+                <p-tab value="history">Historico</p-tab>
+              </p-tablist>
+
+              <p-tabpanels>
+                <p-tabpanel value="results">
+                  <app-sql-result-panel [state]="state" [result]="result" [errorMessage]="errorMessage" />
+                </p-tabpanel>
+
+                <p-tabpanel value="messages">
+                  <app-sql-messages-panel [messages]="messages" />
+                </p-tabpanel>
+
+                <p-tabpanel value="history">
+                  <app-sql-history-panel [items]="history" (selected)="aplicarHistorico($event)" />
+                </p-tabpanel>
+              </p-tabpanels>
+            </p-tabs>
+          </section>
         </main>
       </div>
+
+      <app-sql-confirmation-dialog
+        [(visible)]="confirmationVisible"
+        [pending]="pendingExecution"
+        (confirm)="confirmarExecucaoPerigosa()"
+        (cancel)="cancelarExecucaoPerigosa()"
+      />
 
       <footer class="sql-statusbar">
         <span class="env-dot"></span>
@@ -145,6 +191,19 @@ LIMIT 100;`;
         min-width: 0;
       }
 
+      .bottom-panel {
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 8px;
+        overflow: hidden;
+        background: #1f1f23;
+      }
+
+      :host ::ng-deep .bottom-panel .p-tabs,
+      :host ::ng-deep .bottom-panel .p-tablist-tab-list,
+      :host ::ng-deep .bottom-panel .p-tabpanels {
+        background: transparent;
+      }
+
       .sql-statusbar {
         min-height: 2.6rem;
         display: flex;
@@ -165,7 +224,7 @@ LIMIT 100;`;
         width: 0.55rem;
         height: 0.55rem;
         border-radius: 999px;
-        background: #7f5af0;
+        background: #2cb67d;
       }
 
       .spacer {
@@ -184,6 +243,8 @@ export class SqlEditorPage implements OnInit {
   ambiente: SqlEnvironment = 'cloud';
   conexaoId = '';
   base = 'w5i_homologacao';
+  maxRows = 500;
+  timeoutSeconds = 30;
   connected = true;
   sql = INITIAL_SQL;
   state: SqlEditorState = 'initial';
@@ -194,6 +255,9 @@ export class SqlEditorPage implements OnInit {
   loadingBases = false;
   history: SqlHistoryItem[] = [];
   savedQueries: SavedSqlQuery[] = [];
+  messages: SqlMessage[] = [];
+  pendingExecution?: PendingSqlExecution;
+  confirmationVisible = false;
 
   ambientes: SelectOption[] = [
     { label: 'Cloud', value: 'cloud' },
@@ -296,23 +360,44 @@ export class SqlEditorPage implements OnInit {
   }
 
   formatarSql(): void {
-    this.sql = this.sql
-      .replace(/\bselect\b/gi, 'SELECT')
-      .replace(/\bfrom\b/gi, '\nFROM')
-      .replace(/\bwhere\b/gi, '\nWHERE')
-      .replace(/\border by\b/gi, '\nORDER BY')
-      .replace(/\blimit\b/gi, '\nLIMIT')
-      .replace(/\n{2,}/g, '\n')
-      .trim();
-    this.dangerCheck = this.checkDangerousSql(this.sql);
+    try {
+      this.sql = format(this.sql, { language: 'postgresql' });
+      this.dangerCheck = this.checkDangerousSql(this.sql);
+      this.adicionarMensagem('success', 'SQL formatado', 'Consulta formatada com sql-formatter.');
+    } catch {
+      this.adicionarMensagem('warn', 'Nao foi possivel formatar', 'Verifique se a consulta SQL esta completa.');
+    }
   }
 
-  executar(): void {
-    const validationMessage = this.validarExecucao();
+  limparEditor(): void {
+    this.sql = '';
+    this.result = undefined;
+    this.errorMessage = '';
+    this.state = 'initial';
+    this.dangerCheck = this.checkDangerousSql(this.sql);
+    this.adicionarMensagem('info', 'Editor limpo', 'O conteudo do editor SQL foi removido.');
+  }
+
+  executar(sqlToExecute = this.sql, confirmado = false): void {
+    const sql = sqlToExecute.trim();
+    const validationMessage = this.validarExecucao(sql);
     if (validationMessage) {
       this.state = 'error';
       this.errorMessage = validationMessage;
       this.messageService.add({ severity: 'warn', summary: 'Consulta nao enviada', detail: validationMessage });
+      this.adicionarMensagem('warn', 'Consulta nao enviada', validationMessage);
+      return;
+    }
+
+    const danger = this.checkDangerousSql(sql);
+    if (danger.dangerous && !confirmado) {
+      this.pendingExecution = {
+        sql,
+        reason: danger.reason,
+        riskLevel: danger.riskLevel || 'HIGH',
+      };
+      this.confirmationVisible = true;
+      this.adicionarMensagem('warn', 'Confirmacao necessaria', danger.reason);
       return;
     }
 
@@ -323,23 +408,54 @@ export class SqlEditorPage implements OnInit {
         ambiente: this.ambiente,
         conexaoId: this.conexaoId,
         base: this.base,
-        sql: this.sql,
+        sql,
+        maxRows: this.maxRows,
+        timeoutSeconds: this.timeoutSeconds,
+        confirmado,
       })
       .pipe(finalize(() => this.cd.markForCheck()))
       .subscribe({
         next: (res) => {
+          if (res.requiresConfirmation && !confirmado) {
+            this.state = 'initial';
+            this.pendingExecution = {
+              sql,
+              reason: res.message || 'A API solicitou confirmacao para executar esta consulta.',
+              riskLevel: res.riskLevel || danger.riskLevel || 'HIGH',
+            };
+            this.confirmationVisible = true;
+            this.adicionarMensagem('warn', 'Confirmacao solicitada pela API', this.pendingExecution.reason);
+            return;
+          }
+
           this.result = res;
           this.state = res.rows.length ? 'loaded' : 'empty';
+          const linhas = `${res.rows.length} linhas retornadas, ${res.affectedRows ?? 0} linhas afetadas, ${res.executionTimeMs} ms.`;
           this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: res.message || 'Consulta executada.' });
-          this.recarregarPaineis();
+          this.adicionarMensagem('success', res.message || 'Consulta executada com sucesso.', linhas);
+          this.registrarHistorico(sql, res);
         },
         error: (error) => {
           this.result = undefined;
           this.state = 'error';
           this.errorMessage = error?.error?.message || 'Erro ao executar consulta SQL.';
           this.messageService.add({ severity: 'error', summary: 'Erro', detail: this.errorMessage });
+          this.adicionarMensagem('error', 'Erro ao executar consulta SQL', this.errorMessage);
         },
       });
+  }
+
+  confirmarExecucaoPerigosa(): void {
+    const sql = this.pendingExecution?.sql;
+    this.confirmationVisible = false;
+    this.pendingExecution = undefined;
+    if (sql) this.executar(sql, true);
+  }
+
+  cancelarExecucaoPerigosa(): void {
+    this.confirmationVisible = false;
+    this.adicionarMensagem('info', 'Execucao cancelada', 'A consulta de risco nao foi enviada para a API.');
+    this.pendingExecution = undefined;
   }
 
   private carregarConexoes(): void {
@@ -400,17 +516,12 @@ export class SqlEditorPage implements OnInit {
       });
   }
 
-  private validarExecucao(): string {
-    const sql = this.sql.trim();
-    const executableSql = this.removerComentarios(sql).trim();
-
-    if (!sql) return 'Informe uma consulta SQL SELECT para executar.';
+  private validarExecucao(sql: string): string {
+    if (!sql) return 'Informe um comando SQL para executar.';
     if (!this.conexaoId) return 'Selecione uma conexao da organizacao ativa.';
     if (!this.base.trim()) return 'Informe a base de dados.';
-    if (!/^SELECT\b/i.test(executableSql)) return 'O SQL Editor envia somente consultas SELECT.';
-    if (!/\bLIMIT\b/i.test(executableSql)) {
-      return 'Consulta SELECT deve conter LIMIT. Exemplo: SELECT * FROM public.usuario LIMIT 100;';
-    }
+    if (!this.maxRows || this.maxRows < 1) return 'Informe um valor valido para Max rows.';
+    if (!this.timeoutSeconds || this.timeoutSeconds < 1) return 'Informe um timeout valido.';
 
     return '';
   }
@@ -420,42 +531,59 @@ export class SqlEditorPage implements OnInit {
     const normalized = executableSql.replace(/\s+/g, ' ').trim().toUpperCase();
     if (!normalized) return { dangerous: false, reason: '' };
 
-    if (!/^SELECT\b/.test(normalized)) {
-      return {
-        dangerous: true,
-        reason: 'Somente consultas SELECT serao enviadas para a API.',
-      };
-    }
-
-    if (!/\bLIMIT\b/.test(normalized)) {
-      return {
-        dangerous: true,
-        reason: 'Inclua LIMIT na consulta. A API bloqueia SELECT sem LIMIT.',
-      };
-    }
-
     if (/\b(DROP|TRUNCATE|ALTER)\b/.test(normalized)) {
       return {
         dangerous: true,
-        reason: 'Comando potencialmente perigoso detectado. Uma confirmacao dedicada sera exigida futuramente.',
+        riskLevel: 'HIGH',
+        reason: 'Comando estrutural potencialmente destrutivo detectado. Confirme para executar.',
       };
     }
 
     if (/\bDELETE\s+FROM\b/.test(normalized) && !/\bWHERE\b/.test(normalized)) {
       return {
         dangerous: true,
-        reason: 'DELETE sem WHERE detectado. Prepare confirmacao antes de liberar execucao real.',
+        riskLevel: 'CRITICAL',
+        reason: 'DELETE sem WHERE detectado. Este comando pode afetar todos os registros.',
       };
     }
 
     if (/\bUPDATE\b/.test(normalized) && !/\bWHERE\b/.test(normalized)) {
       return {
         dangerous: true,
-        reason: 'UPDATE sem WHERE detectado. Prepare confirmacao antes de liberar execucao real.',
+        riskLevel: 'CRITICAL',
+        reason: 'UPDATE sem WHERE detectado. Este comando pode afetar todos os registros.',
       };
     }
 
     return { dangerous: false, reason: '' };
+  }
+
+  private registrarHistorico(sql: string, res: SqlExecutionResponse): void {
+    this.history = [
+      {
+        id: crypto.randomUUID(),
+        sql,
+        ambiente: this.ambiente,
+        base: this.base,
+        executedAt: new Date().toISOString(),
+        executionTimeMs: res.executionTimeMs,
+        affectedRows: res.affectedRows,
+        riskLevel: res.riskLevel,
+      },
+      ...this.history,
+    ].slice(0, 30);
+  }
+
+  private adicionarMensagem(severity: SqlMessage['severity'], title: string, detail: string): void {
+    this.messages = [
+      {
+        severity,
+        title,
+        detail,
+        timestamp: new Date().toLocaleTimeString('pt-BR'),
+      },
+      ...this.messages,
+    ].slice(0, 50);
   }
 
   private removerComentarios(sql: string): string {

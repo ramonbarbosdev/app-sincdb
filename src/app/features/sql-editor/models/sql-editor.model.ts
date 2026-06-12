@@ -2,11 +2,16 @@ export type SqlEnvironment = 'cloud' | 'local';
 
 export type SqlEditorState = 'initial' | 'executing' | 'success' | 'error' | 'empty' | 'loaded';
 
+export type SqlRiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
 export interface SqlExecutionRequest {
   ambiente: SqlEnvironment;
   conexaoId: string;
   base: string;
   sql: string;
+  maxRows: number;
+  timeoutSeconds: number;
+  confirmado: boolean;
 }
 
 export interface SqlExecutionResponse {
@@ -15,6 +20,8 @@ export interface SqlExecutionResponse {
   executionTimeMs: number;
   affectedRows?: number;
   message?: string;
+  requiresConfirmation?: boolean;
+  riskLevel?: SqlRiskLevel;
 }
 
 export interface SqlResultColumn {
@@ -37,6 +44,8 @@ export interface SqlHistoryItem {
   base: string;
   executedAt: string;
   executionTimeMs?: number;
+  affectedRows?: number;
+  riskLevel?: SqlRiskLevel;
 }
 
 export interface SavedSqlQuery {
@@ -59,4 +68,18 @@ export interface SelectOption {
 export interface DangerousSqlCheck {
   dangerous: boolean;
   reason: string;
+  riskLevel?: SqlRiskLevel;
+}
+
+export interface SqlMessage {
+  severity: 'info' | 'success' | 'warn' | 'error';
+  title: string;
+  detail: string;
+  timestamp: string;
+}
+
+export interface PendingSqlExecution {
+  sql: string;
+  reason: string;
+  riskLevel: SqlRiskLevel;
 }

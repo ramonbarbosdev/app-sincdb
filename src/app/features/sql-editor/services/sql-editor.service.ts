@@ -69,11 +69,13 @@ export class SqlEditorService {
       },
       {
         id: 'hist-2',
-        sql: 'SELECT COUNT(*) FROM public.empresa LIMIT 100;',
+        sql: 'UPDATE public.usuario SET ativo = false WHERE id_usuario = 10;',
         ambiente: 'local',
         base: 'sincdb_local',
         executedAt: '2026-06-11T15:42:00',
         executionTimeMs: 88,
+        affectedRows: 1,
+        riskLevel: 'MEDIUM',
       },
     ];
 

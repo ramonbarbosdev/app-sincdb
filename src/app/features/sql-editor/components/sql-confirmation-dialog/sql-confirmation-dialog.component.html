@@ -1,0 +1,24 @@
+<p-dialog
+  header="Confirmar execucao SQL"
+  [modal]="true"
+  [visible]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [style]="{ width: '34rem' }"
+  styleClass="sql-confirm-dialog"
+>
+  <section class="confirmation-content">
+    <div class="risk-badge">
+      <i class="pi pi-exclamation-triangle"></i>
+      <span>Risco {{ pending?.riskLevel || 'HIGH' }}</span>
+    </div>
+
+    <p>{{ pending?.reason || 'A consulta exige confirmacao antes da execucao.' }}</p>
+
+    <pre>{{ pending?.sql }}</pre>
+  </section>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [outlined]="true" (click)="cancel.emit()" />
+    <p-button label="Executar mesmo assim" icon="pi pi-check" severity="danger" (click)="confirm.emit()" />
+  </ng-template>
+</p-dialog>

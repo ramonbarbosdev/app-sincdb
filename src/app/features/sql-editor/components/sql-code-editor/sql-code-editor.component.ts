@@ -14,18 +14,17 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { MenuModule } from 'primeng/menu';
 import { MessageModule } from 'primeng/message';
-import { MenuItem } from 'primeng/api';
 import type * as Monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
 import { DangerousSqlCheck } from '../../models/sql-editor.model';
+import { SqlToolbarComponent } from '../sql-toolbar/sql-toolbar.component';
 
 type MonacoApi = typeof Monaco;
 
 @Component({
   selector: 'app-sql-code-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonModule, MenuModule, MessageModule],
+  imports: [CommonModule, FormsModule, ButtonModule, MessageModule, SqlToolbarComponent],
   templateUrl: './sql-code-editor.component.html',
   styleUrl: './sql-code-editor.component.scss',
 })
@@ -38,11 +37,10 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
   @Output() sqlChange = new EventEmitter<string>();
   @Output() formatar = new EventEmitter<void>();
   @Output() executar = new EventEmitter<void>();
-
-  menuItems: MenuItem[] = [
-    { label: 'Explicar consulta', icon: 'pi pi-sparkles', disabled: true },
-    { label: 'Salvar como template', icon: 'pi pi-bookmark', disabled: true },
-  ];
+  @Output() executarSelecionado = new EventEmitter<string>();
+  @Output() limpar = new EventEmitter<void>();
+  @Output() salvar = new EventEmitter<void>();
+  @Output() historico = new EventEmitter<void>();
 
   private static themeRegistered = false;
   private editor?: Monaco.editor.IStandaloneCodeEditor;
@@ -98,8 +96,8 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
       base: 'vs-dark',
       inherit: true,
       rules: [
-        { token: 'keyword.sql', foreground: 'd8c9ff', fontStyle: 'bold' },
-        { token: 'operator.sql', foreground: 'b08cff' },
+        { token: 'keyword.sql', foreground: '8fffe0', fontStyle: 'bold' },
+        { token: 'operator.sql', foreground: '00f5a0' },
         { token: 'string.sql', foreground: 'f4d35e' },
         { token: 'number.sql', foreground: '2cb67d' },
         { token: 'comment.sql', foreground: '72757e', fontStyle: 'italic' },
@@ -108,10 +106,10 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
         'editor.background': '#101014',
         'editor.foreground': '#fffffe',
         'editorLineNumber.foreground': '#94a1b2',
-        'editorLineNumber.activeForeground': '#d8c9ff',
-        'editorCursor.foreground': '#7f5af0',
-        'editor.selectionBackground': '#7f5af055',
-        'editor.lineHighlightBackground': '#7f5af012',
+        'editorLineNumber.activeForeground': '#8fffe0',
+        'editorCursor.foreground': '#2cb67d',
+        'editor.selectionBackground': '#2cb67d55',
+        'editor.lineHighlightBackground': '#2cb67d12',
         'editorGutter.background': '#101014',
       },
     });
@@ -161,5 +159,17 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
 
     this.resizeObserver = new ResizeObserver(() => this.editor?.layout());
     this.resizeObserver.observe(this.monacoContainer.nativeElement);
+  }
+
+  emitSelectedSql(): void {
+    const model = this.editor?.getModel();
+    const selection = this.editor?.getSelection();
+
+    if (!model || !selection || selection.isEmpty()) {
+      this.executarSelecionado.emit(this.editor?.getValue() || this.sql);
+      return;
+    }
+
+    this.executarSelecionado.emit(model.getValueInRange(selection));
   }
 }

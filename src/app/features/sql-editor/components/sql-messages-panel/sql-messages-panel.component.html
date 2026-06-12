@@ -1,0 +1,15 @@
+<section class="messages-panel">
+  <div class="empty" *ngIf="!messages.length">
+    <i class="pi pi-info-circle"></i>
+    <strong>Nenhuma mensagem</strong>
+    <span>Erros, confirmacoes e metricas da execucao aparecerao aqui.</span>
+  </div>
+
+  <article class="message-item" *ngFor="let message of messages" [class]="message.severity">
+    <div>
+      <strong>{{ message.title }}</strong>
+      <time>{{ message.timestamp }}</time>
+    </div>
+    <p>{{ message.detail }}</p>
+  </article>
+</section>

@@ -33,7 +33,7 @@
             "loader": {
               ".ttf": "file"
             },
-            "allowedCommonJsDependencies": ["sockjs-client"]
+            "allowedCommonJsDependencies": ["sockjs-client", "nearley"]
           },
           "configurations": {
             "production": {

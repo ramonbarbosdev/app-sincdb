@@ -30,13 +30,30 @@ label span,
   min-width: 16rem;
 }
 
+:host ::ng-deep .p-inputnumber {
+  width: 8.5rem;
+}
+
+:host ::ng-deep .number-input {
+  width: 100%;
+  color: #fffffe;
+  border-color: rgba(148, 163, 184, 0.22);
+  background: #2a2a2f;
+  font-weight: 600;
+}
+
 :host ::ng-deep .p-select {
   border-color: rgba(148, 163, 184, 0.22);
   background: #2a2a2f;
 }
 
 :host ::ng-deep .p-select:not(.p-disabled):hover {
-  border-color: #7f5af0;
+  border-color: #2cb67d;
+}
+
+:host ::ng-deep .number-input:hover,
+:host ::ng-deep .number-input:focus {
+  border-color: #2cb67d;
 }
 
 :host ::ng-deep .p-select-label {
