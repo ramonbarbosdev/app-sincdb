@@ -330,11 +330,12 @@ export class SqlEditorPage implements OnInit {
           this.conexaoId = this.conexaoId || items[0]?.value || '';
           this.carregarBases();
         },
-        error: () => {
+        error: (error) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Erro',
-            detail: 'Nao foi possivel carregar as conexoes da organizacao ativa.',
+            detail: error?.error?.message || 'Nao foi possivel carregar as conexoes da organizacao ativa.',
+
           });
         },
       });
