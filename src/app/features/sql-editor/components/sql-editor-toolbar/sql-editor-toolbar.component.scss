@@ -3,9 +3,14 @@
   align-items: flex-end;
   gap: 0.75rem;
   flex-wrap: wrap;
+
   padding: 0.85rem 1rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
-  background: #1f1f23;
+
+  border-bottom: 1px solid var(--surface-border);
+
+  background: var(--surface-card);
+
+  min-width: 0;
 }
 
 label,
@@ -16,10 +21,12 @@ label,
 
 label span,
 .status-box span {
-  color: #94a1b2;
+  color: var(--text-color-secondary);
+
   font-size: 0.75rem;
   font-weight: 600;
-  // text-transform: uppercase;
+
+  letter-spacing: .03em;
 }
 
 :host ::ng-deep .sql-selector {
@@ -34,29 +41,57 @@ label span,
   width: 8.5rem;
 }
 
+/* InputNumber */
+
 :host ::ng-deep .number-input {
   width: 100%;
-  color: #fffffe;
-  border-color: rgba(148, 163, 184, 0.22);
-  background: #2a2a2f;
   font-weight: 600;
 }
 
+/* Select */
+
 :host ::ng-deep .p-select {
-  border-color: rgba(148, 163, 184, 0.22);
-  background: #2a2a2f;
-}
-
-:host ::ng-deep .p-select:not(.p-disabled):hover {
-  border-color: #2cb67d;
-}
-
-:host ::ng-deep .number-input:hover,
-:host ::ng-deep .number-input:focus {
-  border-color: #2cb67d;
+  min-height: 2.5rem;
 }
 
 :host ::ng-deep .p-select-label {
-  color: #fffffe;
   font-weight: 600;
+  color: var(--text-color);
+}
+
+/* Hover segue a cor primária do tema */
+
+:host ::ng-deep .p-select:not(.p-disabled):hover,
+:host ::ng-deep .number-input:hover {
+  border-color: var(--primary-color);
+}
+
+/* Focus */
+
+:host ::ng-deep .p-select.p-focus,
+:host ::ng-deep .number-input:focus,
+:host ::ng-deep .number-input:focus-visible {
+  border-color: var(--primary-color);
+
+  box-shadow:
+    0 0 0 0.15rem
+    color-mix(
+      in srgb,
+      var(--primary-color) 18%,
+      transparent
+    );
+}
+
+/* Status da conexão */
+
+.status-box strong {
+  color: var(--text-color);
+}
+
+.status-connected {
+  color: var(--green-500);
+}
+
+.status-disconnected {
+  color: var(--red-500);
 }

@@ -103,26 +103,49 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
       base: 'vs-dark',
       inherit: true,
       rules: [
-        { token: 'keyword.sql', foreground: '8fffe0', fontStyle: 'bold' },
-        { token: 'operator.sql', foreground: '00f5a0' },
-        { token: 'string.sql', foreground: 'f4d35e' },
-        { token: 'number.sql', foreground: '2cb67d' },
-        { token: 'comment.sql', foreground: '72757e', fontStyle: 'italic' },
+        { token: 'keyword.sql', foreground: '10B981', fontStyle: 'bold' },
+        { token: 'operator.sql', foreground: '94A3B8' },
+        { token: 'string.sql', foreground: 'F59E0B' },
+        { token: 'number.sql', foreground: '38BDF8' },
+        { token: 'comment.sql', foreground: '64748B', fontStyle: 'italic' },
       ],
       colors: {
-        'editor.background': '#101014',
-        'editor.foreground': '#fffffe',
-        'editorLineNumber.foreground': '#94a1b2',
-        'editorLineNumber.activeForeground': '#8fffe0',
-        'editorCursor.foreground': '#2cb67d',
-        'editor.selectionBackground': '#2cb67d55',
-        'editor.lineHighlightBackground': '#2cb67d12',
-        'editorGutter.background': '#101014',
+        'editor.background': '#0B0F14',
+        'editor.foreground': '#F8FAFC',
+        'editorLineNumber.foreground': '#64748B',
+        'editorLineNumber.activeForeground': '#10B981',
+        'editorCursor.foreground': '#10B981',
+        'editor.selectionBackground': '#10B98140',
+        'editor.lineHighlightBackground': '#10B98112',
+        'editorGutter.background': '#0B0F14',
+      },
+    });
+
+    monacoApi.editor.defineTheme('syncdb-sql-light', {
+      base: 'vs',
+      inherit: true,
+      rules: [
+        { token: 'keyword.sql', foreground: '047857', fontStyle: 'bold' },
+        { token: 'operator.sql', foreground: '475569' },
+        { token: 'string.sql', foreground: 'B45309' },
+        { token: 'number.sql', foreground: '0369A1' },
+        { token: 'comment.sql', foreground: '64748B', fontStyle: 'italic' },
+      ],
+      colors: {
+        'editor.background': '#FFFFFF',
+        'editor.foreground': '#0F172A',
+        'editorLineNumber.foreground': '#94A3B8',
+        'editorLineNumber.activeForeground': '#047857',
+        'editorCursor.foreground': '#047857',
+        'editor.selectionBackground': '#10B98133',
+        'editor.lineHighlightBackground': '#10B98110',
+        'editorGutter.background': '#FFFFFF',
       },
     });
 
     SqlCodeEditorComponent.themeRegistered = true;
   }
+
 
   private async createEditor(): Promise<void> {
     if (!this.monacoContainer?.nativeElement) return;
@@ -137,7 +160,7 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
     this.editor = monacoApi.editor.create(this.monacoContainer.nativeElement, {
       value: this.sql,
       language: 'sql',
-      theme: 'syncdb-sql-dark',
+      theme: this.getMonacoTheme(),
       automaticLayout: true,
       minimap: { enabled: false },
       fontFamily: '"Cascadia Code", "Consolas", "Monaco", monospace',
@@ -178,5 +201,22 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
     }
 
     this.executarSelecionado.emit(model.getValueInRange(selection));
+  }
+
+  private getMonacoTheme(): string {
+    return this.isLightMode() ? 'syncdb-sql-light' : 'syncdb-sql-dark';
+  }
+
+  private isLightMode(): boolean {
+    const html = document.documentElement;
+    const body = document.body;
+
+    return (
+      html.classList.contains('light') ||
+      html.classList.contains('p-light') ||
+      body.classList.contains('light') ||
+      body.classList.contains('p-light') ||
+      getComputedStyle(document.documentElement).colorScheme === 'light'
+    );
   }
 }

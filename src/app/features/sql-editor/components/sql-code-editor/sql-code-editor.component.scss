@@ -1,8 +1,8 @@
 .editor-panel {
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  border: 1px solid var(--surface-border);
   border-radius: 8px;
   overflow: hidden;
-  background: #101014;
+  background: var(--surface-ground);
 }
 
 .editor-titlebar,
@@ -12,66 +12,39 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 0.9rem;
-  background: #1f1f23;
+  background: var(--surface-card);
 }
 
 .editor-titlebar {
-  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
-
-  div {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    flex-wrap: wrap;
-  }
+  border-bottom: 1px solid var(--surface-border);
 
   strong {
-    color: #fffffe;
+    color: var(--text-color);
   }
 
   span {
-    color: #94a1b2;
+    color: var(--text-color-secondary);
     font-size: 0.78rem;
   }
 }
 
 .engine-pill {
-  border: 1px solid rgba(44, 182, 125, 0.36);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 36%, transparent);
   border-radius: 999px;
   padding: 0.25rem 0.55rem;
-  color: #8fffe0;
-  background: rgba(44, 182, 125, 0.14);
+  color: var(--primary-color);
+  background: color-mix(in srgb, var(--primary-color) 14%, transparent);
 }
 
-.title-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
-
-.danger-message {
-  padding: 0.6rem 0.9rem 0;
-  background: #101014;
-}
-
-.editor-body {
-  min-height: 320px;
-  background: #101014;
-  transition: min-height 160ms ease;
+.editor-body,
+.monaco-container {
+  background: var(--surface-ground);
 }
 
 .monaco-container {
   width: 100%;
   height: 320px;
   min-height: 320px;
-  transition:
-    height 160ms ease,
-    min-height 160ms ease;
-}
-
-.editor-panel.expanded .editor-body {
-  min-height: min(68vh, 760px);
 }
 
 .editor-panel.expanded .monaco-container {
@@ -79,14 +52,8 @@
   min-height: 520px;
 }
 
-:host ::ng-deep .monaco-editor,
-:host ::ng-deep .monaco-editor-background,
-:host ::ng-deep .monaco-editor .margin {
-  background-color: #101014;
-}
-
 .editor-footer {
-  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  border-top: 1px solid var(--surface-border);
   flex-wrap: wrap;
 }
 
@@ -94,18 +61,11 @@
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  color: #94a1b2;
+  color: var(--text-color-secondary);
   font-size: 0.82rem;
 
   i {
-    color: #2cb67d;
+    color: var(--primary-color);
     font-size: 0.48rem;
   }
-}
-
-.editor-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
 }
