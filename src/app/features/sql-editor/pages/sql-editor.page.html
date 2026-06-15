@@ -38,6 +38,7 @@
   />
 
   <app-sql-workspace
+    #workspaceEl
     [sql]="sql"
     [state]="state"
     [danger]="dangerCheck"
@@ -67,6 +68,7 @@
     (resizeStart)="iniciarResizeWorkspace($event)"
     (propriedadesTabela)="abrirPropriedadesTabela($event)"
     (selecionarHistorico)="aplicarHistorico($event)"
+    (fecharResultados)="fecharResultados()"
   />
 
   <app-sql-statusbar
@@ -147,7 +149,8 @@
         <span>{{ parameter }}</span>
         <input
           type="text"
-          [(ngModel)]="pendingParameters.values[parameter]"
+          [ngModel]="pendingParameters.values[parameter]"
+          (ngModelChange)="onParameterValueChange(parameter, $event)"
           [name]="parameter"
           [placeholder]="parameter"
           autocomplete="off"

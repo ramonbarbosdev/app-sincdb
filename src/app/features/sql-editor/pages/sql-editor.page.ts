@@ -46,6 +46,8 @@ LIMIT 100;`;
 
 type SqlWorkspaceMode = 'adaptive' | 'editor' | 'results';
 
+const SQL_EDITOR_SESSION_KEY = 'syncdb.sql-editor.session.v1';
+
 interface SqlInsight {
   label: string;
   value: string;
@@ -59,6 +61,18 @@ interface SqlColumnStatistic {
   min?: string;
   max?: string;
   average?: string;
+}
+
+interface SqlEditorSessionState {
+  ambiente: SqlEnvironment;
+  conexaoId: string;
+  base: string;
+  sql: string;
+  queryTabs: SqlQueryTab[];
+  activeQueryTabId: string;
+  parameterValueCache: Record<string, unknown>;
+  pendingParameters?: PendingSqlParameters;
+  parametersVisible: boolean;
 }
 
 @Component({
@@ -80,7 +94,7 @@ interface SqlColumnStatistic {
   styleUrl: './sql-editor.page.scss'
 })
 export class SqlEditorPage implements OnInit {
-  @ViewChild('workspaceEl') workspaceEl?: ElementRef<HTMLElement>;
+  @ViewChild('workspaceEl', { read: ElementRef }) workspaceEl?: ElementRef<HTMLElement>;
 
   ambiente: SqlEnvironment = 'local';
   conexaoId = '';
@@ -110,8 +124,8 @@ export class SqlEditorPage implements OnInit {
   catalogoSql?: SqlCatalogResponse;
   tabelaSelecionada?: SqlCatalogTableSelection;
   propriedadesTabelaVisible = false;
-  workspaceMode: SqlWorkspaceMode = 'adaptive';
-  editorPanePercent = 62;
+  workspaceMode: SqlWorkspaceMode = 'editor';
+  editorPanePercent = 78;
   draggingDivider = false;
   pendingExecution?: PendingSqlExecution;
   pendingParameters?: PendingSqlParameters;
@@ -138,7 +152,7 @@ export class SqlEditorPage implements OnInit {
     if (this.workspaceMode === 'editor') return 'minmax(0, 1fr) 0 0';
     if (this.workspaceMode === 'results') return '0 0 minmax(0, 1fr)';
 
-    return `minmax(0, ${this.editorPanePercent}fr) 8px minmax(0, ${100 - this.editorPanePercent}fr)`;
+    return `minmax(0, ${this.editorPanePercent}fr) 12px minmax(0, ${100 - this.editorPanePercent}fr)`;
   }
 
   get conexaoLabel(): string {
@@ -203,8 +217,7 @@ export class SqlEditorPage implements OnInit {
   }
 
   ngOnInit(): void {
-    this.activeQueryTabId = this.queryTabs[0]?.id || '';
-    this.sql = this.queryTabs[0]?.sql || INITIAL_SQL;
+    this.restoreSessionState();
     this.carregarConexoes();
     this.recarregarPaineis();
     this.dangerCheck = this.checkDangerousSql(this.sql);
@@ -213,16 +226,19 @@ export class SqlEditorPage implements OnInit {
   onAmbienteChange(ambiente: SqlEnvironment): void {
     this.ambiente = ambiente;
     if (ambiente === 'local') this.cloudBlockedMessage = '';
+    this.persistSessionState();
     this.carregarBases();
   }
 
   onConexaoChange(conexaoId: string): void {
     this.conexaoId = conexaoId;
+    this.persistSessionState();
     this.carregarBases();
   }
 
   onBaseChange(base: string): void {
     this.base = base;
+    this.persistSessionState();
     this.carregarCatalogo();
   }
 
@@ -230,7 +246,14 @@ export class SqlEditorPage implements OnInit {
     this.sql = sql;
     this.atualizarAbaAtiva(sql);
     this.dangerCheck = this.checkDangerousSql(sql);
-    this.applyAdaptiveLayout([70, 30]);
+    if (!this.result && this.workspaceMode !== 'editor') {
+      this.workspaceMode = 'editor';
+      this.scheduleLayoutRefresh();
+      this.persistSessionState();
+      return;
+    }
+    this.applyAdaptiveLayout([78, 22]);
+    this.persistSessionState();
   }
 
   abrirPropriedadesTabela(tabela: SqlCatalogTableSelection): void {
@@ -248,6 +271,11 @@ export class SqlEditorPage implements OnInit {
     return String(item['type'] ?? item['tipo'] ?? item['dataType'] ?? item['data_type'] ?? 'tipo nao informado');
   }
 
+  fecharResultados(): void {
+    this.workspaceMode = 'editor';
+    this.scheduleLayoutRefresh();
+  }
+
   maximizarEditor(): void {
     this.workspaceMode = 'editor';
     this.scheduleLayoutRefresh();
@@ -260,12 +288,14 @@ export class SqlEditorPage implements OnInit {
 
   restaurarLayout(): void {
     this.workspaceMode = 'adaptive';
-    this.editorPanePercent = this.result ? 42 : 62;
+    this.editorPanePercent = this.result ? 70 : 78;
     this.scheduleLayoutRefresh();
   }
 
   iniciarResizeWorkspace(event: PointerEvent): void {
     event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget instanceof HTMLElement && event.currentTarget.setPointerCapture(event.pointerId);
     this.draggingDivider = true;
     this.workspaceMode = 'adaptive';
     document.body.classList.add('sql-resizing');
@@ -277,7 +307,7 @@ export class SqlEditorPage implements OnInit {
 
     const rect = this.workspaceEl.nativeElement.getBoundingClientRect();
     const percent = ((event.clientY - rect.top) / rect.height) * 100;
-    this.editorPanePercent = Math.min(82, Math.max(24, percent));
+    this.editorPanePercent = Math.min(94, Math.max(36, percent));
     this.scheduleLayoutRefresh();
   }
 
@@ -306,7 +336,9 @@ export class SqlEditorPage implements OnInit {
     this.errorMessage = '';
     this.cloudBlockedMessage = '';
     this.state = 'initial';
+    this.workspaceMode = 'editor';
     this.dangerCheck = this.checkDangerousSql(this.sql);
+    this.persistSessionState();
   }
 
   selecionarQueryTab(tabId: string): void {
@@ -321,7 +353,9 @@ export class SqlEditorPage implements OnInit {
     this.result = undefined;
     this.errorMessage = '';
     this.state = 'initial';
+    this.workspaceMode = 'editor';
     this.dangerCheck = this.checkDangerousSql(this.sql);
+    this.persistSessionState();
   }
 
   fecharQueryTab(tabId: string): void {
@@ -333,7 +367,10 @@ export class SqlEditorPage implements OnInit {
     const nextTabs = this.queryTabs.filter((tab) => tab.id !== tabId);
     this.queryTabs = nextTabs;
 
-    if (this.activeQueryTabId !== tabId) return;
+    if (this.activeQueryTabId !== tabId) {
+      this.persistSessionState();
+      return;
+    }
 
     const nextTab = nextTabs[Math.max(index - 1, 0)] || nextTabs[0];
     this.activeQueryTabId = nextTab.id;
@@ -341,7 +378,9 @@ export class SqlEditorPage implements OnInit {
     this.result = undefined;
     this.errorMessage = '';
     this.state = 'initial';
+    this.workspaceMode = 'editor';
     this.dangerCheck = this.checkDangerousSql(this.sql);
+    this.persistSessionState();
   }
 
   salvarConsulta(): void {
@@ -378,21 +417,27 @@ export class SqlEditorPage implements OnInit {
 
   aplicarHistorico(item: SqlHistoryItem): void {
     this.sql = item.sql;
+    this.atualizarAbaAtiva(this.sql);
     this.ambiente = item.ambiente;
     this.base = item.base;
     this.dangerCheck = this.checkDangerousSql(this.sql);
     this.carregarCatalogo();
+    this.persistSessionState();
   }
 
   aplicarConsultaSalva(item: SavedSqlQuery): void {
     this.sql = item.sql;
+    this.atualizarAbaAtiva(this.sql);
     this.dangerCheck = this.checkDangerousSql(this.sql);
+    this.persistSessionState();
   }
 
   formatarSql(): void {
     try {
       this.sql = format(this.sql, { language: 'postgresql' });
+      this.atualizarAbaAtiva(this.sql);
       this.dangerCheck = this.checkDangerousSql(this.sql);
+      this.persistSessionState();
       this.adicionarMensagem('success', 'SQL formatado', 'Consulta formatada com sql-formatter.');
     } catch {
       this.adicionarMensagem('warn', 'Nao foi possivel formatar', 'Verifique se a consulta SQL esta completa.');
@@ -407,8 +452,10 @@ export class SqlEditorPage implements OnInit {
     this.pendingParameters = undefined;
     this.parametersVisible = false;
     this.state = 'initial';
+    this.workspaceMode = 'editor';
     this.dangerCheck = this.checkDangerousSql(this.sql);
     this.adicionarMensagem('info', 'Editor limpo', 'O conteudo do editor SQL foi removido.');
+    this.persistSessionState();
   }
 
   executar(sqlToExecute = this.sql, confirmado = false, parametros?: Record<string, unknown>): void {
@@ -435,7 +482,8 @@ export class SqlEditorPage implements OnInit {
     }
 
     this.state = 'executing';
-    this.applyAdaptiveLayout([55, 45]);
+    this.workspaceMode = 'adaptive';
+    this.applyAdaptiveLayout([70, 30]);
     this.errorMessage = '';
     this.cloudBlockedMessage = '';
     this.service
@@ -476,13 +524,14 @@ export class SqlEditorPage implements OnInit {
               }, {}),
             };
             this.parametersVisible = true;
+            this.persistSessionState();
             this.adicionarMensagem('info', 'Parametros necessarios', res.message || 'Informe os parametros para executar a consulta.');
             return;
           }
 
           this.result = res;
           this.state = res.rows.length ? 'loaded' : 'empty';
-          this.applyAdaptiveLayout([32, 68]);
+          this.applyAdaptiveLayout([70, 30]);
           const linhas = `${res.rows.length} linhas retornadas, ${res.affectedRows ?? 0} linhas afetadas, ${res.executionTimeMs} ms.`;
           this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: res.message || 'Consulta executada.' });
           this.adicionarMensagem('success', res.message || 'Consulta executada com sucesso.', linhas);
@@ -491,7 +540,7 @@ export class SqlEditorPage implements OnInit {
         error: (error) => {
           if (error?.status === 403) {
             this.state = 'error';
-            this.applyAdaptiveLayout([55, 45]);
+            this.applyAdaptiveLayout([70, 30]);
             this.confirmationVisible = false;
             this.pendingExecution = undefined;
             this.errorMessage =
@@ -510,7 +559,7 @@ export class SqlEditorPage implements OnInit {
 
           this.result = undefined;
           this.state = 'error';
-          this.applyAdaptiveLayout([55, 45]);
+          this.applyAdaptiveLayout([70, 30]);
           this.errorMessage = error?.error?.message || 'Erro ao executar consulta SQL.';
           this.messageService.add({ severity: 'error', summary: 'Erro', detail: this.errorMessage });
           this.adicionarMensagem('error', 'Erro ao executar consulta SQL', this.errorMessage);
@@ -521,6 +570,7 @@ export class SqlEditorPage implements OnInit {
   usarAmbienteLocal(): void {
     this.ambiente = 'local';
     this.cloudBlockedMessage = '';
+    this.persistSessionState();
     this.carregarBases();
     this.adicionarMensagem('info', 'Ambiente alterado', 'Ambiente Local selecionado para a proxima execucao.');
   }
@@ -553,6 +603,7 @@ export class SqlEditorPage implements OnInit {
 
     this.parametersVisible = false;
     this.pendingParameters = undefined;
+    this.persistSessionState();
     this.executar(pending.sql, pending.confirmado, parametros);
   }
 
@@ -568,12 +619,29 @@ export class SqlEditorPage implements OnInit {
         }, {}),
       };
     }
+
+    this.persistSessionState();
   }
 
   cancelarParametrosSql(): void {
     this.parametersVisible = false;
     this.pendingParameters = undefined;
+    this.persistSessionState();
     this.adicionarMensagem('info', 'Execucao cancelada', 'A consulta parametrizada nao foi enviada para a API.');
+  }
+
+  onParameterValueChange(parameter: string, value: unknown): void {
+    if (!this.pendingParameters) return;
+
+    this.pendingParameters = {
+      ...this.pendingParameters,
+      values: {
+        ...this.pendingParameters.values,
+        [parameter]: value,
+      },
+    };
+
+    this.persistSessionState();
   }
 
   private carregarConexoes(): void {
@@ -587,7 +655,9 @@ export class SqlEditorPage implements OnInit {
       .subscribe({
         next: (items) => {
           this.conexoes = items;
-          this.conexaoId = this.conexaoId || items[0]?.value || '';
+          const conexaoAtualExiste = items.some((item) => item.value === this.conexaoId);
+          this.conexaoId = this.conexaoId && conexaoAtualExiste ? this.conexaoId : items[0]?.value || '';
+          this.persistSessionState();
           this.carregarBases();
         },
         error: (error) => {
@@ -623,6 +693,7 @@ export class SqlEditorPage implements OnInit {
           this.bases = items;
           const baseAtualExiste = items.some((item) => item.value === this.base);
           this.base = baseAtualExiste ? this.base : items[0]?.value || '';
+          this.persistSessionState();
           this.carregarCatalogo();
         },
         error: (error) => {
@@ -738,6 +809,103 @@ export class SqlEditorPage implements OnInit {
         ? { ...tab, sql }
         : tab
     );
+  }
+
+  private restoreSessionState(): void {
+    const state = this.readSessionState();
+
+    if (!state) {
+      this.activeQueryTabId = this.queryTabs[0]?.id || '';
+      this.sql = this.queryTabs[0]?.sql || INITIAL_SQL;
+      return;
+    }
+
+    this.queryTabs = state.queryTabs;
+    this.activeQueryTabId = state.activeQueryTabId;
+    this.sql = this.queryTabs.find((tab) => tab.id === this.activeQueryTabId)?.sql || state.sql;
+    this.ambiente = state.ambiente;
+    this.conexaoId = state.conexaoId;
+    this.base = state.base;
+    this.parameterValueCache = state.parameterValueCache;
+    this.pendingParameters = state.pendingParameters;
+    this.parametersVisible = Boolean(state.parametersVisible && this.pendingParameters);
+  }
+
+  private readSessionState(): SqlEditorSessionState | undefined {
+    try {
+      const rawState = sessionStorage.getItem(SQL_EDITOR_SESSION_KEY);
+      if (!rawState) return undefined;
+
+      const parsed = JSON.parse(rawState) as Partial<SqlEditorSessionState>;
+      const queryTabs = Array.isArray(parsed.queryTabs)
+        ? parsed.queryTabs.filter((tab): tab is SqlQueryTab =>
+            Boolean(tab && typeof tab.id === 'string' && typeof tab.name === 'string' && typeof tab.sql === 'string')
+          )
+        : [];
+
+      if (!queryTabs.length) return undefined;
+
+      const activeQueryTabId =
+        typeof parsed.activeQueryTabId === 'string' && queryTabs.some((tab) => tab.id === parsed.activeQueryTabId)
+          ? parsed.activeQueryTabId
+          : queryTabs[0].id;
+
+      return {
+        ambiente: parsed.ambiente === 'cloud' || parsed.ambiente === 'local' ? parsed.ambiente : 'local',
+        conexaoId: typeof parsed.conexaoId === 'string' ? parsed.conexaoId : '',
+        base: typeof parsed.base === 'string' ? parsed.base : 'db_name',
+        sql: typeof parsed.sql === 'string' ? parsed.sql : queryTabs[0].sql,
+        queryTabs,
+        activeQueryTabId,
+        parameterValueCache: this.isRecord(parsed.parameterValueCache) ? parsed.parameterValueCache : {},
+        pendingParameters: this.isPendingParameters(parsed.pendingParameters) ? parsed.pendingParameters : undefined,
+        parametersVisible: Boolean(parsed.parametersVisible),
+      };
+    } catch {
+      return undefined;
+    }
+  }
+
+  private persistSessionState(): void {
+    try {
+      const queryTabs = this.queryTabs.map((tab) =>
+        tab.id === this.activeQueryTabId
+          ? { ...tab, sql: this.sql }
+          : tab
+      );
+
+      const state: SqlEditorSessionState = {
+        ambiente: this.ambiente,
+        conexaoId: this.conexaoId,
+        base: this.base,
+        sql: this.sql,
+        queryTabs,
+        activeQueryTabId: this.activeQueryTabId,
+        parameterValueCache: this.parameterValueCache,
+        pendingParameters: this.pendingParameters,
+        parametersVisible: this.parametersVisible,
+      };
+
+      sessionStorage.setItem(SQL_EDITOR_SESSION_KEY, JSON.stringify(state));
+    } catch {
+      // Session persistence is best-effort; the editor must keep working if storage is unavailable.
+    }
+  }
+
+  private isPendingParameters(value: unknown): value is PendingSqlParameters {
+    if (!this.isRecord(value)) return false;
+
+    return (
+      typeof value['sql'] === 'string' &&
+      typeof value['confirmado'] === 'boolean' &&
+      Array.isArray(value['parameters']) &&
+      value['parameters'].every((parameter) => typeof parameter === 'string') &&
+      this.isRecord(value['values'])
+    );
+  }
+
+  private isRecord(value: unknown): value is Record<string, unknown> {
+    return Boolean(value && typeof value === 'object' && !Array.isArray(value));
   }
 
   private parseParameterValue(value: unknown): unknown {

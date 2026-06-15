@@ -6,9 +6,9 @@
 
 .editor-panel {
   height: 100%;
-  min-height: 18rem;
+  min-height: 28rem;
   display: grid;
-  grid-template-rows: auto auto auto minmax(240px, 1fr);
+  grid-template-rows: auto auto auto minmax(min(28rem, 58vh), 1fr);
   border: 0;
   border-radius: 0;
   overflow: hidden;
@@ -49,19 +49,19 @@
 
 .editor-body,
 .monaco-container {
-  min-height: 240px;
+  min-height: min(28rem, 58vh);
   background: var(--surface-ground);
 }
 
 .editor-body {
   height: 100%;
+  display: grid;
   overflow: hidden;
 }
 
 .monaco-container {
   width: 100%;
   height: 100%;
-  min-height: 240px;
 }
 
 .editor-panel.expanded .monaco-container {
@@ -94,4 +94,9 @@
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 2px;
+}
+
+:host ::ng-deep .monaco-editor,
+:host ::ng-deep .monaco-editor .overflow-guard {
+  height: 100% !important;
 }

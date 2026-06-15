@@ -12,12 +12,26 @@
 }
 
 .workspace-divider {
-  height: 8px;
+  height: 12px;
   cursor: row-resize;
-  background: var(--surface-border);
+  position: relative;
+  z-index: 2;
+  background: color-mix(in srgb, var(--surface-border) 70%, transparent);
   transition: background 0.15s ease;
 }
 
+.workspace-divider::before {
+  content: '';
+  position: absolute;
+  inset: 5px 0;
+  background: var(--surface-border);
+}
+
 .workspace-divider:hover {
+  background: var(--primary-color);
+}
+
+:host-context(.sql-resizing) .workspace-divider,
+:host-context(.sql-resizing) .workspace-divider::before {
   background: var(--primary-color);
 }

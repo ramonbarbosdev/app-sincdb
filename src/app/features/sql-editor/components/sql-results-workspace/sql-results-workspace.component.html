@@ -11,33 +11,23 @@
       </p-tablist>
 
       <div class="layout-actions">
-        <button
-          type="button"
-          title="Maximizar resultados"
-          (click)="maximizarResultados.emit()"
-        >
-          <i class="pi pi-window-maximize"></i>
-        </button>
+
 
         <button type="button" title="Restaurar layout" (click)="restaurarLayout.emit()">
           <i class="pi pi-th-large"></i>
         </button>
+
+        <button class="close-button" type="button" title="Fechar resultados" (click)="fechar.emit()">
+          <i class="pi pi-times"></i>
+        </button>
       </div>
     </div>
 
-    <app-sql-results-contextbar
-      [insights]="resultInsights"
-      [warnings]="queryWarnings"
-    />
+    <app-sql-results-contextbar [insights]="resultInsights" [warnings]="queryWarnings" />
 
     <p-tabpanels>
       <p-tabpanel value="results">
-        <app-sql-result-panel
-          [state]="state"
-          [result]="result"
-          [errorMessage]="errorMessage"
-          [sql]="sql"
-        />
+        <app-sql-result-panel [state]="state" [result]="result" [errorMessage]="errorMessage" [sql]="sql" />
       </p-tabpanel>
 
       <p-tabpanel value="json">
@@ -82,10 +72,7 @@
       </p-tabpanel>
 
       <p-tabpanel value="history">
-        <app-sql-history-panel
-          [items]="history"
-          (selected)="selecionarHistorico.emit($event)"
-        />
+        <app-sql-history-panel [items]="history" (selected)="selecionarHistorico.emit($event)" />
       </p-tabpanel>
     </p-tabpanels>
   </p-tabs>

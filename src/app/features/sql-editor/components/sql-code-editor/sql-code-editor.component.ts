@@ -111,7 +111,7 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
 
   @HostListener('window:resize')
   onWindowResize(): void {
-    this.editor?.layout();
+    this.layoutEditorToContainer();
   }
 
   @HostListener('window:keyup', ['$event'])
@@ -125,7 +125,7 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
     this.expanded = !this.expanded;
 
     setTimeout(() => {
-      this.editor?.layout();
+      this.layoutEditorToContainer();
     });
   }
 
@@ -205,9 +205,18 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
   private scheduleEditorLayout(): void {
     [0, 50, 150, 300].forEach((delay) => {
       setTimeout(() => {
-        this.editor?.layout();
+        this.layoutEditorToContainer();
       }, delay);
     });
+  }
+
+  private layoutEditorToContainer(): void {
+    if (!this.editor || !this.monacoContainer?.nativeElement) return;
+
+    const { clientWidth, clientHeight } = this.monacoContainer.nativeElement;
+    if (!clientWidth || !clientHeight) return;
+
+    this.editor.layout({ width: clientWidth, height: clientHeight });
   }
 
   private loadMonaco(): Promise<MonacoApi> {
@@ -634,7 +643,7 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
     if (!this.monacoApi || !this.editor) return;
 
     this.monacoApi.editor.setTheme(this.getMonacoTheme());
-    this.editor.layout();
+    this.layoutEditorToContainer();
   }
 
   private getMonacoTheme(): string {

@@ -51,4 +51,5 @@ export class SqlResultsWorkspaceComponent {
   @Output() maximizarResultados = new EventEmitter<void>();
   @Output() restaurarLayout = new EventEmitter<void>();
   @Output() selecionarHistorico = new EventEmitter<SqlHistoryItem>();
+  @Output() fechar = new EventEmitter<void>();
 }

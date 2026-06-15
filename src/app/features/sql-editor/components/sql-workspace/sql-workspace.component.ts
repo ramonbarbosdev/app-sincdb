@@ -49,7 +49,7 @@ export class SqlWorkspaceComponent {
   @Input() queryWarnings: string[] = [];
   @Input() columnStatistics: SqlColumnStatistic[] = [];
   @Input() history: SqlHistoryItem[] = [];
-  @Input() workspaceGridTemplate = 'minmax(0, 62fr) 8px minmax(0, 38fr)';
+  @Input() workspaceGridTemplate = 'minmax(0, 78fr) 12px minmax(0, 22fr)';
   @Input() queryTabs: SqlQueryTab[] = [];
   @Input() activeQueryTabId = '';
 
@@ -69,4 +69,5 @@ export class SqlWorkspaceComponent {
   @Output() resizeStart = new EventEmitter<PointerEvent>();
   @Output() propriedadesTabela = new EventEmitter<SqlCatalogTableSelection>();
   @Output() selecionarHistorico = new EventEmitter<SqlHistoryItem>();
+  @Output() fecharResultados = new EventEmitter<void>();
 }
