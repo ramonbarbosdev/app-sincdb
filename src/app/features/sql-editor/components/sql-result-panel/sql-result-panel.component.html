@@ -4,14 +4,41 @@
     <span>Executando consulta...</span>
   </div>
 
-  <div class="empty-state" *ngIf="state !== 'executing' && (!result || !result.rows.length)">
+  <article class="error-state" *ngIf="shouldShowErrorState && displayError">
+    <header>
+      <span class="error-icon">
+        <i class="pi pi-exclamation-triangle"></i>
+      </span>
+
+      <div>
+        <strong>{{ displayError.title }}</strong>
+        <span>A consulta nao foi executada. Verifique o SQL antes de tentar novamente.</span>
+      </div>
+    </header>
+
+    <div class="error-detail">
+      <span>Mensagem do banco</span>
+      <code>{{ displayError.message }}</code>
+    </div>
+
+    <div class="error-meta" *ngIf="displayError.position">
+      <span>Posicao {{ displayError.position }}</span>
+      <span *ngIf="displayError.line && displayError.column">
+        Linha {{ displayError.line }}, coluna {{ displayError.column }}
+      </span>
+    </div>
+
+    <p>{{ displayError.hint }}</p>
+  </article>
+
+  <div class="empty-state" *ngIf="shouldShowEmptyState">
     <i class="pi pi-table"></i>
     <strong>Execute uma consulta para visualizar os resultados</strong>
     <span>Limite de linhas definido pelo usuario</span>
 
   </div>
 
-  <ng-container *ngIf="state !== 'executing' && result && result.rows.length">
+  <ng-container *ngIf="shouldShowGrid && result">
     <div class="result-summary">
       <span>{{ result.rows.length }} linhas retornadas</span>
       <span>{{ result.executionTimeMs }} ms</span>

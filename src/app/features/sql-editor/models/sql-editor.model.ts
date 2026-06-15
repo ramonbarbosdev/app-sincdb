@@ -29,6 +29,25 @@ export interface SqlResultColumn {
   type?: string;
 }
 
+export interface SqlCatalogColumn {
+  name: string;
+  type?: string;
+}
+
+export interface SqlCatalogTable {
+  name: string;
+  columns: SqlCatalogColumn[];
+}
+
+export interface SqlCatalogSchema {
+  name: string;
+  tables: SqlCatalogTable[];
+}
+
+export interface SqlCatalogResponse {
+  schemas: SqlCatalogSchema[];
+}
+
 export interface ConexaoSqlOption {
   id?: string;
   id_conexao?: string;

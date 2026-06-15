@@ -19,7 +19,7 @@
         [loadingBases]="loadingBases"
         (ambienteChange)="onAmbienteChange($event)"
         (conexaoIdChange)="onConexaoChange($event)"
-        (baseChange)="base = $event"
+        (baseChange)="onBaseChange($event)"
         (maxRowsChange)="maxRows = $event"
         (timeoutSecondsChange)="timeoutSeconds = $event"
         (refresh)="recarregarContexto()"
@@ -59,6 +59,7 @@
             [sql]="sql"
             [executing]="state === 'executing'"
             [danger]="dangerCheck"
+            [catalogo]="catalogoSql"
             (sqlChange)="onSqlChange($event)"
             (formatar)="formatarSql()"
             (executar)="executar()"
@@ -78,7 +79,12 @@
 
               <p-tabpanels>
                 <p-tabpanel value="results">
-                  <app-sql-result-panel [state]="state" [result]="result" [errorMessage]="errorMessage" />
+                  <app-sql-result-panel
+                    [state]="state"
+                    [result]="result"
+                    [errorMessage]="errorMessage"
+                    [sql]="sql"
+                  />
                 </p-tabpanel>
 
                 <p-tabpanel value="messages">

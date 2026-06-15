@@ -18,6 +18,7 @@ import {
   PendingSqlExecution,
   SavedSqlQuery,
   SelectOption,
+  SqlCatalogResponse,
   SqlEditorState,
   SqlEnvironment,
   SqlExecutionResponse,
@@ -73,6 +74,7 @@ export class SqlEditorPage implements OnInit {
   history: SqlHistoryItem[] = [];
   savedQueries: SavedSqlQuery[] = [];
   messages: SqlMessage[] = [];
+  catalogoSql?: SqlCatalogResponse;
   pendingExecution?: PendingSqlExecution;
   confirmationVisible = false;
 
@@ -133,6 +135,11 @@ export class SqlEditorPage implements OnInit {
     this.carregarBases();
   }
 
+  onBaseChange(base: string): void {
+    this.base = base;
+    this.carregarCatalogo();
+  }
+
   onSqlChange(sql: string): void {
     this.sql = sql;
     this.dangerCheck = this.checkDangerousSql(sql);
@@ -184,6 +191,7 @@ export class SqlEditorPage implements OnInit {
     this.ambiente = item.ambiente;
     this.base = item.base;
     this.dangerCheck = this.checkDangerousSql(this.sql);
+    this.carregarCatalogo();
   }
 
   aplicarConsultaSalva(item: SavedSqlQuery): void {
@@ -345,6 +353,7 @@ export class SqlEditorPage implements OnInit {
     if (!this.conexaoId) {
       this.bases = [];
       this.base = '';
+      this.catalogoSql = undefined;
       return;
     }
 
@@ -362,10 +371,12 @@ export class SqlEditorPage implements OnInit {
           this.bases = items;
           const baseAtualExiste = items.some((item) => item.value === this.base);
           this.base = baseAtualExiste ? this.base : items[0]?.value || '';
+          this.carregarCatalogo();
         },
         error: (error) => {
           this.bases = [];
           this.base = '';
+          this.catalogoSql = undefined;
           this.messageService.add({
             severity: 'error',
             summary: 'Erro',
@@ -373,6 +384,30 @@ export class SqlEditorPage implements OnInit {
           });
         },
       });
+  }
+
+  private carregarCatalogo(): void {
+    if (!this.conexaoId || !this.base.trim()) {
+      this.catalogoSql = undefined;
+      return;
+    }
+
+    const contexto = `${this.ambiente}:${this.conexaoId}:${this.base}`;
+
+    this.service.listarCatalogo(this.ambiente, this.conexaoId, this.base).subscribe({
+      next: (catalogo) => {
+        if (contexto !== `${this.ambiente}:${this.conexaoId}:${this.base}`) return;
+
+        this.catalogoSql = catalogo;
+        this.cd.markForCheck();
+      },
+      error: () => {
+        if (contexto !== `${this.ambiente}:${this.conexaoId}:${this.base}`) return;
+
+        this.catalogoSql = undefined;
+        this.cd.markForCheck();
+      },
+    });
   }
 
   private validarExecucao(sql: string): string {

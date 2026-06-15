@@ -16,7 +16,13 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import type * as Monaco from 'monaco-editor';
-import { DangerousSqlCheck } from '../../models/sql-editor.model';
+import {
+  DangerousSqlCheck,
+  SqlCatalogColumn,
+  SqlCatalogResponse,
+  SqlCatalogSchema,
+  SqlCatalogTable,
+} from '../../models/sql-editor.model';
 import { SqlToolbarComponent } from '../sql-toolbar/sql-toolbar.component';
 
 type MonacoApi = typeof Monaco;
@@ -45,6 +51,7 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
   @Input() sql = '';
   @Input() executing = false;
   @Input() danger: DangerousSqlCheck = { dangerous: false, reason: '' };
+  @Input() catalogo?: SqlCatalogResponse;
 
   @Output() sqlChange = new EventEmitter<string>();
   @Output() formatar = new EventEmitter<void>();
@@ -63,6 +70,7 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
   private monacoApi?: MonacoApi;
   private resizeObserver?: ResizeObserver;
   private themeObserver?: MutationObserver;
+  private completionProviderDisposable?: Monaco.IDisposable;
   private updatingFromInput = false;
 
   ngAfterViewInit(): void {
@@ -84,6 +92,7 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
   ngOnDestroy(): void {
     this.themeObserver?.disconnect();
     this.resizeObserver?.disconnect();
+    this.completionProviderDisposable?.dispose();
     this.editor?.dispose();
   }
 
@@ -126,6 +135,7 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
     this.monacoApi = monacoApi;
 
     this.configureMonaco(monacoApi);
+    this.registerSqlCompletionProvider(monacoApi);
 
     this.editor = monacoApi.editor.create(this.monacoContainer.nativeElement, {
       value: this.sql,
@@ -259,6 +269,200 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
     });
 
     SqlCodeEditorComponent.themeRegistered = true;
+  }
+
+  private registerSqlCompletionProvider(monacoApi: MonacoApi): void {
+    this.completionProviderDisposable?.dispose();
+
+    this.completionProviderDisposable = monacoApi.languages.registerCompletionItemProvider('sql', {
+      triggerCharacters: ['.', ' ', '"'],
+      provideCompletionItems: (model, position) => {
+        const catalogo = this.catalogo;
+        const range = this.getCompletionRange(monacoApi, model, position);
+
+        if (!catalogo?.schemas?.length) {
+          return { suggestions: [] };
+        }
+
+        const lineUntilCursor = model.getValueInRange({
+          startLineNumber: position.lineNumber,
+          startColumn: 1,
+          endLineNumber: position.lineNumber,
+          endColumn: position.column,
+        });
+        const dotContext = this.getDotContext(lineUntilCursor);
+
+        if (dotContext) {
+          return {
+            suggestions: this.getColumnsForQualifier(model.getValue(), dotContext, catalogo).map((column) =>
+              this.createColumnSuggestion(monacoApi, column, range)
+            ),
+          };
+        }
+
+        return {
+          suggestions: [
+            ...this.createSchemaSuggestions(monacoApi, catalogo.schemas, range),
+            ...this.createTableSuggestions(monacoApi, catalogo.schemas, range),
+            ...this.createColumnSuggestions(monacoApi, catalogo.schemas, range),
+          ],
+        };
+      },
+    });
+  }
+
+  private getCompletionRange(
+    monacoApi: MonacoApi,
+    model: Monaco.editor.ITextModel,
+    position: Monaco.Position
+  ): Monaco.IRange {
+    const word = model.getWordUntilPosition(position);
+
+    return new monacoApi.Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn);
+  }
+
+  private getDotContext(lineUntilCursor: string): string {
+    const match = /((?:"[^"]+"|\[[^\]]+\]|[a-zA-Z_][\w$]*))\.\s*$/.exec(lineUntilCursor);
+    return match?.[1] ? this.normalizeIdentifier(match[1]) : '';
+  }
+
+  private getColumnsForQualifier(
+    sql: string,
+    qualifier: string,
+    catalogo: SqlCatalogResponse
+  ): SqlCatalogColumn[] {
+    const aliasMap = this.extractAliasMap(sql, catalogo);
+    const tableFromAlias = aliasMap.get(this.normalizeIdentifier(qualifier).toLowerCase());
+    const table = tableFromAlias || this.findTable(catalogo, qualifier);
+
+    return table?.columns || [];
+  }
+
+  private createSchemaSuggestions(
+    monacoApi: MonacoApi,
+    schemas: SqlCatalogSchema[],
+    range: Monaco.IRange
+  ): Monaco.languages.CompletionItem[] {
+    return schemas.map((schema) => ({
+      label: schema.name,
+      kind: monacoApi.languages.CompletionItemKind.Module,
+      insertText: schema.name,
+      detail: 'Schema',
+      range,
+    }));
+  }
+
+  private createTableSuggestions(
+    monacoApi: MonacoApi,
+    schemas: SqlCatalogSchema[],
+    range: Monaco.IRange
+  ): Monaco.languages.CompletionItem[] {
+    return schemas.flatMap((schema) =>
+      schema.tables.map((table) => ({
+        label: table.name,
+        kind: monacoApi.languages.CompletionItemKind.Class,
+        insertText: table.name,
+        detail: `Tabela ${schema.name}.${table.name}`,
+        range,
+      }))
+    );
+  }
+
+  private createColumnSuggestions(
+    monacoApi: MonacoApi,
+    schemas: SqlCatalogSchema[],
+    range: Monaco.IRange
+  ): Monaco.languages.CompletionItem[] {
+    return schemas.flatMap((schema) =>
+      schema.tables.flatMap((table) =>
+        table.columns.map((column) => this.createColumnSuggestion(monacoApi, column, range, table))
+      )
+    );
+  }
+
+  private createColumnSuggestion(
+    monacoApi: MonacoApi,
+    column: SqlCatalogColumn,
+    range: Monaco.IRange,
+    table?: SqlCatalogTable
+  ): Monaco.languages.CompletionItem {
+    return {
+      label: column.name,
+      kind: monacoApi.languages.CompletionItemKind.Field,
+      insertText: column.name,
+      detail: table ? `${table.name}.${column.name}${column.type ? `: ${column.type}` : ''}` : column.type || 'Coluna',
+      range,
+    };
+  }
+
+  private extractAliasMap(sql: string, catalogo: SqlCatalogResponse): Map<string, SqlCatalogTable> {
+    const aliases = new Map<string, SqlCatalogTable>();
+    const reservedWords = new Set([
+      'where',
+      'join',
+      'left',
+      'right',
+      'inner',
+      'full',
+      'cross',
+      'on',
+      'group',
+      'order',
+      'limit',
+      'offset',
+      'union',
+      'having',
+    ]);
+    const identifier = String.raw`(?:"[^"]+"|\[[^\]]+\]|[a-zA-Z_][\w$]*)`;
+    const tableReference = String.raw`(${identifier}(?:\s*\.\s*${identifier})?)`;
+    const aliasPattern = new RegExp(
+      String.raw`\b(?:FROM|JOIN)\s+${tableReference}\s+(?:AS\s+)?(${identifier})`,
+      'gi'
+    );
+
+    for (const match of sql.matchAll(aliasPattern)) {
+      const tableReferenceValue = match[1] || '';
+      const alias = this.normalizeIdentifier(match[2] || '').toLowerCase();
+
+      if (!alias || reservedWords.has(alias)) continue;
+
+      const table = this.findTable(catalogo, tableReferenceValue);
+      if (table) aliases.set(alias, table);
+    }
+
+    return aliases;
+  }
+
+  private findTable(catalogo: SqlCatalogResponse, tableReference: string): SqlCatalogTable | undefined {
+    const parts = tableReference
+      .split('.')
+      .map((part) => this.normalizeIdentifier(part).toLowerCase())
+      .filter(Boolean);
+    const tableName = parts.at(-1);
+    const schemaName = parts.length > 1 ? parts.at(-2) : undefined;
+
+    if (!tableName) return undefined;
+
+    for (const schema of catalogo.schemas) {
+      if (schemaName && schema.name.toLowerCase() !== schemaName) continue;
+
+      const table = schema.tables.find((item) => item.name.toLowerCase() === tableName);
+      if (table) return table;
+    }
+
+    return undefined;
+  }
+
+  private normalizeIdentifier(value: string): string {
+    const trimmed = value.trim();
+    if (
+      (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+      (trimmed.startsWith('[') && trimmed.endsWith(']'))
+    ) {
+      return trimmed.slice(1, -1);
+    }
+
+    return trimmed;
   }
 
   private observeThemeChanges(): void {

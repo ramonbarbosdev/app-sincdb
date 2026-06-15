@@ -19,6 +19,101 @@
   font-size: 1.7rem;
 }
 
+.error-state {
+  display: grid;
+  gap: 0.9rem;
+
+  padding: 1rem;
+
+  border: 1px solid color-mix(in srgb, var(--red-500) 35%, var(--surface-border));
+  border-left: 4px solid var(--red-500);
+  border-radius: 8px;
+
+  background: color-mix(in srgb, var(--red-500) 8%, var(--surface-card));
+  color: var(--text-color-secondary);
+}
+
+.error-state header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.error-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--red-500) 16%, transparent);
+  color: var(--red-500);
+}
+
+.error-state header div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.error-state strong {
+  color: var(--text-color);
+  font-size: 0.98rem;
+}
+
+.error-detail {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.error-detail span {
+  color: var(--text-color-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.error-detail code {
+  display: block;
+  width: 100%;
+
+  padding: 0.75rem;
+
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+
+  background: color-mix(in srgb, var(--surface-ground) 88%, transparent);
+  color: var(--text-color);
+
+  font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.error-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.error-meta span {
+  padding: 0.25rem 0.55rem;
+
+  border: 1px solid color-mix(in srgb, var(--red-500) 28%, var(--surface-border));
+  border-radius: 999px;
+
+  background: color-mix(in srgb, var(--red-500) 10%, transparent);
+  color: var(--text-color);
+
+  font-size: 0.78rem;
+}
+
+.error-state p {
+  margin: 0;
+}
 
 .result-summary {
   display: flex;

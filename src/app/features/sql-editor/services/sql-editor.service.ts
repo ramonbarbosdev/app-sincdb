@@ -7,6 +7,7 @@ import {
   SaveSqlQueryRequest,
   SavedSqlQuery,
   SelectOption,
+  SqlCatalogResponse,
   SqlExecutionRequest,
   SqlExecutionResponse,
   SqlHistoryItem,
@@ -55,6 +56,18 @@ export class SqlEditorService {
           })
         )
       );
+  }
+
+  listarCatalogo(ambiente: string, conexaoId: string, base: string): Observable<SqlCatalogResponse> {
+    const params = new HttpParams()
+      .set('ambiente', ambiente)
+      .set('idConexao', conexaoId)
+      .set('base', base);
+
+    return this.http.get<SqlCatalogResponse>(`${this.apiUrl}/sql/catalogo`, {
+      params,
+      withCredentials: true,
+    });
   }
 
   listarHistorico(): Observable<SqlHistoryItem[]> {
