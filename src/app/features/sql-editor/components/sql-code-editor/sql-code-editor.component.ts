@@ -22,6 +22,7 @@ import {
   SqlCatalogResponse,
   SqlCatalogSchema,
   SqlCatalogTable,
+  SqlCatalogTableSelection,
 } from '../../models/sql-editor.model';
 import { SqlToolbarComponent } from '../sql-toolbar/sql-toolbar.component';
 
@@ -60,6 +61,7 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
   @Output() limpar = new EventEmitter<void>();
   @Output() salvar = new EventEmitter<void>();
   @Output() historico = new EventEmitter<void>();
+  @Output() propriedadesTabela = new EventEmitter<SqlCatalogTableSelection>();
 
   expanded = false;
 
@@ -71,6 +73,9 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
   private resizeObserver?: ResizeObserver;
   private themeObserver?: MutationObserver;
   private completionProviderDisposable?: Monaco.IDisposable;
+  private tableLinkDecorations?: Monaco.editor.IEditorDecorationsCollection;
+  private tableLinkDisposables: Monaco.IDisposable[] = [];
+  private hoveredTable?: SqlCatalogTableSelection;
   private updatingFromInput = false;
 
   ngAfterViewInit(): void {
@@ -93,6 +98,8 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
     this.themeObserver?.disconnect();
     this.resizeObserver?.disconnect();
     this.completionProviderDisposable?.dispose();
+    this.tableLinkDecorations?.clear();
+    this.tableLinkDisposables.forEach((disposable) => disposable.dispose());
     this.editor?.dispose();
   }
 
@@ -105,6 +112,13 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
   @HostListener('window:resize')
   onWindowResize(): void {
     this.editor?.layout();
+  }
+
+  @HostListener('window:keyup', ['$event'])
+  onWindowKeyUp(event: KeyboardEvent): void {
+    if (event.key === 'Control' || event.key === 'Meta') {
+      this.clearTableHover();
+    }
   }
 
   toggleExpanded(): void {
@@ -174,6 +188,8 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
     this.editor.addCommand(monacoApi.KeyMod.CtrlCmd | monacoApi.KeyCode.Enter, () => {
       this.executar.emit();
     });
+
+    this.registerSqlTableHover(monacoApi);
 
     this.resizeObserver = new ResizeObserver(() => {
       this.editor?.layout();
@@ -309,6 +325,98 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
         };
       },
     });
+  }
+
+  private registerSqlTableHover(monacoApi: MonacoApi): void {
+    if (!this.editor) return;
+
+    this.tableLinkDecorations = this.editor.createDecorationsCollection();
+    this.tableLinkDisposables.forEach((disposable) => disposable.dispose());
+
+    this.tableLinkDisposables = [
+      this.editor.onMouseMove((event) => {
+        if (!event.event.ctrlKey && !event.event.metaKey) {
+          this.clearTableHover();
+          return;
+        }
+
+        const match = this.getTableReferenceAtPosition(monacoApi, event.target.position);
+        if (!match) {
+          this.clearTableHover();
+          return;
+        }
+
+        this.hoveredTable = match.selection;
+        this.tableLinkDecorations?.set([
+          {
+            range: match.range,
+            options: {
+              inlineClassName: 'sql-table-link-hover',
+              hoverMessage: {
+                value: `Abrir propriedades de **${match.selection.schema}.${match.selection.name}**`,
+              },
+            },
+          },
+        ]);
+      }),
+      this.editor.onMouseDown((event) => {
+        if ((!event.event.ctrlKey && !event.event.metaKey) || !this.hoveredTable) return;
+
+        this.propriedadesTabela.emit(this.hoveredTable);
+        this.clearTableHover();
+      }),
+      this.editor.onMouseLeave(() => {
+        this.clearTableHover();
+      }),
+      this.editor.onKeyUp((event) => {
+        if (event.browserEvent.key === 'Control' || event.browserEvent.key === 'Meta') {
+          this.clearTableHover();
+        }
+      }),
+      this.editor.onKeyDown((event) => {
+        if (!event.ctrlKey && !event.metaKey) {
+          this.clearTableHover();
+        }
+      }),
+    ];
+  }
+
+  private getTableReferenceAtPosition(
+    monacoApi: MonacoApi,
+    position: Monaco.Position | null
+  ): { range: Monaco.Range; selection: SqlCatalogTableSelection } | undefined {
+    const model = this.editor?.getModel();
+    const catalogo = this.catalogo;
+    if (!model || !catalogo?.schemas?.length || !position) return undefined;
+
+    const sql = model.getValue();
+    const identifier = String.raw`(?:"[^"]+"|\[[^\]]+\]|[a-zA-Z_][\w$]*)`;
+    const tableReference = String.raw`(${identifier}(?:\s*\.\s*${identifier})?)`;
+    const tablePattern = new RegExp(String.raw`\b(?:FROM|JOIN)\s+${tableReference}`, 'gi');
+
+    for (const match of sql.matchAll(tablePattern)) {
+      const reference = match[1] || '';
+      const selection = this.findTableSelectionFromCatalog(catalogo, reference);
+      if (!selection || match.index === undefined) continue;
+
+      const referenceStart = sql.indexOf(reference, match.index);
+      if (referenceStart < 0) continue;
+
+      const start = model.getPositionAt(referenceStart);
+      const end = model.getPositionAt(referenceStart + reference.length);
+      const range = new monacoApi.Range(start.lineNumber, start.column, end.lineNumber, end.column);
+
+      if (range.containsPosition(position)) {
+        return { range, selection };
+      }
+    }
+
+    return undefined;
+  }
+
+  private clearTableHover(): void {
+    this.hoveredTable = undefined;
+    this.tableLinkDecorations?.clear();
   }
 
   private getCompletionRange(
@@ -448,6 +556,35 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
 
       const table = schema.tables.find((item) => item.name.toLowerCase() === tableName);
       if (table) return table;
+    }
+
+    return undefined;
+  }
+
+  private findTableSelectionFromCatalog(
+    catalogo: SqlCatalogResponse,
+    tableReference: string
+  ): SqlCatalogTableSelection | undefined {
+    const parts = tableReference
+      .split('.')
+      .map((part) => this.normalizeIdentifier(part).toLowerCase())
+      .filter(Boolean);
+    const tableName = parts.at(-1);
+    const schemaName = parts.length > 1 ? parts.at(-2) : undefined;
+
+    if (!tableName) return undefined;
+
+    for (const schema of catalogo.schemas) {
+      if (schemaName && schema.name.toLowerCase() !== schemaName) continue;
+
+      const table = schema.tables.find((item) => item.name.toLowerCase() === tableName);
+      if (table) {
+        return {
+          schema: schema.name,
+          name: table.name,
+          columns: table.columns,
+        };
+      }
     }
 
     return undefined;

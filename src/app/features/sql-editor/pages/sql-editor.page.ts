@@ -3,6 +3,7 @@ import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { finalize } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 import { TabsModule } from 'primeng/tabs';
 import { format } from 'sql-formatter';
 import { AuthService } from '../../../auth/auth.service';
@@ -19,6 +20,7 @@ import {
   SavedSqlQuery,
   SelectOption,
   SqlCatalogResponse,
+  SqlCatalogTableSelection,
   SqlEditorState,
   SqlEnvironment,
   SqlExecutionResponse,
@@ -44,6 +46,7 @@ LIMIT 100;`;
   imports: [
     CommonModule,
     ButtonModule,
+    DialogModule,
     TabsModule,
     SqlEditorHeaderComponent,
     SqlEditorToolbarComponent,
@@ -75,6 +78,8 @@ export class SqlEditorPage implements OnInit {
   savedQueries: SavedSqlQuery[] = [];
   messages: SqlMessage[] = [];
   catalogoSql?: SqlCatalogResponse;
+  tabelaSelecionada?: SqlCatalogTableSelection;
+  propriedadesTabelaVisible = false;
   pendingExecution?: PendingSqlExecution;
   confirmationVisible = false;
 
@@ -143,6 +148,11 @@ export class SqlEditorPage implements OnInit {
   onSqlChange(sql: string): void {
     this.sql = sql;
     this.dangerCheck = this.checkDangerousSql(sql);
+  }
+
+  abrirPropriedadesTabela(tabela: SqlCatalogTableSelection): void {
+    this.tabelaSelecionada = tabela;
+    this.propriedadesTabelaVisible = true;
   }
 
   novaConsulta(): void {

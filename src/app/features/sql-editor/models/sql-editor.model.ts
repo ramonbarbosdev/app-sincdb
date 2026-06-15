@@ -48,6 +48,12 @@ export interface SqlCatalogResponse {
   schemas: SqlCatalogSchema[];
 }
 
+export interface SqlCatalogTableSelection {
+  schema: string;
+  name: string;
+  columns: SqlCatalogColumn[];
+}
+
 export interface ConexaoSqlOption {
   id?: string;
   id_conexao?: string;

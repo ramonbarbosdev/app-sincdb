@@ -67,6 +67,7 @@
             (limpar)="limparEditor()"
             (salvar)="salvarConsulta()"
             (historico)="toggleHistory()"
+            (propriedadesTabela)="abrirPropriedadesTabela($event)"
           />
 
           <section class="bottom-panel">
@@ -106,6 +107,46 @@
         (confirm)="confirmarExecucaoPerigosa()"
         (cancel)="cancelarExecucaoPerigosa()"
       />
+
+      <p-dialog
+        header="Propriedades da tabela"
+        [(visible)]="propriedadesTabelaVisible"
+        [modal]="true"
+        [draggable]="false"
+        [resizable]="false"
+        [style]="{ width: 'min(760px, 94vw)' }"
+        styleClass="sql-table-properties-dialog"
+      >
+        <section class="table-properties" *ngIf="tabelaSelecionada">
+          <div class="table-properties-title">
+            <span>{{ tabelaSelecionada.schema }}</span>
+            <strong>{{ tabelaSelecionada.name }}</strong>
+          </div>
+
+          <div class="table-properties-summary">
+            <span>
+              <i class="pi pi-database"></i>
+              Schema {{ tabelaSelecionada.schema }}
+            </span>
+            <span>
+              <i class="pi pi-table"></i>
+              {{ tabelaSelecionada.columns.length }} colunas
+            </span>
+          </div>
+
+          <div class="table-columns">
+            <div class="table-column table-column-header">
+              <span>Coluna</span>
+              <span>Tipo</span>
+            </div>
+
+            <div class="table-column" *ngFor="let coluna of tabelaSelecionada.columns">
+              <span>{{ coluna.name }}</span>
+              <code>{{ coluna.type || 'tipo nao informado' }}</code>
+            </div>
+          </div>
+        </section>
+      </p-dialog>
 
       <footer class="sql-statusbar">
         <span class="env-dot"></span>

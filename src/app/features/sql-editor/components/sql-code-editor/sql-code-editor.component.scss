@@ -69,3 +69,11 @@
     font-size: 0.48rem;
   }
 }
+
+:host ::ng-deep .sql-table-link-hover {
+  color: var(--primary-color);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
