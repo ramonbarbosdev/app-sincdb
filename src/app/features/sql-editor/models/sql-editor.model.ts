@@ -27,6 +27,7 @@ export interface SqlExecutionResponse {
 export interface SqlResultColumn {
   name: string;
   type?: string;
+  width?: number;
 }
 
 export interface SqlCatalogColumn {

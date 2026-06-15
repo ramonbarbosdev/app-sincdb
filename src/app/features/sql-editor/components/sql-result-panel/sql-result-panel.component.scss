@@ -178,3 +178,10 @@
 
   --ag-input-focus-border-color: var(--primary-color);
 }
+
+:host ::ng-deep .ag-theme-quartz-dark .ag-cell.sql-cell,
+:host ::ng-deep .ag-theme-quartz-dark .ag-cell.sql-cell .ag-cell-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

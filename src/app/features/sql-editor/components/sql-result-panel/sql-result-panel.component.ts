@@ -60,8 +60,8 @@ export class SqlResultPanelComponent implements OnChanges {
     sortable: true,
     filter: true,
     resizable: true,
-    minWidth: 120,
-    flex: 1,
+    minWidth: 110,
+    maxWidth: 520,
   };
 
   gridOptions: GridOptions = {
@@ -73,6 +73,7 @@ export class SqlResultPanelComponent implements OnChanges {
     pagination: true,
     paginationPageSize: 100,
     paginationPageSizeSelector: [50, 100, 250, 500],
+    tooltipShowDelay: 250,
   };
 
   ngOnChanges(): void {
@@ -85,9 +86,15 @@ export class SqlResultPanelComponent implements OnChanges {
     return columns.map((column) => ({
       field: column.name,
       headerName: column.name,
+      width: column.width ?? 140,
+      minWidth: 110,
+      maxWidth: 520,
+      resizable: true,
+      cellClass: 'sql-cell',
       headerTooltip: column.type ? `${column.name} (${column.type})` : column.name,
-      tooltipField: column.name,
+      tooltipValueGetter: (params) => this.formatValue(params.value),
       valueFormatter: (params) => this.formatValue(params.value),
+      comparator: (valueA, valueB) => this.compareValues(valueA, valueB),
     }));
   }
 
@@ -99,6 +106,30 @@ export class SqlResultPanelComponent implements OnChanges {
     }
 
     return String(value);
+  }
+
+  private compareValues(valueA: unknown, valueB: unknown): number {
+    const numberA = this.toNumericValue(valueA);
+    const numberB = this.toNumericValue(valueB);
+
+    if (numberA !== undefined && numberB !== undefined) {
+      return numberA - numberB;
+    }
+
+    return this.formatValue(valueA).localeCompare(this.formatValue(valueB), 'pt-BR', {
+      numeric: true,
+      sensitivity: 'base',
+    });
+  }
+
+  private toNumericValue(value: unknown): number | undefined {
+    if (value === null || value === undefined || value === '') return undefined;
+
+    const normalized = String(value).replace(',', '.').trim();
+    if (!/^-?\d+(\.\d+)?$/.test(normalized)) return undefined;
+
+    const numericValue = Number(normalized);
+    return Number.isFinite(numericValue) ? numericValue : undefined;
   }
 
   private buildDisplayError(errorMessage: string): SqlDisplayError | undefined {
