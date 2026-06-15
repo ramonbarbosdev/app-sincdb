@@ -15,11 +15,22 @@ import {
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
-import type * as Monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
+import type * as Monaco from 'monaco-editor';
 import { DangerousSqlCheck } from '../../models/sql-editor.model';
 import { SqlToolbarComponent } from '../sql-toolbar/sql-toolbar.component';
 
 type MonacoApi = typeof Monaco;
+type MonacoLoaderRequire = {
+  config: (config: { paths: { vs: string } }) => void;
+  (dependencies: string[], callback: (monacoApi: MonacoApi) => void, errorCallback?: (error: unknown) => void): void;
+};
+
+declare global {
+  interface Window {
+    monaco?: MonacoApi;
+    require?: MonacoLoaderRequire;
+  }
+}
 
 @Component({
   selector: 'app-sql-code-editor',
@@ -46,6 +57,7 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
   expanded = false;
 
   private static themeRegistered = false;
+  private static monacoLoadPromise?: Promise<MonacoApi>;
 
   private editor?: Monaco.editor.IStandaloneCodeEditor;
   private monacoApi?: MonacoApi;
@@ -109,10 +121,7 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
   private async createEditor(): Promise<void> {
     if (!this.monacoContainer?.nativeElement) return;
 
-    const [monacoApi] = await Promise.all([
-      import('monaco-editor/esm/vs/editor/editor.api.js'),
-      import('monaco-editor/esm/vs/basic-languages/sql/sql.contribution.js'),
-    ]);
+    const monacoApi = await this.loadMonaco();
 
     this.monacoApi = monacoApi;
 
@@ -165,12 +174,43 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
     this.observeThemeChanges();
   }
 
+  private loadMonaco(): Promise<MonacoApi> {
+    SqlCodeEditorComponent.monacoLoadPromise ??= new Promise<MonacoApi>((resolve, reject) => {
+      const monacoBaseUrl = new URL('assets/monaco/vs', document.baseURI).toString();
+
+      const configureLoader = (): void => {
+        if (!window.require) {
+          reject(new Error('Monaco loader was not available after loading loader.js.'));
+          return;
+        }
+
+        window.require.config({ paths: { vs: monacoBaseUrl } });
+        window.require(['vs/editor/editor.main'], resolve, reject);
+      };
+
+      if (window.monaco) {
+        resolve(window.monaco);
+        return;
+      }
+
+      if (window.require) {
+        configureLoader();
+        return;
+      }
+
+      const loaderScript = document.createElement('script');
+      loaderScript.src = new URL('assets/monaco/vs/loader.js', document.baseURI).toString();
+      loaderScript.async = true;
+      loaderScript.onload = configureLoader;
+      loaderScript.onerror = () => reject(new Error(`Unable to load Monaco from ${loaderScript.src}`));
+
+      document.head.appendChild(loaderScript);
+    });
+
+    return SqlCodeEditorComponent.monacoLoadPromise;
+  }
+
   private configureMonaco(monacoApi: MonacoApi): void {
-
-    (globalThis as any).MonacoEnvironment = {
-      getWorkerUrl: () => './assets/monaco/vs/base/worker/workerMain.js',
-    };
-
 
     if (SqlCodeEditorComponent.themeRegistered) return;
 
