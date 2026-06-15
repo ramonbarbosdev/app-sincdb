@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, OnInit, ViewChild, inject } from '@angular/core';
 import { finalize } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -7,13 +7,14 @@ import { DialogModule } from 'primeng/dialog';
 import { TabsModule } from 'primeng/tabs';
 import { format } from 'sql-formatter';
 import { AuthService } from '../../../auth/auth.service';
-import { SqlCodeEditorComponent } from '../components/sql-code-editor/sql-code-editor.component';
 import { SqlConfirmationDialogComponent } from '../components/sql-confirmation-dialog/sql-confirmation-dialog.component';
 import { SqlEditorHeaderComponent } from '../components/sql-editor-header/sql-editor-header.component';
 import { SqlEditorToolbarComponent } from '../components/sql-editor-toolbar/sql-editor-toolbar.component';
-import { SqlHistoryPanelComponent } from '../components/sql-history-panel/sql-history-panel.component';
-import { SqlMessagesPanelComponent } from '../components/sql-messages-panel/sql-messages-panel.component';
-import { SqlResultPanelComponent } from '../components/sql-result-panel/sql-result-panel.component';
+
+import { SqlWorkspaceComponent } from '../components/sql-workspace/sql-workspace.component';
+import { SqlCloudBlockAlertComponent } from '../components/sql-cloud-block-alert/sql-cloud-block-alert.component';
+import { SqlStatusbarComponent } from '../components/sql-statusbar/sql-statusbar.component';
+
 import {
   DangerousSqlCheck,
   PendingSqlExecution,
@@ -40,6 +41,23 @@ WHERE ativo = true
 ORDER BY criado_em DESC
 LIMIT 100;`;
 
+type SqlWorkspaceMode = 'adaptive' | 'editor' | 'results';
+
+interface SqlInsight {
+  label: string;
+  value: string;
+}
+
+interface SqlColumnStatistic {
+  name: string;
+  type: 'numeric' | 'text' | 'date' | 'mixed';
+  distinct: number;
+  nullPercent: number;
+  min?: string;
+  max?: string;
+  average?: string;
+}
+
 @Component({
   selector: 'app-sql-editor-page',
   standalone: true,
@@ -50,16 +68,16 @@ LIMIT 100;`;
     TabsModule,
     SqlEditorHeaderComponent,
     SqlEditorToolbarComponent,
-    SqlCodeEditorComponent,
-    SqlConfirmationDialogComponent,
-    SqlMessagesPanelComponent,
-    SqlResultPanelComponent,
-    SqlHistoryPanelComponent,
+    SqlWorkspaceComponent,
+    SqlCloudBlockAlertComponent,
+    SqlStatusbarComponent,
   ],
   templateUrl: `./sql-editor.page.html`,
   styleUrl: './sql-editor.page.scss'
 })
 export class SqlEditorPage implements OnInit {
+  @ViewChild('workspaceEl') workspaceEl?: ElementRef<HTMLElement>;
+
   ambiente: SqlEnvironment = 'local';
   conexaoId = '';
   base = 'db_name';
@@ -80,6 +98,9 @@ export class SqlEditorPage implements OnInit {
   catalogoSql?: SqlCatalogResponse;
   tabelaSelecionada?: SqlCatalogTableSelection;
   propriedadesTabelaVisible = false;
+  workspaceMode: SqlWorkspaceMode = 'adaptive';
+  editorPanePercent = 62;
+  draggingDivider = false;
   pendingExecution?: PendingSqlExecution;
   confirmationVisible = false;
 
@@ -97,6 +118,13 @@ export class SqlEditorPage implements OnInit {
   private readonly messageService = inject(MessageService);
   private readonly auth = inject(AuthService);
   private readonly cd = inject(ChangeDetectorRef);
+
+  get workspaceGridTemplate(): string {
+    if (this.workspaceMode === 'editor') return 'minmax(0, 1fr) 0 0';
+    if (this.workspaceMode === 'results') return '0 0 minmax(0, 1fr)';
+
+    return `minmax(0, ${this.editorPanePercent}fr) 8px minmax(0, ${100 - this.editorPanePercent}fr)`;
+  }
 
   get conexaoLabel(): string {
     return this.conexoes.find((item) => item.value === this.conexaoId)?.label || 'Conexao';
@@ -121,6 +149,42 @@ export class SqlEditorPage implements OnInit {
     const role = user.dsRole ?? user.role ?? organizacaoAtiva?.dsRole ?? organizacaoAtiva?.role;
 
     return role === 'ROLE_ADMIN' || role === 'ROLE_DEV';
+  }
+
+  get resultInsights(): SqlInsight[] {
+    const rows = this.result?.rows || [];
+    const columns = this.result?.columns || [];
+
+    return [
+      { label: 'Linhas', value: String(rows.length) },
+      { label: 'Colunas', value: String(columns.length) },
+      { label: 'Tempo', value: this.result ? this.formatDuration(this.result.executionTimeMs) : '-' },
+      { label: 'Tamanho', value: this.estimateResultSize(rows) },
+      { label: 'Engine', value: this.base ? 'PostgreSQL' : '-' },
+    ];
+  }
+
+  get queryWarnings(): string[] {
+    const executableSql = this.removerComentarios(this.sql).trim();
+    const normalized = executableSql.replace(/\s+/g, ' ').toUpperCase();
+    const warnings: string[] = [];
+
+    if (/\bSELECT\s+\*/.test(normalized)) warnings.push('SELECT * detectado');
+    if (/\bSELECT\b/.test(normalized) && !/\bLIMIT\b/.test(normalized)) warnings.push('Consulta sem LIMIT');
+    if (/\bUPDATE\b/.test(normalized) && !/\bWHERE\b/.test(normalized)) warnings.push('UPDATE sem WHERE');
+    if (/\bDELETE\s+FROM\b/.test(normalized) && !/\bWHERE\b/.test(normalized)) warnings.push('DELETE sem WHERE');
+    if (/\bJOIN\b/.test(normalized) && !/\bON\b/.test(normalized)) warnings.push('JOIN sem condição ON');
+    if ((this.result?.rows.length || 0) >= this.maxRows) warnings.push('Resultado atingiu o limite de linhas');
+
+    return warnings.slice(0, 5);
+  }
+
+  get columnStatistics(): SqlColumnStatistic[] {
+    const rows = this.result?.rows || [];
+    const columns = this.result?.columns || [];
+    if (!rows.length || !columns.length) return [];
+
+    return columns.slice(0, 24).map((column) => this.buildColumnStatistic(column.name, rows));
   }
 
   ngOnInit(): void {
@@ -148,11 +212,54 @@ export class SqlEditorPage implements OnInit {
   onSqlChange(sql: string): void {
     this.sql = sql;
     this.dangerCheck = this.checkDangerousSql(sql);
+    this.applyAdaptiveLayout([70, 30]);
   }
 
   abrirPropriedadesTabela(tabela: SqlCatalogTableSelection): void {
     this.tabelaSelecionada = tabela;
     this.propriedadesTabelaVisible = true;
+  }
+
+  maximizarEditor(): void {
+    this.workspaceMode = 'editor';
+    this.scheduleLayoutRefresh();
+  }
+
+  maximizarResultados(): void {
+    this.workspaceMode = 'results';
+    this.scheduleLayoutRefresh();
+  }
+
+  restaurarLayout(): void {
+    this.workspaceMode = 'adaptive';
+    this.editorPanePercent = this.result ? 42 : 62;
+    this.scheduleLayoutRefresh();
+  }
+
+  iniciarResizeWorkspace(event: PointerEvent): void {
+    event.preventDefault();
+    this.draggingDivider = true;
+    this.workspaceMode = 'adaptive';
+    document.body.classList.add('sql-resizing');
+  }
+
+  @HostListener('document:pointermove', ['$event'])
+  onWorkspaceResizeMove(event: PointerEvent): void {
+    if (!this.draggingDivider || !this.workspaceEl?.nativeElement) return;
+
+    const rect = this.workspaceEl.nativeElement.getBoundingClientRect();
+    const percent = ((event.clientY - rect.top) / rect.height) * 100;
+    this.editorPanePercent = Math.min(82, Math.max(24, percent));
+    this.scheduleLayoutRefresh();
+  }
+
+  @HostListener('document:pointerup')
+  onWorkspaceResizeEnd(): void {
+    if (!this.draggingDivider) return;
+
+    this.draggingDivider = false;
+    document.body.classList.remove('sql-resizing');
+    this.scheduleLayoutRefresh();
   }
 
   novaConsulta(): void {
@@ -252,6 +359,7 @@ export class SqlEditorPage implements OnInit {
     }
 
     this.state = 'executing';
+    this.applyAdaptiveLayout([55, 45]);
     this.errorMessage = '';
     this.cloudBlockedMessage = '';
     this.service
@@ -281,6 +389,7 @@ export class SqlEditorPage implements OnInit {
 
           this.result = res;
           this.state = res.rows.length ? 'loaded' : 'empty';
+          this.applyAdaptiveLayout([32, 68]);
           const linhas = `${res.rows.length} linhas retornadas, ${res.affectedRows ?? 0} linhas afetadas, ${res.executionTimeMs} ms.`;
           this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: res.message || 'Consulta executada.' });
           this.adicionarMensagem('success', res.message || 'Consulta executada com sucesso.', linhas);
@@ -289,6 +398,7 @@ export class SqlEditorPage implements OnInit {
         error: (error) => {
           if (error?.status === 403) {
             this.state = 'error';
+            this.applyAdaptiveLayout([55, 45]);
             this.confirmationVisible = false;
             this.pendingExecution = undefined;
             this.errorMessage =
@@ -307,6 +417,7 @@ export class SqlEditorPage implements OnInit {
 
           this.result = undefined;
           this.state = 'error';
+          this.applyAdaptiveLayout([55, 45]);
           this.errorMessage = error?.error?.message || 'Erro ao executar consulta SQL.';
           this.messageService.add({ severity: 'error', summary: 'Erro', detail: this.errorMessage });
           this.adicionarMensagem('error', 'Erro ao executar consulta SQL', this.errorMessage);
@@ -494,5 +605,74 @@ export class SqlEditorPage implements OnInit {
     return sql
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/^\s*--.*$/gm, '');
+  }
+
+  private applyAdaptiveLayout(sizes: number[]): void {
+    if (this.workspaceMode !== 'adaptive') return;
+
+    this.editorPanePercent = sizes[0] || this.editorPanePercent;
+    this.scheduleLayoutRefresh();
+  }
+
+  private scheduleLayoutRefresh(): void {
+    setTimeout(() => this.cd.markForCheck());
+  }
+
+  private formatDuration(milliseconds: number): string {
+    if (milliseconds < 1000) return `${milliseconds} ms`;
+    return `${(milliseconds / 1000).toFixed(2)}s`;
+  }
+
+  private estimateResultSize(rows: Record<string, unknown>[]): string {
+    if (!rows.length) return '0 KB';
+
+    const bytes = new Blob([JSON.stringify(rows)]).size;
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${Math.ceil(bytes / 1024)} KB`;
+
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  }
+
+  private buildColumnStatistic(name: string, rows: Record<string, unknown>[]): SqlColumnStatistic {
+    const values = rows.map((row) => row[name]);
+    const nonNullValues = values.filter((value) => value !== null && value !== undefined && value !== '');
+    const numericValues = nonNullValues
+      .map((value) => Number(String(value).replace(',', '.')))
+      .filter((value) => Number.isFinite(value));
+    const distinct = new Set(nonNullValues.map((value) => String(value))).size;
+    const nullPercent = Math.round(((values.length - nonNullValues.length) / Math.max(values.length, 1)) * 100);
+
+    if (numericValues.length === nonNullValues.length && numericValues.length) {
+      const min = Math.min(...numericValues);
+      const max = Math.max(...numericValues);
+      const average = numericValues.reduce((sum, value) => sum + value, 0) / numericValues.length;
+
+      return {
+        name,
+        type: 'numeric',
+        distinct,
+        nullPercent,
+        min: this.formatStatisticNumber(min),
+        max: this.formatStatisticNumber(max),
+        average: this.formatStatisticNumber(average),
+      };
+    }
+
+    const sortedValues = nonNullValues.map((value) => String(value)).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+    return {
+      name,
+      type: nonNullValues.every((value) => !Number.isNaN(Date.parse(String(value)))) ? 'date' : 'text',
+      distinct,
+      nullPercent,
+      min: sortedValues[0],
+      max: sortedValues.at(-1),
+    };
+  }
+
+  private formatStatisticNumber(value: number): string {
+    return new Intl.NumberFormat('pt-BR', {
+      maximumFractionDigits: 2,
+    }).format(value);
   }
 }

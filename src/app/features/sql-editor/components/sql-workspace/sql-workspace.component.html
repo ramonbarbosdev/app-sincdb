@@ -1,0 +1,41 @@
+<section class="sql-workspace" [style.grid-template-rows]="workspaceGridTemplate">
+  <app-sql-editor-pane
+    [sql]="sql"
+    [state]="state"
+    [danger]="danger"
+    [catalogo]="catalogo"
+    (sqlChange)="sqlChange.emit($event)"
+    (formatar)="formatar.emit()"
+    (executar)="executar.emit()"
+    (executarSelecionado)="executarSelecionado.emit($event)"
+    (limpar)="limpar.emit()"
+    (salvar)="salvar.emit()"
+    (historico)="historico.emit()"
+    (novaConsulta)="novaConsulta.emit()"
+    (maximizarEditor)="maximizarEditor.emit()"
+    (restaurarLayout)="restaurarLayout.emit()"
+    (propriedadesTabela)="propriedadesTabela.emit($event)"
+  />
+
+  <div
+    class="workspace-divider"
+    role="separator"
+    aria-orientation="horizontal"
+    title="Arraste para redimensionar"
+    (pointerdown)="resizeStart.emit($event)"
+  ></div>
+
+  <app-sql-results-workspace
+    [state]="state"
+    [result]="result"
+    [errorMessage]="errorMessage"
+    [sql]="sql"
+    [resultInsights]="resultInsights"
+    [queryWarnings]="queryWarnings"
+    [columnStatistics]="columnStatistics"
+    [history]="history"
+    (maximizarResultados)="maximizarResultados.emit()"
+    (restaurarLayout)="restaurarLayout.emit()"
+    (selecionarHistorico)="selecionarHistorico.emit($event)"
+  />
+</section>

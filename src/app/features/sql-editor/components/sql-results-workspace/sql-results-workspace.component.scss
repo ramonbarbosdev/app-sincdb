@@ -1,0 +1,162 @@
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
+.results-pane {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0 0.75rem 0.75rem;
+}
+
+.result-tabs-header {
+  min-height: 2.5rem;
+  flex: 0 0 auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+
+  padding: 0 0.55rem;
+
+  border-bottom: 1px solid var(--surface-border);
+
+  background: var(--surface-card);
+}
+
+.layout-actions {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.layout-actions button {
+  min-height: 1.9rem;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  padding: 0 0.6rem;
+
+  border: 1px solid transparent;
+  border-radius: 6px;
+
+  background: transparent;
+  color: var(--text-color-secondary);
+
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+.layout-actions button:hover {
+  border-color: var(--surface-border);
+  background: var(--surface-ground);
+  color: var(--text-color);
+}
+
+:host ::ng-deep .result-tabs {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+
+  background: var(--surface-card);
+}
+
+:host ::ng-deep .result-tabs .p-tablist {
+  border: 0;
+  background: transparent;
+}
+
+:host ::ng-deep .result-tabs .p-tabpanels {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+
+  padding: 0;
+  overflow: hidden;
+
+  background: transparent;
+}
+
+:host ::ng-deep .result-tabs .p-tabpanel {
+  height: 100%;
+  min-height: 0;
+
+  padding: 0;
+  overflow: hidden;
+
+  background: transparent;
+}
+
+.json-panel,
+.stats-panel {
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+}
+
+.json-panel {
+  margin: 0;
+  padding: 0.85rem;
+
+  background: var(--surface-ground);
+  color: var(--text-color);
+
+  font: 0.82rem / 1.5 monospace;
+}
+
+.stats-panel {
+  display: grid;
+  align-content: start;
+  gap: 0.5rem;
+
+  padding: 0.75rem;
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+
+  padding: 0.6rem;
+
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+
+  background: var(--surface-card);
+}
+
+.empty-workspace {
+  height: 100%;
+  min-height: 0;
+
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.35rem;
+
+  text-align: center;
+  color: var(--text-color-secondary);
+  font-size: 0.78rem;
+}
+
+.empty-workspace i {
+  font-size: 1.4rem;
+  color: var(--primary-color);
+}

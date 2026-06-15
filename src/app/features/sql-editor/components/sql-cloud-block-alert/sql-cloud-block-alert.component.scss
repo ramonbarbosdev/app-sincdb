@@ -1,0 +1,17 @@
+.cloud-block-alert {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+
+  margin: 0.65rem 0.75rem 0;
+  padding: 0.65rem 0.8rem;
+
+  border-left: 3px solid var(--yellow-500);
+
+  background: color-mix(in srgb, var(--yellow-500) 8%, transparent);
+}
+
+.cloud-block-alert p {
+  margin: 0.25rem 0;
+}

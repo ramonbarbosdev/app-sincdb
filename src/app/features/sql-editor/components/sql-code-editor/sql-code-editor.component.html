@@ -22,10 +22,6 @@
     <p-message severity="warn" [text]="danger.reason" />
   </div>
 
-  <div class="editor-body">
-    <div #monacoContainer class="monaco-container" aria-label="Editor SQL"></div>
-  </div>
-
   <footer class="editor-footer">
     <span class="ready-state"><i class="pi pi-circle-fill"></i> Pronto para executar</span>
 
@@ -39,4 +35,8 @@
       (historico)="historico.emit()"
     />
   </footer>
+
+  <div class="editor-body">
+    <div #monacoContainer class="monaco-container" aria-label="Editor SQL"></div>
+  </div>
 </section>

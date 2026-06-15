@@ -1,0 +1,16 @@
+<footer class="sql-statusbar">
+  <span class="env-dot"></span>
+  <strong>{{ ambiente === 'cloud' ? 'Cloud' : 'Local' }}</strong>
+
+  <i class="pi pi-angle-right"></i>
+  <span>{{ conexaoLabel }}</span>
+
+  <i class="pi pi-angle-right"></i>
+  <span>{{ base }}</span>
+
+  <i class="pi pi-angle-right"></i>
+  <span>{{ rows }} linhas</span>
+
+  <span class="spacer"></span>
+  <span>{{ statusLabel }}</span>
+</footer>

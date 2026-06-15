@@ -1,0 +1,40 @@
+<section class="editor-pane">
+  <div class="pane-commandbar">
+    <div class="query-tabs">
+      <button class="query-tab active" type="button">
+        <i class="pi pi-file"></i>
+        Query_1.sql
+      </button>
+
+      <button class="query-tab new" type="button" (click)="novaConsulta.emit()">
+        <i class="pi pi-plus"></i>
+        Nova Query
+      </button>
+    </div>
+
+    <div class="layout-actions">
+      <button type="button" title="Maximizar editor" (click)="maximizarEditor.emit()">
+        <i class="pi pi-window-maximize"></i>
+      </button>
+
+      <button type="button" title="Restaurar layout" (click)="restaurarLayout.emit()">
+        <i class="pi pi-th-large"></i>
+      </button>
+    </div>
+  </div>
+
+  <app-sql-code-editor
+    [sql]="sql"
+    [executing]="state === 'executing'"
+    [danger]="danger"
+    [catalogo]="catalogo"
+    (sqlChange)="sqlChange.emit($event)"
+    (formatar)="formatar.emit()"
+    (executar)="executar.emit()"
+    (executarSelecionado)="executarSelecionado.emit($event)"
+    (limpar)="limpar.emit()"
+    (salvar)="salvar.emit()"
+    (historico)="historico.emit()"
+    (propriedadesTabela)="propriedadesTabela.emit($event)"
+  />
+</section>

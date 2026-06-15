@@ -1,206 +1,43 @@
-.sql-editor-shell {
-  min-height: calc(100vh - 8rem);
-  display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
-  border: 1px solid var(--surface-border);
-  border-radius: 8px;
-  overflow: hidden;
-  background:
-    radial-gradient(
-      circle at top left,
-      color-mix(in srgb, var(--primary-color) 14%, transparent),
-      transparent 31rem
-    ),
-    var(--surface-ground);
-}
-
-.workspace {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0.85rem;
-  min-width: 0;
-  padding: 0.85rem;
-}
-
-.editor-area {
-  display: grid;
-  gap: 0.85rem;
-  min-width: 0;
-}
-
-.cloud-block-alert {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  border: 1px solid color-mix(in srgb, var(--yellow-500) 35%, transparent);
-  border-left: 3px solid var(--yellow-500);
-  border-radius: 8px;
-  padding: 0.85rem;
-  color: var(--text-color-secondary);
-  background: color-mix(in srgb, var(--yellow-500) 10%, transparent);
-}
-
-.cloud-block-alert strong {
-  color: var(--text-color);
-}
-
-.cloud-block-alert p {
-  margin: 0.25rem 0 0;
-}
-
-.cloud-block-alert span {
+:host {
   display: block;
-  margin-top: 0.35rem;
-  color: var(--yellow-500);
-  font-size: 0.82rem;
-}
-
-.bottom-panel {
-  border: 1px solid var(--surface-border);
-  border-radius: 8px;
+  height: 100vh;
+  min-height: 0;
   overflow: hidden;
-  background: var(--surface-card);
 }
 
-:host ::ng-deep .bottom-panel .p-tabs,
-:host ::ng-deep .bottom-panel .p-tablist-tab-list,
-:host ::ng-deep .bottom-panel .p-tabpanels {
-  background: transparent;
-}
+.sql-editor-shell {
+  height: calc(100vh - 1rem);
+  min-height: 0;
 
-.sql-statusbar {
-  min-height: 2.6rem;
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0 0.85rem;
-  border-top: 1px solid var(--surface-border);
-  color: var(--text-color-secondary);
-  font-size: 0.82rem;
-  background: var(--surface-ground);
-}
-
-.sql-statusbar strong {
-  color: var(--text-color);
-}
-
-.env-dot {
-  width: 0.55rem;
-  height: 0.55rem;
-  border-radius: 999px;
-  background: var(--green-500);
-}
-
-.spacer {
-  flex: 1;
-}
-
-.table-properties {
   display: grid;
-  gap: 1rem;
-}
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
 
-.table-properties-title {
-  display: grid;
-  gap: 0.2rem;
-}
-
-.table-properties-title span {
-  color: var(--text-color-secondary);
-  font-size: 0.78rem;
-}
-
-.table-properties-title strong {
-  color: var(--text-color);
-  font-size: 1.25rem;
-}
-
-.table-properties-summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.table-properties-summary span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-
-  padding: 0.32rem 0.65rem;
-
-  border: 1px solid color-mix(in srgb, var(--primary-color) 24%, var(--surface-border));
-  border-radius: 999px;
-
-  background: color-mix(in srgb, var(--primary-color) 10%, transparent);
-  color: var(--text-color);
-
-  font-size: 0.82rem;
-}
-
-.table-columns {
-  max-height: min(52vh, 28rem);
-  overflow: auto;
+  overflow: hidden;
 
   border: 1px solid var(--surface-border);
   border-radius: 8px;
-}
-
-.table-column {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(8rem, 14rem);
-  gap: 1rem;
-  align-items: center;
-
-  padding: 0.65rem 0.75rem;
-
-  border-top: 1px solid var(--surface-border);
-}
-
-.table-column:first-child {
-  border-top: 0;
-}
-
-.table-column-header {
-  position: sticky;
-  top: 0;
-  z-index: 1;
 
   background: var(--surface-ground);
-  color: var(--text-color-secondary);
-
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
 }
 
-.table-column span {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--text-color);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+.max-editor app-sql-workspace {
+  ::ng-deep .sql-workspace {
+    grid-template-rows: minmax(0, 1fr) 0 0 !important;
+  }
 
-.table-column code {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--text-color-secondary);
-  font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
-  font-size: 0.82rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-@media (max-width: 1100px) {
-  .workspace {
-    grid-template-columns: 1fr;
+  ::ng-deep .workspace-divider,
+  ::ng-deep app-sql-results-workspace {
+    display: none;
   }
 }
 
-@media (max-width: 640px) {
-  .table-column {
-    grid-template-columns: 1fr;
-    gap: 0.25rem;
+.max-results app-sql-workspace {
+  ::ng-deep .sql-workspace {
+    grid-template-rows: 0 0 minmax(0, 1fr) !important;
+  }
+
+  ::ng-deep .workspace-divider,
+  ::ng-deep app-sql-editor-pane {
+    display: none;
   }
 }

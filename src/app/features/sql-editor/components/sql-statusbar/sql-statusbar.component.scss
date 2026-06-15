@@ -1,0 +1,28 @@
+.sql-statusbar {
+  min-height: 2.2rem;
+
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+
+  padding: 0 0.85rem;
+
+  border-top: 1px solid var(--surface-border);
+
+  background: var(--surface-ground);
+  color: var(--text-color-secondary);
+
+  font-size: 0.78rem;
+}
+
+.env-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+
+  border-radius: 999px;
+  background: #2cb67d;
+}
+
+.spacer {
+  flex: 1;
+}

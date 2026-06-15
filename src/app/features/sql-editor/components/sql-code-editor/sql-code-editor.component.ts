@@ -191,13 +191,23 @@ export class SqlCodeEditorComponent implements AfterViewInit, OnChanges, OnDestr
 
     this.registerSqlTableHover(monacoApi);
 
+    this.scheduleEditorLayout();
+
     this.resizeObserver = new ResizeObserver(() => {
-      this.editor?.layout();
+      this.scheduleEditorLayout();
     });
 
     this.resizeObserver.observe(this.monacoContainer.nativeElement);
 
     this.observeThemeChanges();
+  }
+
+  private scheduleEditorLayout(): void {
+    [0, 50, 150, 300].forEach((delay) => {
+      setTimeout(() => {
+        this.editor?.layout();
+      }, delay);
+    });
   }
 
   private loadMonaco(): Promise<MonacoApi> {

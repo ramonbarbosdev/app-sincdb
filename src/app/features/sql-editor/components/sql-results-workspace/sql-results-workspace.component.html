@@ -1,0 +1,92 @@
+<section class="results-pane">
+  <p-tabs value="results" class="result-tabs">
+    <div class="result-tabs-header">
+      <p-tablist>
+        <p-tab value="results">Resultados</p-tab>
+        <p-tab value="json">JSON</p-tab>
+        <p-tab value="stats">Estatísticas</p-tab>
+        <p-tab value="chart">Gráfico</p-tab>
+        <p-tab value="relations">Relações</p-tab>
+        <p-tab value="history">Histórico</p-tab>
+      </p-tablist>
+
+      <div class="layout-actions">
+        <button
+          type="button"
+          title="Maximizar resultados"
+          (click)="maximizarResultados.emit()"
+        >
+          <i class="pi pi-window-maximize"></i>
+        </button>
+
+        <button type="button" title="Restaurar layout" (click)="restaurarLayout.emit()">
+          <i class="pi pi-th-large"></i>
+        </button>
+      </div>
+    </div>
+
+    <app-sql-results-contextbar
+      [insights]="resultInsights"
+      [warnings]="queryWarnings"
+    />
+
+    <p-tabpanels>
+      <p-tabpanel value="results">
+        <app-sql-result-panel
+          [state]="state"
+          [result]="result"
+          [errorMessage]="errorMessage"
+          [sql]="sql"
+        />
+      </p-tabpanel>
+
+      <p-tabpanel value="json">
+        <pre class="json-panel">{{ result?.rows || [] | json }}</pre>
+      </p-tabpanel>
+
+      <p-tabpanel value="stats">
+        <section class="stats-panel" *ngIf="columnStatistics.length; else emptyStats">
+          <article class="stat-row" *ngFor="let statistic of columnStatistics">
+            <strong>{{ statistic.name }}</strong>
+            <span>{{ statistic.distinct }} distintos</span>
+            <span>{{ statistic.nullPercent }}% nulos</span>
+            <span *ngIf="statistic.average">média {{ statistic.average }}</span>
+            <span *ngIf="statistic.min">min {{ statistic.min }}</span>
+            <span *ngIf="statistic.max">max {{ statistic.max }}</span>
+          </article>
+        </section>
+
+        <ng-template #emptyStats>
+          <div class="empty-workspace">
+            <i class="pi pi-chart-bar"></i>
+            <strong>Estatísticas disponíveis após a execução</strong>
+            <span>Execute uma consulta com linhas para perfilar as colunas.</span>
+          </div>
+        </ng-template>
+      </p-tabpanel>
+
+      <p-tabpanel value="chart">
+        <div class="empty-workspace">
+          <i class="pi pi-chart-line"></i>
+          <strong>Gráfico rápido</strong>
+          <span>O SyncDB poderá sugerir visualizações a partir de colunas numéricas e categóricas.</span>
+        </div>
+      </p-tabpanel>
+
+      <p-tabpanel value="relations">
+        <div class="empty-workspace">
+          <i class="pi pi-sitemap"></i>
+          <strong>Relações da consulta</strong>
+          <span>Use Ctrl + clique em tabelas no editor para abrir propriedades e colunas.</span>
+        </div>
+      </p-tabpanel>
+
+      <p-tabpanel value="history">
+        <app-sql-history-panel
+          [items]="history"
+          (selected)="selecionarHistorico.emit($event)"
+        />
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+</section>

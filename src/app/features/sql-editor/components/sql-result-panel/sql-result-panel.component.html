@@ -12,7 +12,7 @@
 
       <div>
         <strong>{{ displayError.title }}</strong>
-        <span>A consulta nao foi executada. Verifique o SQL antes de tentar novamente.</span>
+        <span>A consulta não foi executada. Verifique o SQL antes de tentar novamente.</span>
       </div>
     </header>
 
@@ -22,7 +22,7 @@
     </div>
 
     <div class="error-meta" *ngIf="displayError.position">
-      <span>Posicao {{ displayError.position }}</span>
+      <span>Posição {{ displayError.position }}</span>
       <span *ngIf="displayError.line && displayError.column">
         Linha {{ displayError.line }}, coluna {{ displayError.column }}
       </span>
@@ -34,23 +34,18 @@
   <div class="empty-state" *ngIf="shouldShowEmptyState">
     <i class="pi pi-table"></i>
     <strong>Execute uma consulta para visualizar os resultados</strong>
-    <span>Limite de linhas definido pelo usuario</span>
-
+    <span>Limite de linhas definido pelo usuário</span>
   </div>
 
-  <ng-container *ngIf="shouldShowGrid && result">
-    <div class="result-summary">
-      <span>{{ result.rows.length }} linhas retornadas</span>
-      <span>{{ result.executionTimeMs }} ms</span>
-      <span *ngIf="result.affectedRows !== undefined">
-        {{ result.affectedRows }} linhas afetadas
-      </span>
-      <span *ngIf="result.riskLevel">Risco {{ result.riskLevel }}</span>
-    </div>
-
+  <div class="grid-state" *ngIf="shouldShowGrid && result">
     <div class="grid-wrapper ag-theme-quartz-dark">
-      <ag-grid-angular class="result-grid" [columnDefs]="columnDefs" [rowData]="rowData" [defaultColDef]="defaultColDef"
-        [gridOptions]="gridOptions" />
+      <ag-grid-angular
+        class="result-grid"
+        [columnDefs]="columnDefs"
+        [rowData]="rowData"
+        [defaultColDef]="defaultColDef"
+        [gridOptions]="gridOptions"
+      />
     </div>
-  </ng-container>
+  </div>
 </section>

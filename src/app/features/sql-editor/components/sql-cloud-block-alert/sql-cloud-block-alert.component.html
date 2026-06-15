@@ -1,0 +1,19 @@
+<section class="cloud-block-alert">
+  <div>
+    <strong>Execução SQL no Cloud está desabilitada</strong>
+    <p>{{ message }}</p>
+
+    <span *ngIf="isAdmin">
+      Usuário administrador: habilite o parâmetro do sistema para permitir execução SQL em Cloud.
+    </span>
+  </div>
+
+  <p-button
+    *ngIf="ambiente === 'cloud'"
+    label="Usar ambiente local"
+    icon="pi pi-desktop"
+    severity="secondary"
+    [outlined]="true"
+    (click)="usarLocal.emit()"
+  />
+</section>

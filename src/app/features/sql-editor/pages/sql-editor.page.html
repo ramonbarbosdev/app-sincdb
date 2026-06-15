@@ -1,114 +1,80 @@
- <div class="sql-editor-shell">
-      <app-sql-editor-header
-        (novo)="novaConsulta()"
-        (salvar)="salvarConsulta()"
-        (historico)="toggleHistory()"
-      />
+<div
+  class="sql-editor-shell"
+  [class.max-editor]="workspaceMode === 'editor'"
+  [class.max-results]="workspaceMode === 'results'"
+>
+  <app-sql-editor-header
+    (novo)="novaConsulta()"
+    (salvar)="salvarConsulta()"
+    (historico)="toggleHistory()"
+  />
 
-      <app-sql-editor-toolbar
-        [ambiente]="ambiente"
-        [conexaoId]="conexaoId"
-        [base]="base"
-        [maxRows]="maxRows"
-        [timeoutSeconds]="timeoutSeconds"
-        [connected]="connected"
-        [ambientes]="ambientes"
-        [conexoes]="conexoes"
-        [bases]="bases"
-        [loadingConexoes]="loadingConexoes"
-        [loadingBases]="loadingBases"
-        (ambienteChange)="onAmbienteChange($event)"
-        (conexaoIdChange)="onConexaoChange($event)"
-        (baseChange)="onBaseChange($event)"
-        (maxRowsChange)="maxRows = $event"
-        (timeoutSecondsChange)="timeoutSeconds = $event"
-        (refresh)="recarregarContexto()"
-      />
+  <app-sql-editor-toolbar
+    [ambiente]="ambiente"
+    [conexaoId]="conexaoId"
+    [base]="base"
+    [maxRows]="maxRows"
+    [timeoutSeconds]="timeoutSeconds"
+    [connected]="connected"
+    [ambientes]="ambientes"
+    [conexoes]="conexoes"
+    [bases]="bases"
+    [loadingConexoes]="loadingConexoes"
+    [loadingBases]="loadingBases"
+    (ambienteChange)="onAmbienteChange($event)"
+    (conexaoIdChange)="onConexaoChange($event)"
+    (baseChange)="onBaseChange($event)"
+    (maxRowsChange)="maxRows = $event"
+    (timeoutSecondsChange)="timeoutSeconds = $event"
+    (refresh)="recarregarContexto()"
+  />
 
-      <div class="workspace">
-        <aside class="inner-sidebar" [class.compact]="!sidePanelOpen">
-        
-          <app-sql-history-panel
-            *ngIf="false"
-            [items]="history"
-            (selected)="aplicarHistorico($event)"
-          />
-        </aside>
+  <app-sql-cloud-block-alert
+    *ngIf="cloudBlockedMessage"
+    [message]="cloudBlockedMessage"
+    [ambiente]="ambiente"
+    [isAdmin]="isAdmin"
+    (usarLocal)="usarAmbienteLocal()"
+  />
 
-        <main class="editor-area">
-          <section class="cloud-block-alert" *ngIf="cloudBlockedMessage">
-            <div>
-              <strong>Execucao SQL no Cloud esta desabilitada</strong>
-              <p>{{ cloudBlockedMessage }}</p>
-              <span *ngIf="isAdmin">
-                Usuario administrador: habilite o parametro do sistema para permitir execucao SQL em Cloud.
-              </span>
-            </div>
+  <app-sql-workspace
+    [sql]="sql"
+    [state]="state"
+    [danger]="dangerCheck"
+    [catalogo]="catalogoSql"
+    [result]="result"
+    [errorMessage]="errorMessage"
+    [resultInsights]="resultInsights"
+    [queryWarnings]="queryWarnings"
+    [columnStatistics]="columnStatistics"
+    [history]="history"
+    [workspaceGridTemplate]="workspaceGridTemplate"
+    (sqlChange)="onSqlChange($event)"
+    (formatar)="formatarSql()"
+    (executar)="executar()"
+    (executarSelecionado)="executar($event)"
+    (limpar)="limparEditor()"
+    (salvar)="salvarConsulta()"
+    (historico)="toggleHistory()"
+    (novaConsulta)="novaConsulta()"
+    (maximizarEditor)="maximizarEditor()"
+    (maximizarResultados)="maximizarResultados()"
+    (restaurarLayout)="restaurarLayout()"
+    (resizeStart)="iniciarResizeWorkspace($event)"
+    (propriedadesTabela)="abrirPropriedadesTabela($event)"
+    (selecionarHistorico)="aplicarHistorico($event)"
+  />
 
-            <p-button
-              *ngIf="ambiente === 'cloud'"
-              label="Usar ambiente local"
-              icon="pi pi-desktop"
-              severity="secondary"
-              [outlined]="true"
-              (click)="usarAmbienteLocal()"
-            />
-          </section>
+  <app-sql-statusbar
+    [ambiente]="ambiente"
+    [conexaoLabel]="conexaoLabel"
+    [base]="base"
+    [rows]="result?.rows?.length || 0"
+    [statusLabel]="statusLabel"
+  />
+</div>
 
-          <app-sql-code-editor
-            [sql]="sql"
-            [executing]="state === 'executing'"
-            [danger]="dangerCheck"
-            [catalogo]="catalogoSql"
-            (sqlChange)="onSqlChange($event)"
-            (formatar)="formatarSql()"
-            (executar)="executar()"
-            (executarSelecionado)="executar($event)"
-            (limpar)="limparEditor()"
-            (salvar)="salvarConsulta()"
-            (historico)="toggleHistory()"
-            (propriedadesTabela)="abrirPropriedadesTabela($event)"
-          />
-
-          <section class="bottom-panel">
-            <p-tabs value="results">
-              <p-tablist>
-                <p-tab value="results">Resultados</p-tab>
-                <p-tab value="messages">Mensagens</p-tab>
-                <p-tab value="history">Historico</p-tab>
-              </p-tablist>
-
-              <p-tabpanels>
-                <p-tabpanel value="results">
-                  <app-sql-result-panel
-                    [state]="state"
-                    [result]="result"
-                    [errorMessage]="errorMessage"
-                    [sql]="sql"
-                  />
-                </p-tabpanel>
-
-                <p-tabpanel value="messages">
-                  <app-sql-messages-panel [messages]="messages" />
-                </p-tabpanel>
-
-                <p-tabpanel value="history">
-                  <app-sql-history-panel [items]="history" (selected)="aplicarHistorico($event)" />
-                </p-tabpanel>
-              </p-tabpanels>
-            </p-tabs>
-          </section>
-        </main>
-      </div>
-
-      <app-sql-confirmation-dialog
-        [(visible)]="confirmationVisible"
-        [pending]="pendingExecution"
-        (confirm)="confirmarExecucaoPerigosa()"
-        (cancel)="cancelarExecucaoPerigosa()"
-      />
-
-      <p-dialog
+  <p-dialog
         header="Propriedades da tabela"
         [(visible)]="propriedadesTabelaVisible"
         [modal]="true"
@@ -147,15 +113,3 @@
           </div>
         </section>
       </p-dialog>
-
-      <footer class="sql-statusbar">
-        <span class="env-dot"></span>
-        <strong>{{ ambiente === 'cloud' ? 'Cloud' : 'Local' }}</strong>
-        <i class="pi pi-angle-right"></i>
-        <span>{{ conexaoLabel }}</span>
-        <i class="pi pi-angle-right"></i>
-        <span>{{ base }}</span>
-        <span class="spacer"></span>
-        <span>{{ statusLabel }}</span>
-      </footer>
-    </div>

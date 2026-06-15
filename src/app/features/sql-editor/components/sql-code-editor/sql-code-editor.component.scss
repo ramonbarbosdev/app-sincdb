@@ -1,6 +1,16 @@
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
 .editor-panel {
-  border: 1px solid var(--surface-border);
-  border-radius: 8px;
+  height: 100%;
+  min-height: 18rem;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(240px, 1fr);
+  border: 0;
+  border-radius: 0;
   overflow: hidden;
   background: var(--surface-ground);
 }
@@ -16,6 +26,7 @@
 }
 
 .editor-titlebar {
+  display: none;
   border-bottom: 1px solid var(--surface-border);
 
   strong {
@@ -38,23 +49,30 @@
 
 .editor-body,
 .monaco-container {
+  min-height: 240px;
   background: var(--surface-ground);
+}
+
+.editor-body {
+  height: 100%;
+  overflow: hidden;
 }
 
 .monaco-container {
   width: 100%;
-  height: 320px;
-  min-height: 320px;
+  height: 100%;
+  min-height: 240px;
 }
 
 .editor-panel.expanded .monaco-container {
-  height: min(68vh, 760px);
-  min-height: 520px;
+  height: 100%;
+  min-height: 0;
 }
 
 .editor-footer {
   border-top: 1px solid var(--surface-border);
   flex-wrap: wrap;
+  padding: 0.5rem 0.75rem;
 }
 
 .ready-state {
