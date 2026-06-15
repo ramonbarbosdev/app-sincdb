@@ -49,6 +49,8 @@
     [columnStatistics]="columnStatistics"
     [history]="history"
     [workspaceGridTemplate]="workspaceGridTemplate"
+    [queryTabs]="queryTabs"
+    [activeQueryTabId]="activeQueryTabId"
     (sqlChange)="onSqlChange($event)"
     (formatar)="formatarSql()"
     (executar)="executar()"
@@ -57,6 +59,8 @@
     (salvar)="salvarConsulta()"
     (historico)="toggleHistory()"
     (novaConsulta)="novaConsulta()"
+    (selecionarQueryTab)="selecionarQueryTab($event)"
+    (fecharQueryTab)="fecharQueryTab($event)"
     (maximizarEditor)="maximizarEditor()"
     (maximizarResultados)="maximizarResultados()"
     (restaurarLayout)="restaurarLayout()"
@@ -100,16 +104,76 @@
             </span>
           </div>
 
-          <div class="table-columns">
-            <div class="table-column table-column-header">
-              <span>Coluna</span>
-              <span>Tipo</span>
-            </div>
-
-            <div class="table-column" *ngFor="let coluna of tabelaSelecionada.columns">
-              <span>{{ coluna.name }}</span>
-              <code>{{ coluna.type || 'tipo nao informado' }}</code>
-            </div>
+          <div class="table-columns" *ngIf="tabelaSelecionada.columns.length; else semColunas">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Coluna</th>
+                  <th>Tipo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let coluna of tabelaSelecionada.columns; let i = index">
+                  <td>{{ i + 1 }}</td>
+                  <td>{{ nomeColunaPropriedade(coluna, i) }}</td>
+                  <td>
+                    <code>{{ tipoColunaPropriedade(coluna) }}</code>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
+
+          <ng-template #semColunas>
+            <div class="table-columns-empty">Nenhuma coluna retornada no catalogo.</div>
+          </ng-template>
         </section>
       </p-dialog>
+
+  <p-dialog
+    header="Parametros da consulta"
+    [(visible)]="parametersVisible"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: 'min(560px, 94vw)' }"
+    styleClass="sql-parameters-dialog"
+  >
+    <section class="sql-parameters" *ngIf="pendingParameters">
+      <p>Informe os valores para executar a consulta parametrizada.</p>
+
+      <label class="sql-parameter-field" *ngFor="let parameter of pendingParameters.parameters">
+        <span>{{ parameter }}</span>
+        <input
+          type="text"
+          [(ngModel)]="pendingParameters.values[parameter]"
+          [name]="parameter"
+          [placeholder]="parameter"
+          autocomplete="off"
+        />
+      </label>
+    </section>
+
+    <ng-template pTemplate="footer">
+      <p-button
+        label="Limpar valores"
+        icon="pi pi-eraser"
+        severity="secondary"
+        [text]="true"
+        (click)="limparParametrosSql()"
+      />
+      <p-button
+        label="Cancelar"
+        icon="pi pi-times"
+        severity="secondary"
+        [outlined]="true"
+        (click)="cancelarParametrosSql()"
+      />
+      <p-button
+        label="Executar"
+        icon="pi pi-play"
+        (click)="confirmarParametrosSql()"
+      />
+    </ng-template>
+  </p-dialog>

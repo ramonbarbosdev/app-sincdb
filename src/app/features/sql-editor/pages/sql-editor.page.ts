@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, ElementRef, HostListener, OnInit, ViewChild, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -17,6 +18,7 @@ import { SqlStatusbarComponent } from '../components/sql-statusbar/sql-statusbar
 
 import {
   DangerousSqlCheck,
+  PendingSqlParameters,
   PendingSqlExecution,
   SavedSqlQuery,
   SelectOption,
@@ -27,6 +29,7 @@ import {
   SqlExecutionResponse,
   SqlHistoryItem,
   SqlMessage,
+  SqlQueryTab,
 } from '../models/sql-editor.model';
 import { SqlEditorService } from '../services/sql-editor.service';
 
@@ -63,6 +66,7 @@ interface SqlColumnStatistic {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ButtonModule,
     DialogModule,
     TabsModule,
@@ -95,6 +99,14 @@ export class SqlEditorPage implements OnInit {
   history: SqlHistoryItem[] = [];
   savedQueries: SavedSqlQuery[] = [];
   messages: SqlMessage[] = [];
+  queryTabs: SqlQueryTab[] = [
+    {
+      id: crypto.randomUUID(),
+      name: 'Query_1.sql',
+      sql: INITIAL_SQL,
+    },
+  ];
+  activeQueryTabId = '';
   catalogoSql?: SqlCatalogResponse;
   tabelaSelecionada?: SqlCatalogTableSelection;
   propriedadesTabelaVisible = false;
@@ -102,7 +114,10 @@ export class SqlEditorPage implements OnInit {
   editorPanePercent = 62;
   draggingDivider = false;
   pendingExecution?: PendingSqlExecution;
+  pendingParameters?: PendingSqlParameters;
+  parameterValueCache: Record<string, unknown> = {};
   confirmationVisible = false;
+  parametersVisible = false;
 
   ambientes: SelectOption[] = [
     { label: 'Cloud', value: 'cloud' },
@@ -188,6 +203,8 @@ export class SqlEditorPage implements OnInit {
   }
 
   ngOnInit(): void {
+    this.activeQueryTabId = this.queryTabs[0]?.id || '';
+    this.sql = this.queryTabs[0]?.sql || INITIAL_SQL;
     this.carregarConexoes();
     this.recarregarPaineis();
     this.dangerCheck = this.checkDangerousSql(this.sql);
@@ -211,6 +228,7 @@ export class SqlEditorPage implements OnInit {
 
   onSqlChange(sql: string): void {
     this.sql = sql;
+    this.atualizarAbaAtiva(sql);
     this.dangerCheck = this.checkDangerousSql(sql);
     this.applyAdaptiveLayout([70, 30]);
   }
@@ -218,6 +236,16 @@ export class SqlEditorPage implements OnInit {
   abrirPropriedadesTabela(tabela: SqlCatalogTableSelection): void {
     this.tabelaSelecionada = tabela;
     this.propriedadesTabelaVisible = true;
+  }
+
+  nomeColunaPropriedade(coluna: unknown, index: number): string {
+    const item = coluna as Record<string, unknown>;
+    return String(item['name'] ?? item['nome'] ?? item['columnName'] ?? item['column_name'] ?? `coluna_${index + 1}`);
+  }
+
+  tipoColunaPropriedade(coluna: unknown): string {
+    const item = coluna as Record<string, unknown>;
+    return String(item['type'] ?? item['tipo'] ?? item['dataType'] ?? item['data_type'] ?? 'tipo nao informado');
   }
 
   maximizarEditor(): void {
@@ -263,10 +291,55 @@ export class SqlEditorPage implements OnInit {
   }
 
   novaConsulta(): void {
-    this.sql = INITIAL_SQL;
+    this.atualizarAbaAtiva(this.sql);
+
+    const tab: SqlQueryTab = {
+      id: crypto.randomUUID(),
+      name: `Query_${this.queryTabs.length + 1}.sql`,
+      sql: '',
+    };
+
+    this.queryTabs = [...this.queryTabs, tab];
+    this.activeQueryTabId = tab.id;
+    this.sql = tab.sql;
     this.result = undefined;
     this.errorMessage = '';
     this.cloudBlockedMessage = '';
+    this.state = 'initial';
+    this.dangerCheck = this.checkDangerousSql(this.sql);
+  }
+
+  selecionarQueryTab(tabId: string): void {
+    if (tabId === this.activeQueryTabId) return;
+
+    this.atualizarAbaAtiva(this.sql);
+    const tab = this.queryTabs.find((item) => item.id === tabId);
+    if (!tab) return;
+
+    this.activeQueryTabId = tab.id;
+    this.sql = tab.sql;
+    this.result = undefined;
+    this.errorMessage = '';
+    this.state = 'initial';
+    this.dangerCheck = this.checkDangerousSql(this.sql);
+  }
+
+  fecharQueryTab(tabId: string): void {
+    if (this.queryTabs.length <= 1) return;
+
+    const index = this.queryTabs.findIndex((tab) => tab.id === tabId);
+    if (index < 0) return;
+
+    const nextTabs = this.queryTabs.filter((tab) => tab.id !== tabId);
+    this.queryTabs = nextTabs;
+
+    if (this.activeQueryTabId !== tabId) return;
+
+    const nextTab = nextTabs[Math.max(index - 1, 0)] || nextTabs[0];
+    this.activeQueryTabId = nextTab.id;
+    this.sql = nextTab.sql;
+    this.result = undefined;
+    this.errorMessage = '';
     this.state = 'initial';
     this.dangerCheck = this.checkDangerousSql(this.sql);
   }
@@ -330,12 +403,15 @@ export class SqlEditorPage implements OnInit {
     this.sql = '';
     this.result = undefined;
     this.errorMessage = '';
+    this.parameterValueCache = {};
+    this.pendingParameters = undefined;
+    this.parametersVisible = false;
     this.state = 'initial';
     this.dangerCheck = this.checkDangerousSql(this.sql);
     this.adicionarMensagem('info', 'Editor limpo', 'O conteudo do editor SQL foi removido.');
   }
 
-  executar(sqlToExecute = this.sql, confirmado = false): void {
+  executar(sqlToExecute = this.sql, confirmado = false, parametros?: Record<string, unknown>): void {
     const sql = sqlToExecute.trim();
     const validationMessage = this.validarExecucao(sql);
     if (validationMessage) {
@@ -368,6 +444,7 @@ export class SqlEditorPage implements OnInit {
         conexaoId: this.conexaoId,
         base: this.base,
         sql,
+        parametros,
         maxRows: this.maxRows,
         timeoutSeconds: this.timeoutSeconds,
         confirmado,
@@ -384,6 +461,22 @@ export class SqlEditorPage implements OnInit {
             };
             this.confirmationVisible = true;
             this.adicionarMensagem('warn', 'Confirmacao solicitada pela API', this.pendingExecution.reason);
+            return;
+          }
+
+          if (res.requiresParameters && res.parameters?.length) {
+            this.state = 'initial';
+            this.pendingParameters = {
+              sql,
+              confirmado,
+              parameters: res.parameters,
+              values: res.parameters.reduce<Record<string, unknown>>((acc, parameter) => {
+                acc[parameter] = this.parameterValueCache[parameter] ?? '';
+                return acc;
+              }, {}),
+            };
+            this.parametersVisible = true;
+            this.adicionarMensagem('info', 'Parametros necessarios', res.message || 'Informe os parametros para executar a consulta.');
             return;
           }
 
@@ -443,6 +536,44 @@ export class SqlEditorPage implements OnInit {
     this.confirmationVisible = false;
     this.adicionarMensagem('info', 'Execucao cancelada', 'A consulta de risco nao foi enviada para a API.');
     this.pendingExecution = undefined;
+  }
+
+  confirmarParametrosSql(): void {
+    const pending = this.pendingParameters;
+    if (!pending) return;
+
+    const parametros = Object.fromEntries(
+      Object.entries(pending.values).map(([key, value]) => [key, this.parseParameterValue(value)])
+    );
+
+    this.parameterValueCache = {
+      ...this.parameterValueCache,
+      ...parametros,
+    };
+
+    this.parametersVisible = false;
+    this.pendingParameters = undefined;
+    this.executar(pending.sql, pending.confirmado, parametros);
+  }
+
+  limparParametrosSql(): void {
+    this.parameterValueCache = {};
+
+    if (this.pendingParameters) {
+      this.pendingParameters = {
+        ...this.pendingParameters,
+        values: this.pendingParameters.parameters.reduce<Record<string, unknown>>((acc, parameter) => {
+          acc[parameter] = '';
+          return acc;
+        }, {}),
+      };
+    }
+  }
+
+  cancelarParametrosSql(): void {
+    this.parametersVisible = false;
+    this.pendingParameters = undefined;
+    this.adicionarMensagem('info', 'Execucao cancelada', 'A consulta parametrizada nao foi enviada para a API.');
   }
 
   private carregarConexoes(): void {
@@ -599,6 +730,26 @@ export class SqlEditorPage implements OnInit {
       },
       ...this.messages,
     ].slice(0, 50);
+  }
+
+  private atualizarAbaAtiva(sql: string): void {
+    this.queryTabs = this.queryTabs.map((tab) =>
+      tab.id === this.activeQueryTabId
+        ? { ...tab, sql }
+        : tab
+    );
+  }
+
+  private parseParameterValue(value: unknown): unknown {
+    if (typeof value !== 'string') return value;
+
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    if (/^-?\d+$/.test(trimmed)) return Number(trimmed);
+    if (/^-?\d+[,.]\d+$/.test(trimmed)) return Number(trimmed.replace(',', '.'));
+    if (/^(true|false)$/i.test(trimmed)) return trimmed.toLowerCase() === 'true';
+
+    return trimmed;
   }
 
   private removerComentarios(sql: string): string {

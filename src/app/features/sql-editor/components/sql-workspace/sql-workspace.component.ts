@@ -7,6 +7,7 @@ import {
   SqlEditorState,
   SqlExecutionResponse,
   SqlHistoryItem,
+  SqlQueryTab,
 } from '../../models/sql-editor.model';
 import { SqlEditorPaneComponent } from '../sql-editor-pane/sql-editor-pane.component';
 import { SqlResultsWorkspaceComponent } from '../sql-results-workspace/sql-results-workspace.component';
@@ -49,6 +50,8 @@ export class SqlWorkspaceComponent {
   @Input() columnStatistics: SqlColumnStatistic[] = [];
   @Input() history: SqlHistoryItem[] = [];
   @Input() workspaceGridTemplate = 'minmax(0, 62fr) 8px minmax(0, 38fr)';
+  @Input() queryTabs: SqlQueryTab[] = [];
+  @Input() activeQueryTabId = '';
 
   @Output() sqlChange = new EventEmitter<string>();
   @Output() formatar = new EventEmitter<void>();
@@ -58,6 +61,8 @@ export class SqlWorkspaceComponent {
   @Output() salvar = new EventEmitter<void>();
   @Output() historico = new EventEmitter<void>();
   @Output() novaConsulta = new EventEmitter<void>();
+  @Output() selecionarQueryTab = new EventEmitter<string>();
+  @Output() fecharQueryTab = new EventEmitter<string>();
   @Output() maximizarEditor = new EventEmitter<void>();
   @Output() maximizarResultados = new EventEmitter<void>();
   @Output() restaurarLayout = new EventEmitter<void>();

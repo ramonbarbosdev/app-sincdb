@@ -9,6 +9,7 @@ export interface SqlExecutionRequest {
   conexaoId: string;
   base: string;
   sql: string;
+  parametros?: Record<string, unknown>;
   maxRows: number;
   timeoutSeconds: number;
   confirmado: boolean;
@@ -21,6 +22,8 @@ export interface SqlExecutionResponse {
   affectedRows?: number;
   message?: string;
   requiresConfirmation?: boolean;
+  requiresParameters?: boolean;
+  parameters?: string[];
   riskLevel?: SqlRiskLevel;
 }
 
@@ -53,6 +56,12 @@ export interface SqlCatalogTableSelection {
   schema: string;
   name: string;
   columns: SqlCatalogColumn[];
+}
+
+export interface SqlQueryTab {
+  id: string;
+  name: string;
+  sql: string;
 }
 
 export interface ConexaoSqlOption {
@@ -108,4 +117,11 @@ export interface PendingSqlExecution {
   sql: string;
   reason: string;
   riskLevel: SqlRiskLevel;
+}
+
+export interface PendingSqlParameters {
+  sql: string;
+  confirmado: boolean;
+  parameters: string[];
+  values: Record<string, unknown>;
 }

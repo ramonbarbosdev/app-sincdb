@@ -5,6 +5,7 @@ import {
   SqlCatalogResponse,
   SqlCatalogTableSelection,
   SqlEditorState,
+  SqlQueryTab,
 } from '../../models/sql-editor.model';
 import { SqlCodeEditorComponent } from '../sql-code-editor/sql-code-editor.component';
 
@@ -20,6 +21,8 @@ export class SqlEditorPaneComponent {
   @Input() state: SqlEditorState = 'initial';
   @Input() danger: DangerousSqlCheck = { dangerous: false, reason: '' };
   @Input() catalogo?: SqlCatalogResponse;
+  @Input() queryTabs: SqlQueryTab[] = [];
+  @Input() activeQueryTabId = '';
 
   @Output() sqlChange = new EventEmitter<string>();
   @Output() formatar = new EventEmitter<void>();
@@ -29,6 +32,8 @@ export class SqlEditorPaneComponent {
   @Output() salvar = new EventEmitter<void>();
   @Output() historico = new EventEmitter<void>();
   @Output() novaConsulta = new EventEmitter<void>();
+  @Output() selecionarQueryTab = new EventEmitter<string>();
+  @Output() fecharQueryTab = new EventEmitter<string>();
   @Output() maximizarEditor = new EventEmitter<void>();
   @Output() restaurarLayout = new EventEmitter<void>();
   @Output() propriedadesTabela = new EventEmitter<SqlCatalogTableSelection>();

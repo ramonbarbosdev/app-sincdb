@@ -1,9 +1,20 @@
 <section class="editor-pane">
   <div class="pane-commandbar">
     <div class="query-tabs">
-      <button class="query-tab active" type="button">
+      <button
+        class="query-tab"
+        type="button"
+        *ngFor="let tab of queryTabs"
+        [class.active]="tab.id === activeQueryTabId"
+        (click)="selecionarQueryTab.emit(tab.id)"
+      >
         <i class="pi pi-file"></i>
-        Query_1.sql
+        <span>{{ tab.name }}</span>
+        <i
+          class="pi pi-times close-tab"
+          *ngIf="queryTabs.length > 1"
+          (click)="$event.stopPropagation(); fecharQueryTab.emit(tab.id)"
+        ></i>
       </button>
 
       <button class="query-tab new" type="button" (click)="novaConsulta.emit()">
