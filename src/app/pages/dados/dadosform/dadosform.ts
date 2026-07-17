@@ -167,7 +167,7 @@ export class Dadosform {
         }
         else {
           if (this.listaEsquema?.length) {
-            this.objeto.esquema = String(this.listaEsquema[this.listaEsquema.length - 1].code);
+            this.objeto.esquema = String(this.listaEsquema[this.listaEsquema.length - 2].code);
             this.obterTabela(this.objeto.esquema);
           }
         }
