@@ -176,7 +176,7 @@ export class Estruturaform {
           this.objeto.esquema = state.esquema;
         }
         else {
-          if (this.listaEsquema?.length) {
+          if (this.listaEsquema?.length > 1 ) {
             this.objeto.esquema = String(this.listaEsquema[this.listaEsquema.length - 2].code);
             this.obterTabela(this.objeto.esquema);
           }
