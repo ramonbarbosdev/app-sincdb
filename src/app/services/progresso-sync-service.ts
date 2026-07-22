@@ -66,6 +66,14 @@ export class ProgressoSyncService {
     setTimeout(() => this.resetar(), 2200);
   }
 
+  marcarErro(mensagem = 'Sincronização interrompida') {
+    this.progressoState.next({
+      ...this.progressoState.value,
+      mensagem,
+      status: 'ERRO',
+    });
+  }
+
   resetar() {
     this.progressoState.next({
       progresso: 0,

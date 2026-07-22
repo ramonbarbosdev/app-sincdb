@@ -1,4 +1,7 @@
 .sql-statusbar {
+  --cloud-color: var(--sincdb-cloud, #7f5af0);
+  --local-color: var(--sincdb-local, #2cb67d);
+
   min-height: 2.2rem;
 
   display: flex;
@@ -20,7 +23,26 @@
   height: 0.55rem;
 
   border-radius: 999px;
-  background: #2cb67d;
+  background: var(--local-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--local-color) 18%, transparent);
+}
+
+.env-cloud .env-dot {
+  background: var(--cloud-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cloud-color) 18%, transparent);
+}
+
+.env-local .env-dot {
+  background: var(--local-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--local-color) 18%, transparent);
+}
+
+.env-cloud .env-label {
+  color: var(--cloud-color);
+}
+
+.env-local .env-label {
+  color: var(--local-color);
 }
 
 .spacer {

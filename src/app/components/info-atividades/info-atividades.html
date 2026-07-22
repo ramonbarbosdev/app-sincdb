@@ -2,7 +2,7 @@
     <div class="font-semibold text-xl mb-4">Atividades de Sincronização</div>
 
     <div class="card">
-        <p-table #dt [value]="value" [paginator]="true" [rows]="5" [tableStyle]="{ 'min-width': '50rem' }"
+        <p-table #dt [value]="displayValue" [paginator]="true" [rows]="5" [tableStyle]="{ 'min-width': '50rem' }"
             [rowsPerPageOptions]="[5, 10, 20]" [globalFilterFields]="['baseNome', 'schemaNome', 'operacao', 'status']"
             [tableStyle]="{ 'min-width': '50rem' }">
 
@@ -36,19 +36,19 @@
             </ng-template>
 
             <ng-template #body let-item>
+                <tr *ngIf="loading">
+                    <td><p-skeleton height="1rem" /></td>
+                    <td><p-skeleton height="1rem" /></td>
+                    <td><p-skeleton height="1rem" /></td>
+                    <td><p-skeleton height="1rem" /></td>
+                    <td><p-skeleton height="1rem" /></td>
+                </tr>
                 <tr *ngIf="!loading">
                     <td>{{ item.baseNome }}</td>
                     <td>{{ item.schemaNome }}</td>
                     <td>{{ item.operacao }}</td>
                     <td>{{ item.status }}</td>
                     <td>{{ item.ultimaExecucao }}</td>
-                </tr>
-                <tr *ngIf="loading">
-                    <td><p-skeleton /></td>
-                    <td><p-skeleton /></td>
-                    <td><p-skeleton /></td>
-                    <td><p-skeleton /></td>
-                    <td><p-skeleton /></td>
                 </tr>
             </ng-template>
 

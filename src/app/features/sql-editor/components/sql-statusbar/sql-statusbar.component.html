@@ -1,6 +1,10 @@
-<footer class="sql-statusbar">
+<footer
+  class="sql-statusbar"
+  [class.env-cloud]="ambiente === 'cloud'"
+  [class.env-local]="ambiente === 'local'"
+>
   <span class="env-dot"></span>
-  <strong>{{ ambiente === 'cloud' ? 'Cloud' : 'Local' }}</strong>
+  <strong class="env-label">{{ ambiente === 'cloud' ? 'Cloud' : 'Local' }}</strong>
 
   <i class="pi pi-angle-right"></i>
   <span>{{ conexaoLabel }}</span>

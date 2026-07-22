@@ -1,29 +1,67 @@
-<div class="bg-surface-0 dark:bg-surface-950 px-6 py-20 md:px-12 lg:px-20">
-  <div class="text-surface-700 dark:text-surface-100 text-center flex flex-col items-center gap-4">
-    <div class="text-primary font-bold text-lg leading-tight">
-      <i class="pi pi-database text-lg! leading-none!"></i>&nbsp;SINCRONIZAÇÃO INTELIGENTE
+<div class="home-status px-4 py-8 md:px-8 lg:px-12">
+  <div *ngIf="loading" class="card status-card status-skeleton mx-auto">
+    <p-skeleton width="8rem" height="0.9rem"></p-skeleton>
+    <p-skeleton width="70%" height="2rem"></p-skeleton>
+    <p-skeleton width="55%" height="1rem"></p-skeleton>
+    <p-skeleton width="100%" height="4.5rem" borderRadius="0.85rem"></p-skeleton>
+    <p-skeleton width="11rem" height="2.4rem" borderRadius="999px"></p-skeleton>
+  </div>
+
+  <section *ngIf="!loading" class="card status-card mx-auto" [class.has-error]="temErroUltimaSync">
+    <div class="status-eyebrow">
+      <i class="pi pi-database"></i>
+      Status do SyncDB
     </div>
-    <div class="text-surface-900 dark:text-surface-0 font-bold text-4xl leading-tight">
-      Conecte e Unifique Seus Bancos de Dados
+
+    <h1 class="status-title">{{ statusTitulo }}</h1>
+    <p class="status-subtitle">{{ statusSubtitulo }}</p>
+
+    <div *ngIf="conexaoPadrao" class="connection-panel">
+      <div class="connection-panel-top">
+        <div class="connection-name-wrap">
+          <span class="connection-label">Conexão padrão</span>
+          <strong class="connection-name">{{ conexaoPadrao.nm_conexao }}</strong>
+        </div>
+        <app-cloud-local-pulse [compact]="true"></app-cloud-local-pulse>
+      </div>
+
+      <div class="connection-hosts">
+        <div class="host-row" [attr.title]="conexaoPadrao.db_cloud_host || ''">
+          <span class="env-chip env-cloud"><i class="pi pi-cloud"></i> Cloud</span>
+          <span class="host-value">{{ hostCloudCurto }}</span>
+        </div>
+        <div class="host-row" [attr.title]="conexaoPadrao.db_local_host || ''">
+          <span class="env-chip env-local"><i class="pi pi-server"></i> Local</span>
+          <span class="host-value">{{ hostLocalCurto }}</span>
+        </div>
+      </div>
     </div>
-    <div class="text-surface-700 dark:text-surface-100 text-xl leading-normal">
-      Automação, segurança e desempenho para manter suas informações sempre consistentes, em
-      qualquer ambiente.
+
+    <div *ngIf="ultimaAtividade" class="last-sync">
+      <div class="last-sync-copy">
+        <span class="last-sync-label">Última sincronização</span>
+        <span class="last-sync-detail">
+          {{ ultimaAtividade.operacao }} · {{ ultimaAtividade.ultimaExecucao }}
+        </span>
+      </div>
+      <p-tag [value]="ultimaAtividade.status" [severity]="statusSeverity"></p-tag>
     </div>
-    <div *ngIf="!loadingConexao && !temConexaoPadrao" class="mt-6 flex flex-col items-center gap-3">
-      <p class="text-surface-600 dark:text-surface-200 text-base">
-        Cadastre uma conexão padrão para começar a sincronizar.
-      </p>
+
+    <div class="status-actions">
       <p-button
-        label="Cadastrar conexão"
-        icon="pi pi-database"
+        [label]="ctaLabel"
+        [icon]="ctaIcon"
         [rounded]="true"
-        (click)="irParaConexao()"
+        [severity]="temErroUltimaSync ? 'danger' : 'primary'"
+        styleClass="action-press"
+        (click)="executarCta()"
       />
     </div>
-  </div>
+  </section>
 </div>
 
-<app-comparativo-estrutura></app-comparativo-estrutura>
-<br>
-<app-info-atividades></app-info-atividades>
+<div class="home-panels px-4 md:px-8 lg:px-12 pb-8">
+  <app-comparativo-estrutura></app-comparativo-estrutura>
+  <div class="home-gap"></div>
+  <app-info-atividades></app-info-atividades>
+</div>

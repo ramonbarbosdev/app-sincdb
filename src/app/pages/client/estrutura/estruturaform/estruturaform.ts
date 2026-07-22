@@ -19,6 +19,7 @@ import { SyncConsole } from "../../../../components/sync-console/sync-console";
 import { WebsocketService } from '../../../../services/websocket.service';
 import { EstruturaPreview, EstruturaResponse } from "../../../../components/estrutura-preview/estrutura-preview";
 import { Conexao } from '../../../../models/conexao';
+import { CloudLocalPulse } from '../../../../components/cloud-local-pulse/cloud-local-pulse';
 
 @Component({
   selector: 'app-estruturaform',
@@ -32,7 +33,8 @@ import { Conexao } from '../../../../models/conexao';
     SyncProgressoBar,
     SyncErros,
     SyncConsole,
-    EstruturaPreview
+    EstruturaPreview,
+    CloudLocalPulse,
   ],
   templateUrl: './estruturaform.html',
   styleUrl: './estruturaform.scss',
@@ -253,7 +255,9 @@ export class Estruturaform {
         let tabelaEsquema = !this.objeto.tabela ? this.objeto.esquema : this.objeto.tabela;
         this.continuarVerificacao(tabelaEsquema);
       },
-      error: (err) => { },
+      error: () => {
+        this.progressoSync.marcarErro('Falha ao verificar esquema');
+      },
     });
   }
 
@@ -276,10 +280,10 @@ export class Estruturaform {
           this.loadingVerificacao = false;
           this.loadingSincronizacao = false;
         },
-        error: (err) => {
-
+        error: () => {
           this.loadingSincronizacao = false;
           this.loadingVerificacao = false;
+          this.progressoSync.marcarErro('Falha na verificação de estrutura');
         },
       });
   }
@@ -305,10 +309,10 @@ export class Estruturaform {
           this.loadingVerificacao = false;
           this.execultarSincronizacao(true);
         },
-        error: (err) => {
-          console.log(err)
+        error: () => {
           this.loadingVerificacao = false;
           this.loadingSincronizacao = false;
+          this.progressoSync.marcarErro('Falha na verificação de estrutura');
         },
       });
   }
@@ -334,6 +338,9 @@ export class Estruturaform {
 
         if (res.errors?.length > 0) {
           this.listaErros = res.errors ?? [];
+          this.progressoSync.marcarErro(
+            `${this.listaErros.length} erro(s) na sincronização de estrutura`
+          );
           this.messageService.add({
             severity: 'warn',
             summary: 'Sincronização com pendências',
@@ -362,9 +369,10 @@ export class Estruturaform {
 
         setTimeout(() => this.oferecerSincronizacaoDados(), 500);
       },
-      error: (err) => {
+      error: () => {
         this.loadingSincronizacao = false;
         this.loadingVerificacao = false;
+        this.progressoSync.marcarErro('Falha na sincronização de estrutura');
         this.messageService.add({
           severity: 'error',
           summary: 'Falha na estrutura',

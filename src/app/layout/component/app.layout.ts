@@ -8,6 +8,7 @@ import { AppFooter } from './app.footer';
 import { LayoutService } from '../service/layout.service';
 import { LoadingService } from '../../services/loading.service';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { ProductTipBanner } from '../../components/product-tip-banner/product-tip-banner';
 @Component({
   selector: 'app-layout',
   standalone: true,
@@ -18,12 +19,14 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
     RouterModule,
     AppFooter,
     ProgressSpinnerModule,
+    ProductTipBanner,
   ],
   template: `
     <div class="layout-wrapper" [ngClass]="containerClass">
       <app-topbar></app-topbar>
       <app-sidebar></app-sidebar>
       <div class="layout-main-container" style="position: relative;">
+        <app-product-tip-banner></app-product-tip-banner>
         <div class="layout-main" style="position: relative;">
           <router-outlet></router-outlet>
 

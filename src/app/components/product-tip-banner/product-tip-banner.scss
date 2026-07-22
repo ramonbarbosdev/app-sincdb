@@ -1,0 +1,79 @@
+.product-tip {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0.5rem 1rem 0;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, var(--p-primary-color, #7f5af0) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--p-primary-color, #7f5af0) 22%, transparent);
+  animation: tipIn 200ms ease;
+}
+
+.tip-icon {
+  color: var(--p-primary-color, #7f5af0);
+  flex-shrink: 0;
+}
+
+.tip-message {
+  margin: 0;
+  flex: 1;
+  font-size: 0.85rem;
+  color: var(--p-text-color);
+}
+
+.tip-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.tip-cta {
+  border: 0;
+  background: transparent;
+  color: var(--p-primary-color, #7f5af0);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.2rem 0.35rem;
+}
+
+.tip-dismiss {
+  border: 0;
+  background: transparent;
+  color: var(--p-text-muted-color, #64748b);
+  cursor: pointer;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+}
+
+.tip-dismiss:hover {
+  background: color-mix(in srgb, var(--p-text-color) 8%, transparent);
+}
+
+@keyframes tipIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-tip {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .product-tip {
+    flex-wrap: wrap;
+  }
+}

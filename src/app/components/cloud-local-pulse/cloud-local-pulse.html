@@ -1,0 +1,21 @@
+<div
+  class="cloud-local-pulse"
+  [class.is-syncing]="isSyncing"
+  [class.is-compact]="compact"
+  aria-hidden="true"
+>
+  <span class="node node-cloud">
+    <i class="pi pi-cloud"></i>
+    <span class="label">Cloud</span>
+  </span>
+
+  <span class="track">
+    <span class="track-line"></span>
+    <span class="pulse-dot"></span>
+  </span>
+
+  <span class="node node-local">
+    <i class="pi pi-server"></i>
+    <span class="label">Local</span>
+  </span>
+</div>

@@ -1,154 +1,167 @@
-<p-card class="w-full max-w-5xl mx-auto my-6 px-2 sm:px-4">
-  <!-- HEADER -->
+<p-card styleClass="sync-form-card w-full max-w-5xl mx-auto my-6">
   <ng-template pTemplate="header">
-    <div class="flex flex-col sm:flex-row justify-between items-center w-full p-4 gap-2 sm:gap-0">
-      <h5 class="text-lg sm:text-xl font-semibold text-center sm:text-left">Sincronizar Dados</h5>
+    <div class="sync-form-header">
+      <div>
+        <p class="sync-form-eyebrow">Operação</p>
+        <h5 class="sync-form-title">Sincronizar Dados</h5>
+      </div>
     </div>
   </ng-template>
 
   <ng-template #content>
-    <div class="mb-4 p-3 border border-surface rounded-md flex flex-col sm:flex-row sm:items-center gap-3">
-      <div class="flex items-center gap-3 flex-1">
-        <i class="pi pi-server text-primary"></i>
-        <div class="flex-1">
-          <div class="font-medium">
-            {{ conexaoPadrao?.nm_conexao || 'Nenhuma conexão padrão configurada' }}
+    <section class="sync-connection" [class.is-empty]="!conexaoPadrao && !loadingConexaoPadrao">
+      <div class="sync-connection-main">
+        <!-- <div class="sync-connection-icon">
+          <i class="pi pi-database"></i>
+        </div> -->
+
+        <div class="sync-connection-body">
+          <div class="sync-connection-top">
+            <!-- <span class="sync-connection-name">
+              {{ conexaoPadrao?.nm_conexao || 'Nenhuma conexão padrão' }}
+            </span> -->
+            <app-cloud-local-pulse *ngIf="conexaoPadrao"></app-cloud-local-pulse>
           </div>
-          <div class="text-sm text-muted-color" *ngIf="conexaoPadrao">
-            Cloud: {{ conexaoPadrao.db_cloud_host || '-' }} | Local:
-            {{ conexaoPadrao.db_local_host || '-' }}
-          </div>
-          <div class="text-sm text-muted-color" *ngIf="!conexaoPadrao && !loadingConexaoPadrao">
+
+          <!-- <div class="sync-connection-hosts" *ngIf="conexaoPadrao">
+            <span class="env-chip env-cloud" [attr.title]="conexaoPadrao.db_cloud_host || ''">
+              <i class="pi pi-cloud"></i>
+              <span class="env-chip-text">{{ conexaoPadrao.db_cloud_host || '—' }}</span>
+            </span>
+            <span class="env-chip env-local" [attr.title]="conexaoPadrao.db_local_host || ''">
+              <i class="pi pi-server"></i>
+              <span class="env-chip-text">{{ conexaoPadrao.db_local_host || '—' }}</span>
+            </span>
+          </div> -->
+
+          <p class="sync-connection-hint" *ngIf="!conexaoPadrao && !loadingConexaoPadrao">
             Cadastre uma conexão e marque-a como padrão antes de sincronizar.
-          </div>
+          </p>
         </div>
       </div>
+
       <p-button
         *ngIf="!conexaoPadrao && !loadingConexaoPadrao"
         label="Cadastrar conexão"
         icon="pi pi-database"
         size="small"
+        styleClass="action-press"
         (click)="irParaConexao()"
       />
-    </div>
+    </section>
 
-    <div class="flex-row-responsive w-full">
-      <app-layout-campo [label]="'Bases: (*)'" [width]="'md:w-6/12'" [error]="errorValidacao['base']">
-        <p-select
-          [checkmark]="true"
-          [showClear]="true"
-          name="base"
-          [options]="listaBase"
-          optionLabel="name"
-          optionValue="code"
-          placeholder="Selecione"
-          class="w-full"
-          [(ngModel)]="objeto.base"
-          [loading]="loadingBase"
-          (ngModelChange)="processarBase($event)"
-          [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['base'] }"
-          [filter]="true"
-          filterPlaceholder="Buscar base..."
-          [filterBy]="'name'"
-        />
-      </app-layout-campo>
+    <section class="sync-fields">
+      <div class="flex-row-responsive w-full">
+        <app-layout-campo [label]="'Bases: (*)'" [width]="'md:w-6/12'" [error]="errorValidacao['base']">
+          <p-select
+            [checkmark]="true"
+            [showClear]="true"
+            name="base"
+            [options]="listaBase"
+            optionLabel="name"
+            optionValue="code"
+            placeholder="Selecione"
+            class="w-full"
+            [(ngModel)]="objeto.base"
+            [loading]="loadingBase"
+            (ngModelChange)="processarBase($event)"
+            [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['base'] }"
+            [filter]="true"
+            filterPlaceholder="Buscar base..."
+            [filterBy]="'name'"
+          />
+        </app-layout-campo>
 
-      <app-layout-campo
-        [label]="'Esquema: (*)'"
-        [width]="'md:w-6/12'"
-        [error]="errorValidacao['esquema']"
-      >
-        <p-select
-          [checkmark]="true"
-          [showClear]="true"
-          name="esquema"
-          [options]="listaEsquema"
-          optionLabel="name"
-          optionValue="code"
-          placeholder="Selecione"
-          class="w-full"
-          [(ngModel)]="objeto.esquema"
-          [loading]="loadingEsquema"
-          (ngModelChange)="processarEsquema($event)"
-          [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['esquema'] }"
-          [filter]="true"
-          filterPlaceholder="Buscar esquema..."
-          [filterBy]="'name'"
-        />
-      </app-layout-campo>
-    </div>
-
-    <div class="flex-row-responsive w-full">
-      <app-layout-campo [label]="'Tabela:'" [width]="'md:w-10/12'">
-        <p-select
-          [checkmark]="true"
-          [showClear]="true"
-          name="tabela"
-          [options]="listaTabela"
-          optionLabel="name"
-          optionValue="code"
-          placeholder="Selecione"
-          class="w-full"
-          [(ngModel)]="objeto.tabela"
-          [loading]="loadingTabela"
-          [filter]="true"
-          filterPlaceholder="Buscar tabela..."
-          [filterBy]="'name'"
+        <app-layout-campo
+          [label]="'Esquema: (*)'"
+          [width]="'md:w-6/12'"
+          [error]="errorValidacao['esquema']"
         >
-        </p-select>
-      </app-layout-campo>
-      <app-layout-campo [label]="'&nbsp;'" [width]="'md:w-2/12'">
-        <p-button
-          label="Verificar"
-          icon="pi pi-search"
-          (click)="verificar()"
-          styleClass="p-button-primary w-full sm:w-auto action-press"
-          [loading]="loadingVerificacao"
-          [disabled]="!conexaoPadrao"
-        ></p-button>
-      </app-layout-campo>
-    </div>
-
-    <div class="p-2 flex flex-col sm:flex-row items-center gap-4 w-full">
-      <!-- Botão -->
-      <!-- <p-button
-        label="Verificar"
-        icon="pi pi-search"
-        (click)="verificar()"
-        styleClass="p-button-primary w-full sm:w-auto"
-        [loading]="loadingVerificacao"
-      ></p-button> -->
-      <!-- Progress -->
-      <div class="flex-1 w-full">
-        <app-sync-console></app-sync-console>
-        <app-sync-progresso-bar></app-sync-progresso-bar>
+          <p-select
+            [checkmark]="true"
+            [showClear]="true"
+            name="esquema"
+            [options]="listaEsquema"
+            optionLabel="name"
+            optionValue="code"
+            placeholder="Selecione"
+            class="w-full"
+            [(ngModel)]="objeto.esquema"
+            [loading]="loadingEsquema"
+            (ngModelChange)="processarEsquema($event)"
+            [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['esquema'] }"
+            [filter]="true"
+            filterPlaceholder="Buscar esquema..."
+            [filterBy]="'name'"
+          />
+        </app-layout-campo>
       </div>
-    </div>
+
+      <div class="sync-table-row">
+        <app-layout-campo [label]="'Tabela (opcional)'" [width]="'md:w-9/12'">
+          <p-select
+            [checkmark]="true"
+            [showClear]="true"
+            name="tabela"
+            [options]="listaTabela"
+            optionLabel="name"
+            optionValue="code"
+            placeholder="Todas as tabelas do esquema"
+            class="w-full"
+            [(ngModel)]="objeto.tabela"
+            [loading]="loadingTabela"
+            [filter]="true"
+            filterPlaceholder="Buscar tabela..."
+            [filterBy]="'name'"
+          >
+          </p-select>
+        </app-layout-campo>
+
+        <div class="sync-verify-wrap">
+          <p-button
+            label="Verificar"
+            icon="pi pi-search"
+            (click)="verificar()"
+            styleClass="p-button-outlined action-press w-full"
+            [loading]="loadingVerificacao"
+            [disabled]="!conexaoPadrao"
+          ></p-button>
+        </div>
+      </div>
+    </section>
+
+    <section class="sync-console-wrap">
+      <app-sync-console></app-sync-console>
+      <app-sync-progresso-bar></app-sync-progresso-bar>
+    </section>
   </ng-template>
 
-  <!-- FOOTER -->
   <ng-template #footer>
-    <div class="flex flex-col sm:flex-row justify-between gap-2 mt-4 px-2 sm:px-0">
+    <div class="sync-form-footer">
       <p-button
         label="Cancelar"
-        icon="pi pi-ban"
+        icon="pi pi-times"
         (click)="cancelarSincronizacao()"
-        styleClass="w-full sm:w-auto"
+        [text]="true"
+        severity="secondary"
+        styleClass="action-press"
       />
-      <div class="flex gap-3">
+
+      <div class="sync-form-footer-actions">
         <p-button
           label="Sincronizar"
           icon="pi pi-sync"
           (click)="execultarSincronizacao()"
-          styleClass="w-full sm:w-auto action-press action-press-sync"
+          [outlined]="true"
+          styleClass="action-press action-press-sync"
           [loading]="loadingSincronizacao"
           [disabled]="!conexaoPadrao"
         />
         <p-button
-          label="Verificar/Sincronizar"
+          label="Verificar e sincronizar"
           icon="pi pi-sync"
           (click)="verificarEExecutar()"
-          styleClass="w-full sm:w-auto action-press action-press-sync"
+          styleClass="action-press action-press-sync"
           [loading]="loadingSincronizacao"
           [disabled]="!conexaoPadrao"
         />
@@ -157,8 +170,6 @@
   </ng-template>
 </p-card>
 
-<p-card class="w-full max-w-5xl mx-auto my-6 px-2 sm:px-4" *ngIf="listaErros.length > 0">
-  <div class="mt-4">
-    <app-sync-erros [erros]="listaErros"></app-sync-erros>
-  </div>
+<p-card styleClass="sync-form-card w-full max-w-5xl mx-auto my-6" *ngIf="listaErros.length > 0">
+  <app-sync-erros [erros]="listaErros"></app-sync-erros>
 </p-card>

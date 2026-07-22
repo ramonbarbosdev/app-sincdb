@@ -19,21 +19,28 @@
       *ngIf="!loading && listaConexoes.length === 0"
       class="empty-state flex flex-col items-center justify-center text-center gap-4"
     >
-      <i class="pi pi-database text-4xl text-primary"></i>
+      <div class="empty-diagram" aria-hidden="true">
+        <span class="env-chip env-cloud"><i class="pi pi-cloud"></i> Cloud</span>
+        <span class="empty-track">
+          <span class="empty-dot"></span>
+        </span>
+        <span class="env-chip env-local"><i class="pi pi-server"></i> Local</span>
+      </div>
 
       <div>
         <h3 class="text-xl font-semibold mb-2">
-          Nenhuma conexão cadastrada
+          Conecte Cloud e Local para começar
         </h3>
 
-        <p class="text-muted-color">
-          Cadastre a primeira conexão da organização ativa.
+        <p class="text-muted-color max-w-md mx-auto">
+          Cadastre a primeira conexão da organização. Leva menos de 2 minutos e libera sincronização de estrutura e dados.
         </p>
       </div>
 
       <p-button
         label="Nova conexão"
         icon="pi pi-plus"
+        styleClass="action-press"
         (click)="novaConexao()"
       />
     </div>

@@ -63,3 +63,59 @@ button.action-press:not(:disabled):active {
     transform: none;
   }
 }
+
+/* P1 — assinatura visual Cloud / Local */
+:root {
+  --sincdb-cloud: #7f5af0;
+  --sincdb-local: #2cb67d;
+}
+
+.env-hosts {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+}
+
+.env-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  min-width: 0;
+}
+
+.env-chip .env-chip-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.env-chip.env-cloud {
+  color: var(--sincdb-cloud);
+  background: color-mix(in srgb, var(--sincdb-cloud) 12%, transparent);
+  border-color: color-mix(in srgb, var(--sincdb-cloud) 28%, transparent);
+}
+
+.env-chip.env-local {
+  color: var(--sincdb-local);
+  background: color-mix(in srgb, var(--sincdb-local) 12%, transparent);
+  border-color: color-mix(in srgb, var(--sincdb-local) 28%, transparent);
+}
+
+/* Skeleton alinhado ao tema (dark/light) */
+.p-skeleton {
+  --p-skeleton-background: var(--p-surface-200, var(--surface-200, #e2e8f0));
+  --p-skeleton-animation-background: var(--p-surface-300, var(--surface-300, #cbd5e1));
+}
+
+.app-dark .p-skeleton,
+.dark .p-skeleton {
+  --p-skeleton-background: var(--p-surface-700, var(--surface-700, #334155));
+  --p-skeleton-animation-background: var(--p-surface-600, var(--surface-600, #475569));
+}

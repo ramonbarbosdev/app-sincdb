@@ -18,6 +18,7 @@ import { SyncErros } from '../../../components/sync-erros/sync-erros';
 import { SyncConsole } from "../../../components/sync-console/sync-console";
 import { WebsocketService } from '../../../services/websocket.service';
 import { Conexao } from '../../../models/conexao';
+import { CloudLocalPulse } from '../../../components/cloud-local-pulse/cloud-local-pulse';
 
 @Component({
   selector: 'app-dadosform',
@@ -30,7 +31,8 @@ import { Conexao } from '../../../models/conexao';
     ButtonModule,
     SyncProgressoBar,
     SyncErros,
-    SyncConsole
+    SyncConsole,
+    CloudLocalPulse,
   ],
   templateUrl: './dadosform.html',
   styleUrl: './dadosform.scss',
@@ -248,7 +250,9 @@ export class Dadosform {
         let tabelaEsquema = !this.objeto.tabela ? this.objeto.esquema : this.objeto.tabela;
         this.continuarVerificacao(tabelaEsquema);
       },
-      error: (err) => { },
+      error: () => {
+        this.progressoSync.marcarErro('Falha ao verificar esquema');
+      },
     });
   }
 
@@ -266,14 +270,14 @@ export class Dadosform {
     this.baseService
       .findAll(`${this.endpointPrincipal}/verificar/${base}/${esquema}/${tabela}`)
       .subscribe({
-        next: (res) => {
-          // this.progressoSync.verificacaoConcluidaProgressoLocal();
+        next: () => {
           this.loadingVerificacao = false;
           this.loadingSincronizacao = false;
         },
-        error: (err) => {
+        error: () => {
           this.loadingSincronizacao = false;
           this.loadingVerificacao = false;
+          this.progressoSync.marcarErro('Falha na verificação de dados');
         },
       });
   }
@@ -302,6 +306,7 @@ export class Dadosform {
         error: () => {
           this.loadingVerificacao = false;
           this.loadingSincronizacao = false;
+          this.progressoSync.marcarErro('Falha na verificação de dados');
         },
       });
   }
@@ -327,6 +332,9 @@ export class Dadosform {
 
         if (res.errors?.length > 0) {
           this.listaErros = res.errors ?? [];
+          this.progressoSync.marcarErro(
+            `${this.listaErros.length} erro(s) na sincronização de dados`
+          );
           this.messageService.add({
             severity: 'warn',
             summary: 'Sincronização com pendências',
@@ -355,9 +363,10 @@ export class Dadosform {
 
         setTimeout(() => this.router.navigate(['client/home']), 700);
       },
-      error: (err) => {
+      error: () => {
         this.loadingSincronizacao = false;
         this.loadingVerificacao = false;
+        this.progressoSync.marcarErro('Falha na sincronização de dados');
         this.messageService.add({
           severity: 'error',
           summary: 'Falha nos dados',

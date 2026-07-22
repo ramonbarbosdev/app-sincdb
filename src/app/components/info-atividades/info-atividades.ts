@@ -24,7 +24,11 @@ export class InfoAtividades {
   endpoint = 'info';
   loading: boolean = true;
   value: any[] = [];
+  private skeletonRows = [{}, {}, {}, {}, {}];
 
+  get displayValue(): any[] {
+    return this.loading ? this.skeletonRows : this.value;
+  }
 
   @ViewChild('filter') filter!: ElementRef;
   @ViewChild('dt') tabela!: Table;

@@ -1,0 +1,17 @@
+<div class="product-tip" *ngIf="tip() as current">
+  <i class="pi pi-lightbulb tip-icon" aria-hidden="true"></i>
+  <p class="tip-message">{{ current.message }}</p>
+  <div class="tip-actions">
+    <button
+      *ngIf="current.ctaLabel && current.ctaRoute"
+      type="button"
+      class="tip-cta"
+      (click)="goCta()"
+    >
+      {{ current.ctaLabel }}
+    </button>
+    <button type="button" class="tip-dismiss" (click)="dismiss()" aria-label="Dispensar dica">
+      <i class="pi pi-times"></i>
+    </button>
+  </div>
+</div>
