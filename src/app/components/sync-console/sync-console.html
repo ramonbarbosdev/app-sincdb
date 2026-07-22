@@ -1,24 +1,25 @@
-<div class="terminal-container" *ngIf="visible">
+<div class="terminal-container" *ngIf="visible" [class.is-live]="live">
   <div class="terminal-header">
     <div class="buttons">
-
-      <!-- Fechar -->
       <span class="btn close" (click)="closeTerminal()"></span>
-
-      <!-- Limpar -->
       <span title="limpar" class="btn minimize" (click)="clear()"></span>
-
-      <!-- Reabrir -->
       <span class="btn maximize" (click)="openTerminal()"></span>
-
     </div>
 
-    <div class="title">Terminal</div>
+    <div class="title">
+      Terminal
+      <span class="live-dot" *ngIf="live" aria-hidden="true"></span>
+    </div>
   </div>
 
-  <div id="terminal-box" class="terminal-body">
-    <div *ngFor="let line of logs" class="terminal-line">
+  <div #terminalBox id="terminal-box" class="terminal-body">
+    <div
+      *ngFor="let line of logs; let i = index"
+      class="terminal-line"
+      [class.is-latest]="i === latestIndex"
+    >
       {{ line }}
     </div>
+    <div class="terminal-cursor" *ngIf="live" aria-hidden="true"></div>
   </div>
 </div>

@@ -32,3 +32,34 @@
         margin-bottom: 1rem;
     }
 }
+
+/* P0 — microfeedback em ações críticas */
+.p-button.action-press,
+button.action-press {
+  transition: transform 80ms ease;
+}
+
+.p-button.action-press:not(:disabled):active,
+button.action-press:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+.p-button.action-press-sync .p-button-icon {
+  transition: transform 200ms ease;
+}
+
+.p-button.action-press-sync:not(:disabled):active .p-button-icon {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .p-button.action-press,
+  .p-button.action-press-sync .p-button-icon {
+    transition: none;
+  }
+
+  .p-button.action-press:not(:disabled):active,
+  .p-button.action-press-sync:not(:disabled):active .p-button-icon {
+    transform: none;
+  }
+}

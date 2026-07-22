@@ -1,6 +1,7 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
 import { WebsocketService } from '../../services/websocket.service';
 
 @Component({
@@ -9,32 +10,60 @@ import { WebsocketService } from '../../services/websocket.service';
   templateUrl: './sync-console.html',
   styleUrl: './sync-console.scss',
 })
-export class SyncConsole {
+export class SyncConsole implements OnInit, OnDestroy {
   logs: string[] = [];
   visible = true;
+  live = false;
+  latestIndex = -1;
 
-  constructor(private ws: WebsocketService) {}
+  @ViewChild('terminalBox') terminalBox?: ElementRef<HTMLDivElement>;
+
+  private liveTimer?: ReturnType<typeof setTimeout>;
+  private logsSub?: Subscription;
+  private clearSub?: Subscription;
+  private ws = inject(WebsocketService);
 
   ngOnInit() {
-    this.ws.logs$.subscribe((msg) => {
+    this.logsSub = this.ws.logs$.subscribe((msg) => {
       this.logs.push(msg);
-      setTimeout(() => this.scrollToBottom(), 50);
+      this.latestIndex = this.logs.length - 1;
+      this.markLive();
+      setTimeout(() => this.scrollToBottom(), 30);
     });
 
-    this.ws.clearTerminal$.subscribe(() => {
+    this.clearSub = this.ws.clearTerminal$.subscribe(() => {
       this.clear();
     });
   }
 
-  scrollToBottom() {
-    const el = document.getElementById('terminal-box');
-    if (el) {
-      el.scrollTop = el.scrollHeight;
+  ngOnDestroy() {
+    this.logsSub?.unsubscribe();
+    this.clearSub?.unsubscribe();
+    if (this.liveTimer) {
+      clearTimeout(this.liveTimer);
     }
+  }
+
+  scrollToBottom() {
+    const el = this.terminalBox?.nativeElement || document.getElementById('terminal-box');
+    if (!el) {
+      return;
+    }
+
+    const reduceMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+    el.scrollTo({
+      top: el.scrollHeight,
+      behavior: reduceMotion ? 'auto' : 'smooth',
+    });
   }
 
   clear() {
     this.logs = [];
+    this.latestIndex = -1;
+    this.live = false;
     setTimeout(() => this.scrollToBottom(), 50);
   }
 
@@ -45,5 +74,15 @@ export class SyncConsole {
 
   closeTerminal() {
     this.visible = false;
+  }
+
+  private markLive() {
+    this.live = true;
+    if (this.liveTimer) {
+      clearTimeout(this.liveTimer);
+    }
+    this.liveTimer = setTimeout(() => {
+      this.live = false;
+    }, 1800);
   }
 }

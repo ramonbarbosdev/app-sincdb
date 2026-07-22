@@ -62,6 +62,7 @@ export class Dadosform {
   loadingSincronizacao = false;
   loadingConexaoPadrao = false;
   conexaoPadrao?: Conexao;
+  private syncStartedAt = 0;
 
   ngOnInit() {
     this.progressoSync.vazioProgressoLocal();
@@ -280,6 +281,7 @@ export class Dadosform {
   verificarEExecutar() {
     if (!this.conexaoPadrao || !this.validarItens()) return;
     this.listaErros = [];
+    this.syncStartedAt = Date.now();
 
     const base = this.objeto.base;
     const esquema = this.objeto.esquema;
@@ -295,48 +297,72 @@ export class Dadosform {
       .subscribe({
         next: () => {
           this.loadingVerificacao = false;
-          this.execultarSincronizacao();
+          this.execultarSincronizacao(true);
         },
         error: () => {
           this.loadingVerificacao = false;
           this.loadingSincronizacao = false;
-          // this.progressoSync.atualizarMensagem('Verificação falhou');
         },
       });
   }
 
-  execultarSincronizacao() {
+  execultarSincronizacao(jaIniciado = false) {
     if (!this.conexaoPadrao || !this.validarItens()) return;
 
     let base = this.objeto.base;
     let esquema = this.objeto.esquema;
 
+    if (!jaIniciado) {
+      this.syncStartedAt = Date.now();
+      this.progressoSync.iniciarGenericoProgressoLocal();
+    }
+
     this.loadingSincronizacao = true;
     this.loadingVerificacao = true;
-
-    this.progressoSync.iniciarGenericoProgressoLocal();
 
     this.baseService.findAll(`${this.endpointPrincipal}/${base}/${esquema}`).subscribe({
       next: (res) => {
         this.loadingSincronizacao = false;
         this.loadingVerificacao = false;
 
-        if (res.errors.length > 0) {
+        if (res.errors?.length > 0) {
           this.listaErros = res.errors ?? [];
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Sincronização com pendências',
+            detail: `${this.listaErros.length} erro(s) em ${base}.${esquema} — veja o painel abaixo.`,
+          });
           return;
         }
 
-        this.router.navigate(['client/home']);
+        const duracaoMs = Date.now() - (this.syncStartedAt || Date.now());
+        const resumo = this.objeto.tabela
+          ? `${base} / ${esquema} / ${this.objeto.tabela}`
+          : `${base} / ${esquema}`;
+        const secs = Math.max(1, Math.round(duracaoMs / 1000));
+
+        this.progressoSync.marcarConcluido({
+          mensagem: 'Dados alinhados',
+          resumo,
+          duracaoMs,
+        });
 
         this.messageService.add({
           severity: 'success',
-          summary: 'Sucesso',
-          detail: 'Sincronização finalizada!',
+          summary: 'Dados alinhados',
+          detail: `${resumo} · ${secs}s`,
         });
+
+        setTimeout(() => this.router.navigate(['client/home']), 700);
       },
       error: (err) => {
         this.loadingSincronizacao = false;
         this.loadingVerificacao = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Falha nos dados',
+          detail: `Não foi possível sincronizar ${base}.${esquema}.`,
+        });
       },
     });
   }

@@ -139,8 +139,10 @@ export class Conexaoform {
         this.carregarConexoes();
         this.messageService.add({
           severity: 'success',
-          summary: 'Sucesso',
-          detail: 'Conexão salva com sucesso.',
+          summary: 'Conexão pronta',
+          detail: this.objeto.nm_conexao
+            ? `"${this.objeto.nm_conexao}" salva e disponível para sync.`
+            : 'Conexão salva e disponível para sync.',
         });
         this.oferecerSincronizacaoEstrutura();
       },
@@ -148,8 +150,8 @@ export class Conexaoform {
         this.salvando = false;
         this.messageService.add({
           severity: 'error',
-          summary: 'Erro',
-          detail: 'Não foi possível salvar a conexão.',
+          summary: 'Não foi possível salvar',
+          detail: 'Verifique os dados da conexão Cloud/Local e tente de novo.',
         });
         this.cd.markForCheck();
       },
@@ -168,15 +170,15 @@ export class Conexaoform {
         this.carregarConexoes();
         this.messageService.add({
           severity: 'success',
-          summary: 'Sucesso',
-          detail: 'Conexão definida como padrão.',
+          summary: 'Conexão padrão',
+          detail: `"${conexao.nm_conexao}" será usada nas sincronizações.`,
         });
       },
       error: () => {
         this.messageService.add({
           severity: 'error',
-          summary: 'Erro',
-          detail: 'Não foi possível definir a conexão como padrão.',
+          summary: 'Não foi possível definir o padrão',
+          detail: 'Tente novamente em instantes.',
         });
       },
     });
@@ -196,25 +198,25 @@ export class Conexaoform {
       acceptLabel: 'Excluir',
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-danger',
-      accept: () => this.confirmarRemocao(id),
+      accept: () => this.confirmarRemocao(id, conexao.nm_conexao),
     });
   }
 
-  private confirmarRemocao(id: string) {
+  private confirmarRemocao(id: string, nome?: string) {
     this.baseService.deleteById(this.endpoint, id as any).subscribe({
       next: () => {
         this.carregarConexoes();
         this.messageService.add({
           severity: 'success',
-          summary: 'Sucesso',
-          detail: 'Conexão excluída com sucesso.',
+          summary: 'Conexão removida',
+          detail: nome ? `"${nome}" foi excluída.` : 'A conexão foi excluída.',
         });
       },
       error: () => {
         this.messageService.add({
           severity: 'error',
-          summary: 'Erro',
-          detail: 'Não foi possível excluir a conexão.',
+          summary: 'Não foi possível excluir',
+          detail: 'A conexão pode estar em uso. Tente novamente.',
         });
       },
     });

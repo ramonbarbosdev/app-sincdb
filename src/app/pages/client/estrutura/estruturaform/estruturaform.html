@@ -104,7 +104,7 @@
         label="Verificar"
         icon="pi pi-search"
         (click)="verificar()"
-        styleClass="p-button-primary w-full sm:w-auto"
+        styleClass="p-button-primary w-full sm:w-auto action-press"
         [loading]="loadingVerificacao"
         [disabled]="!conexaoPadrao"
       ></p-button>
@@ -151,7 +151,7 @@
           label="Sincronizar"
           icon="pi pi-sync"
           (click)="execultarSincronizacao()"
-          styleClass="w-full sm:w-auto"
+          styleClass="w-full sm:w-auto action-press action-press-sync"
           [loading]="loadingSincronizacao"
           [disabled]="!conexaoPadrao"
         />
@@ -159,7 +159,7 @@
           label="Verificar/Sincronizar"
           icon="pi pi-sync"
           (click)="verificarEExecutar()"
-          styleClass="w-full sm:w-auto"
+          styleClass="w-full sm:w-auto action-press action-press-sync"
           [loading]="loadingSincronizacao"
           [disabled]="!conexaoPadrao"
         />

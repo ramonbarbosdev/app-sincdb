@@ -1,14 +1,26 @@
-<div class="mt-3 flex flex-col gap-2 w-full">
+<div class="mt-3 flex flex-col gap-2 w-full sync-progress">
+  <div *ngIf="concluido" class="sync-success" role="status">
+    <div class="sync-success-icon">
+      <i class="pi pi-check"></i>
+    </div>
+    <div class="sync-success-copy">
+      <div class="sync-success-title">{{ mensagem || 'Sincronização concluída' }}</div>
+      <div class="sync-success-meta" *ngIf="resumo || duracaoLabel">
+        <span *ngIf="resumo">{{ resumo }}</span>
+        <span *ngIf="resumo && duracaoLabel"> · </span>
+        <span *ngIf="duracaoLabel">{{ duracaoLabel }}</span>
+      </div>
+    </div>
+  </div>
+
   <p-progressbar
+    *ngIf="!concluido"
     [value]="progresso"
     [showValue]="false"
+    styleClass="sync-progress-bar"
   >
     <ng-template pTemplate="content">
-      <span >{{ progresso }}%</span>
+      <span>{{ progresso }}%</span>
     </ng-template>
   </p-progressbar>
-<!-- 
-  <p *ngIf="mensagem" class="status-text mt-2">
-    {{ mensagem }}
-  </p> -->
 </div>
