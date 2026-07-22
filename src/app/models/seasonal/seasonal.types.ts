@@ -76,7 +76,7 @@ export const SEASONAL_OPT_OUT_KEY = 'sincdb.seasonal.optout';
 export const SEASONAL_CACHE_KEY = 'sincdb.seasonal.config';
 
 export const DEFAULT_SEASONAL_CONFIG: SeasonalAdminConfig = {
-  enabled: true,
+  enabled: false,
   mode: 'auto',
   manualTheme: 'none',
   customMessage: '',
