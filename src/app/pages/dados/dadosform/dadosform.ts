@@ -78,6 +78,10 @@ export class Dadosform {
     }
   }
 
+  irParaConexao() {
+    this.router.navigate(['/client/conexao']);
+  }
+
   processarBase(item: any) {
     if (!item) return;
 
@@ -164,6 +168,7 @@ export class Dadosform {
 
         if (state.esquema) {
           this.objeto.esquema = state.esquema;
+          this.obterTabela(this.objeto.esquema);
         }
         else {
          if (this.listaEsquema?.length > 1 ) {
@@ -197,7 +202,13 @@ export class Dadosform {
             return item;
           });
 
+          const state = history.state;
+          if (state?.tabela) {
+            this.objeto.tabela = state.tabela;
+          }
+
           this.loadingTabela = false;
+          this.cd.markForCheck();
         },
         error: (err) => {
           this.loadingTabela = false;
@@ -224,7 +235,7 @@ export class Dadosform {
   }
 
   verificar() {
-    if (!this.validarItens()) return;
+    if (!this.conexaoPadrao || !this.validarItens()) return;
 
     this.listaErros = [];
 
@@ -267,7 +278,7 @@ export class Dadosform {
   }
 
   verificarEExecutar() {
-    if (!this.validarItens()) return;
+    if (!this.conexaoPadrao || !this.validarItens()) return;
     this.listaErros = [];
 
     const base = this.objeto.base;
@@ -295,7 +306,7 @@ export class Dadosform {
   }
 
   execultarSincronizacao() {
-    if (!this.validarItens()) return;
+    if (!this.conexaoPadrao || !this.validarItens()) return;
 
     let base = this.objeto.base;
     let esquema = this.objeto.esquema;

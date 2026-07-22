@@ -9,20 +9,29 @@
   </ng-template>
 
   <ng-template #content>
-    <div class="mb-4 p-3 border border-surface rounded-md flex items-center gap-3">
-      <i class="pi pi-server text-primary"></i>
-      <div class="flex-1">
-        <div class="font-medium">
-          {{ conexaoPadrao?.nm_conexao || 'Nenhuma conexao padrao configurada' }}
-        </div>
-        <div class="text-sm text-muted-color" *ngIf="conexaoPadrao">
-          Cloud: {{ conexaoPadrao.db_cloud_host || '-' }} | Local:
-          {{ conexaoPadrao.db_local_host || '-' }}
-        </div>
-        <div class="text-sm text-muted-color" *ngIf="!conexaoPadrao && !loadingConexaoPadrao">
-          Cadastre uma conexao e marque-a como padrao antes de sincronizar.
+    <div class="mb-4 p-3 border border-surface rounded-md flex flex-col sm:flex-row sm:items-center gap-3">
+      <div class="flex items-center gap-3 flex-1">
+        <i class="pi pi-server text-primary"></i>
+        <div class="flex-1">
+          <div class="font-medium">
+            {{ conexaoPadrao?.nm_conexao || 'Nenhuma conexão padrão configurada' }}
+          </div>
+          <div class="text-sm text-muted-color" *ngIf="conexaoPadrao">
+            Cloud: {{ conexaoPadrao.db_cloud_host || '-' }} | Local:
+            {{ conexaoPadrao.db_local_host || '-' }}
+          </div>
+          <div class="text-sm text-muted-color" *ngIf="!conexaoPadrao && !loadingConexaoPadrao">
+            Cadastre uma conexão e marque-a como padrão antes de sincronizar.
+          </div>
         </div>
       </div>
+      <p-button
+        *ngIf="!conexaoPadrao && !loadingConexaoPadrao"
+        label="Cadastrar conexão"
+        icon="pi pi-database"
+        size="small"
+        (click)="irParaConexao()"
+      />
     </div>
 
     <div class="flex-row-responsive w-full">
@@ -97,6 +106,7 @@
         (click)="verificar()"
         styleClass="p-button-primary w-full sm:w-auto"
         [loading]="loadingVerificacao"
+        [disabled]="!conexaoPadrao"
       ></p-button>
       </app-layout-campo>
     </div>
@@ -143,6 +153,7 @@
           (click)="execultarSincronizacao()"
           styleClass="w-full sm:w-auto"
           [loading]="loadingSincronizacao"
+          [disabled]="!conexaoPadrao"
         />
         <p-button
           label="Verificar/Sincronizar"
@@ -150,6 +161,7 @@
           (click)="verificarEExecutar()"
           styleClass="w-full sm:w-auto"
           [loading]="loadingSincronizacao"
+          [disabled]="!conexaoPadrao"
         />
       </div>
     </div>

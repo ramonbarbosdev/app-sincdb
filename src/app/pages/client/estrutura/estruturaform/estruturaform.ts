@@ -12,7 +12,7 @@ import { SyncProgressoBar } from '../../../../components/sync-progresso-bar/sync
 import { ProgressoSyncService } from '../../../../services/progresso-sync-service';
 import { SyncErros } from '../../../../components/sync-erros/sync-erros';
 import { Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { Operacao } from '../../../../models/operacao';
 import { OperacoeSchema } from '../../../../schema/operacao-schema';
 import { SyncConsole } from "../../../../components/sync-console/sync-console";
@@ -52,6 +52,7 @@ export class Estruturaform {
   private cd = inject(ChangeDetectorRef);
   private progressoSync = inject(ProgressoSyncService);
   private messageService = inject(MessageService);
+  private confirmationService = inject(ConfirmationService);
   private ws = inject(WebsocketService);
   router = inject(Router);
   endpointPrincipal = 'estrutura'
@@ -85,6 +86,10 @@ export class Estruturaform {
 
   abrirDetalhes() {
     this.visibleDetail = true;
+  }
+
+  irParaConexao() {
+    this.router.navigate(['/client/conexao']);
   }
 
   processarBase(item: any) {
@@ -234,7 +239,7 @@ export class Estruturaform {
   }
 
   verificar() {
-    if (!this.validarItens()) return;
+    if (!this.conexaoPadrao || !this.validarItens()) return;
 
     this.listaErros = [];
 
@@ -278,7 +283,7 @@ export class Estruturaform {
   }
 
   verificarEExecutar() {
-    if (!this.validarItens()) return;
+    if (!this.conexaoPadrao || !this.validarItens()) return;
     this.listaErros = [];
 
     const base = this.objeto.base;
@@ -307,7 +312,7 @@ export class Estruturaform {
   }
 
   execultarSincronizacao() {
-    if (!this.validarItens()) return;
+    if (!this.conexaoPadrao || !this.validarItens()) return;
 
     let base = this.objeto.base;
     let esquema = this.objeto.esquema;
@@ -327,18 +332,45 @@ export class Estruturaform {
           return;
         }
 
-        this.router.navigate(['client/home']);
-
         this.messageService.add({
           severity: 'success',
           summary: 'Sucesso',
-          detail: 'Sincronização finalizada!',
+          detail: 'Sincronização de estrutura finalizada!',
         });
+        this.oferecerSincronizacaoDados();
       },
       error: (err) => {
         this.loadingSincronizacao = false;
         this.loadingVerificacao = false;
       },
+    });
+  }
+
+  private oferecerSincronizacaoDados() {
+    const state: { base: string; esquema: string; tabela?: string } = {
+      base: this.objeto.base,
+      esquema: this.objeto.esquema,
+    };
+
+    if (this.objeto.tabela) {
+      state.tabela = this.objeto.tabela;
+    }
+
+    const escopo = this.objeto.tabela
+      ? `${this.objeto.base} / ${this.objeto.esquema} / ${this.objeto.tabela}`
+      : `${this.objeto.base} / ${this.objeto.esquema}`;
+
+    this.confirmationService.confirm({
+      message: `Estrutura sincronizada. Deseja sincronizar os dados agora (${escopo})?`,
+      header: 'Próximo passo',
+      icon: 'pi pi-database',
+      acceptLabel: 'Sincronizar dados',
+      rejectLabel: 'Agora não',
+      accept: () =>
+        this.router.navigate(['/client/dados'], {
+          state,
+        }),
+      reject: () => this.router.navigate(['/client/home']),
     });
   }
 

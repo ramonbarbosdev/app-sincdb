@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -10,6 +11,8 @@ import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { TooltipModule } from 'primeng/tooltip';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { LayoutCampo } from '../../../../components/layout-campo/layout-campo';
 import { BaseService } from '../../../../services/base.service';
 import { ConexaoSchema } from '../../../../schema/conexao-schema';
@@ -30,6 +33,7 @@ import { UploadCertiicado } from '../upload-certiicado/upload-certiicado';
     TableModule,
     TagModule,
     ToggleSwitchModule,
+    TooltipModule,
     UploadCertiicado,
   ],
   templateUrl: './conexaoform.html',
@@ -48,6 +52,9 @@ export class Conexaoform {
 
   private baseService = inject(BaseService);
   private cd = inject(ChangeDetectorRef);
+  private confirmationService = inject(ConfirmationService);
+  private messageService = inject(MessageService);
+  private router = inject(Router);
   private endpoint = 'conexao';
 
   ngOnInit(): void {
@@ -64,6 +71,11 @@ export class Conexaoform {
       },
       error: () => {
         this.loading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erro',
+          detail: 'Não foi possível carregar as conexões.',
+        });
         this.cd.markForCheck();
       },
     });
@@ -98,6 +110,11 @@ export class Conexaoform {
       },
       error: () => {
         this.carregandoConexao = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erro',
+          detail: 'Não foi possível carregar a conexão.',
+        });
         this.cd.markForCheck();
       }
     });
@@ -120,9 +137,20 @@ export class Conexaoform {
         this.salvando = false;
         this.dialogVisible = false;
         this.carregarConexoes();
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Sucesso',
+          detail: 'Conexão salva com sucesso.',
+        });
+        this.oferecerSincronizacaoEstrutura();
       },
       error: () => {
         this.salvando = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erro',
+          detail: 'Não foi possível salvar a conexão.',
+        });
         this.cd.markForCheck();
       },
     });
@@ -136,7 +164,21 @@ export class Conexaoform {
     }
 
     this.baseService.update(`${this.endpoint}/${id}/padrao`, {}).subscribe({
-      next: () => this.carregarConexoes(),
+      next: () => {
+        this.carregarConexoes();
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Sucesso',
+          detail: 'Conexão definida como padrão.',
+        });
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erro',
+          detail: 'Não foi possível definir a conexão como padrão.',
+        });
+      },
     });
   }
 
@@ -147,8 +189,45 @@ export class Conexaoform {
       return;
     }
 
+    this.confirmationService.confirm({
+      message: `Tem certeza de que deseja excluir a conexão "${conexao.nm_conexao}"?`,
+      header: 'Confirmar exclusão',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Excluir',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => this.confirmarRemocao(id),
+    });
+  }
+
+  private confirmarRemocao(id: string) {
     this.baseService.deleteById(this.endpoint, id as any).subscribe({
-      next: () => this.carregarConexoes(),
+      next: () => {
+        this.carregarConexoes();
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Sucesso',
+          detail: 'Conexão excluída com sucesso.',
+        });
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erro',
+          detail: 'Não foi possível excluir a conexão.',
+        });
+      },
+    });
+  }
+
+  private oferecerSincronizacaoEstrutura() {
+    this.confirmationService.confirm({
+      message: 'Conexão salva. Deseja sincronizar a estrutura agora?',
+      header: 'Próximo passo',
+      icon: 'pi pi-sync',
+      acceptLabel: 'Sincronizar estrutura',
+      rejectLabel: 'Agora não',
+      accept: () => this.router.navigate(['/client/estrutura']),
     });
   }
 

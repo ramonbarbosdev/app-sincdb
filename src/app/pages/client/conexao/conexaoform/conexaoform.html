@@ -82,6 +82,8 @@
                 icon="pi pi-pencil"
                 [text]="true"
                 [loading]="carregandoConexao"
+                pTooltip="Editar"
+                tooltipPosition="top"
                 (click)="editarConexao(conexao)"
               />
 
@@ -89,6 +91,8 @@
                 icon="pi pi-star"
                 [text]="true"
                 [disabled]="conexao.fl_padrao"
+                pTooltip="Tornar padrão"
+                tooltipPosition="top"
                 (click)="marcarPadrao(conexao)"
               />
 
@@ -96,6 +100,8 @@
                 icon="pi pi-trash"
                 severity="danger"
                 [text]="true"
+                pTooltip="Excluir"
+                tooltipPosition="top"
                 (click)="removerConexao(conexao)"
               />
             </div>

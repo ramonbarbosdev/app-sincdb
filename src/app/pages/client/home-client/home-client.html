@@ -10,10 +10,17 @@
       Automação, segurança e desempenho para manter suas informações sempre consistentes, em
       qualquer ambiente.
     </div>
-    <!-- <button pButton [rounded]="true" class="mt-4">
-      <i pButtonIcon class="pi pi-cloud-upload"></i>
-      <span pButtonLabel>Começar Agora</span>
-    </button> -->
+    <div *ngIf="!loadingConexao && !temConexaoPadrao" class="mt-6 flex flex-col items-center gap-3">
+      <p class="text-surface-600 dark:text-surface-200 text-base">
+        Cadastre uma conexão padrão para começar a sincronizar.
+      </p>
+      <p-button
+        label="Cadastrar conexão"
+        icon="pi pi-database"
+        [rounded]="true"
+        (click)="irParaConexao()"
+      />
+    </div>
   </div>
 </div>
 

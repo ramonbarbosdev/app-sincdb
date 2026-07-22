@@ -14,7 +14,7 @@
     </div>
   </ng-template>
 
-  <p-table [value]="erros" responsiveLayout="scroll">
+  <p-table [value]="errosNormalizados" responsiveLayout="scroll">
     <ng-template pTemplate="header">
       <tr>
         <th>Erro</th>
@@ -24,12 +24,12 @@
 
     <ng-template pTemplate="body" let-erro>
       <tr>
-        <td>{{ erro }}</td>
+        <td>{{ erro.mensagem }}</td>
         <td>
           <p-button
-            icon="pi pi-eye"
+            [icon]="erro.showDetalhes ? 'pi pi-eye-slash' : 'pi pi-eye'"
             size="small"
-            label="Detalhes"
+            [label]="erro.showDetalhes ? 'Ocultar' : 'Detalhes'"
             severity="secondary"
             (click)="toggleDetalhes(erro)"
           ></p-button>
@@ -37,8 +37,8 @@
       </tr>
 
       <tr *ngIf="erro.showDetalhes">
-        <td colspan="3" class="bg-red-100 p-3 text-sm text-gray-900">
-          <strong>SQL:</strong>
+        <td colspan="2" class="bg-red-100 dark:bg-red-950 p-3 text-sm text-gray-900 dark:text-gray-100">
+          <strong>Detalhes:</strong>
           <pre style="white-space: pre-wrap;">{{ erro.sql }}</pre>
         </td>
       </tr>
