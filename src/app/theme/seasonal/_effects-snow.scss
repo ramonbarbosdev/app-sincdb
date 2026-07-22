@@ -1,0 +1,17 @@
+/* Ambient snow — data-season-ambient="snow" */
+
+html[data-season-ambient='snow'] .layout-topbar {
+  background-image:
+    radial-gradient(circle at 12% 35%, rgba(255, 255, 255, 0.16) 0 1px, transparent 2px),
+    radial-gradient(circle at 38% 55%, rgba(255, 255, 255, 0.12) 0 1px, transparent 2px),
+    radial-gradient(circle at 62% 28%, rgba(255, 255, 255, 0.14) 0 1px, transparent 2px),
+    radial-gradient(circle at 84% 48%, rgba(255, 255, 255, 0.1) 0 1px, transparent 2px),
+    radial-gradient(circle at 22% 70%, rgba(255, 255, 255, 0.09) 0 1px, transparent 2px);
+  background-size: 140px 48px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-season-ambient='snow'] .layout-topbar {
+    background-image: none;
+  }
+}

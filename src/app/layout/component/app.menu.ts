@@ -56,7 +56,12 @@ export class AppMenu {
           {
             label: 'Parâmetros',
             icon: 'pi pi-fw pi-bookmark',
-            routerLink: ['parametro'],
+            routerLink: ['/dev/parametro'],
+          },
+          {
+            label: 'Experiências sazonais',
+            icon: 'pi pi-fw pi-sparkles',
+            routerLink: ['/dev/sazonal'],
           },
         ],
       });

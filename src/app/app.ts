@@ -6,6 +6,7 @@ import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { UpdateSystem } from "./components/update-system/update-system";
+import { SeasonalThemeService } from './services/seasonal-theme.service';
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, ButtonModule, ToastModule, ConfirmDialogModule, UpdateSystem],
@@ -16,6 +17,7 @@ export class App {
   protected readonly title = signal('app-sincdb');
 
   baseService = inject(BaseService);
+  private seasonal = inject(SeasonalThemeService);
 
   waitForBackend() {
     const checkInterval = 1000; // 1 segundo
@@ -58,6 +60,7 @@ export class App {
   ngOnInit() {
 
        this.waitForBackend();
+    this.seasonal.init();
     this.primeng.ripple.set(true);
 
     this.primeng.setTranslation({

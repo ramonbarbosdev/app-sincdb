@@ -21,6 +21,8 @@ import { ButtonModule } from 'primeng/button';
 import { AvatarPerfil } from "../../../components/avatar-perfil/avatar-perfil";
 import { ConverterNomeRole } from '../../../utils/ConverterNomeRole';
 import { PerfilSchema } from '../../../schema/perfil-schema';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { SeasonalThemeService } from '../../../services/seasonal-theme.service';
 
 @Component({
   selector: 'app-perfil',
@@ -34,7 +36,8 @@ import { PerfilSchema } from '../../../schema/perfil-schema';
     PasswordModule,
     NgxMaskDirective,
     ButtonModule,
-    AvatarPerfil
+    AvatarPerfil,
+    ToggleSwitchModule,
 ],
   templateUrl: './perfil.html',
   styleUrl: './perfil.scss',
@@ -47,9 +50,17 @@ export class Perfil {
   private baseService = inject(BaseService);
   private cd = inject(ChangeDetectorRef);
   private auth = inject(AuthService);
+  private seasonal = inject(SeasonalThemeService);
   private endpoint = 'perfil';
 
   selectedFile: File | null = null;
+  experienciasSazonais = !this.seasonal.optedOut();
+
+  onToggleSazonal(value: boolean) {
+    this.experienciasSazonais = value;
+    this.seasonal.setOptOut(!value);
+    this.cd.markForCheck();
+  }
 
   ngOnInit(): void {
     this.onEdit();

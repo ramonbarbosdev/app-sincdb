@@ -1,0 +1,38 @@
+/* Efeito ambient: chuva leve/moderada, restrita à faixa da topbar */
+html[data-season-ambient='rain'] .layout-topbar {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  html[data-season-ambient='rain'] .layout-topbar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.35;
+    background-image: repeating-linear-gradient(
+      100deg,
+      transparent 0,
+      transparent 18px,
+      rgba(255, 255, 255, 0.55) 18px,
+      rgba(255, 255, 255, 0.55) 19px,
+      transparent 19px,
+      transparent 46px
+    );
+    background-size: 60px 140%;
+    animation: season-rain-fall 0.9s linear infinite;
+  }
+  
+  @keyframes season-rain-fall {
+    from { background-position: 0 -60px; }
+    to   { background-position: 0 60px; }
+  }
+  
+  /* Respeita prefers-reduced-motion: chuva fica estática, sem animação */
+  @media (prefers-reduced-motion: reduce) {
+    html[data-season-ambient='rain'] .layout-topbar::before {
+      animation: none;
+      opacity: 0.2;
+    }
+  }

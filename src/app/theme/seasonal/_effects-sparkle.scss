@@ -1,0 +1,27 @@
+/* Ambient sparkle — data-season-ambient="sparkle" */
+
+html[data-season-ambient='sparkle'] .layout-topbar {
+  background-image:
+    radial-gradient(circle at 15% 40%, color-mix(in srgb, var(--season-accent) 70%, white) 0 1.2px, transparent 2px),
+    radial-gradient(circle at 42% 25%, rgba(255, 255, 255, 0.55) 0 1px, transparent 2px),
+    radial-gradient(circle at 68% 55%, color-mix(in srgb, var(--season-accent) 60%, white) 0 1.2px, transparent 2px),
+    radial-gradient(circle at 88% 35%, rgba(255, 255, 255, 0.4) 0 1px, transparent 2px);
+  background-size: 120px 48px;
+  animation: season-sparkle 4.5s ease-in-out infinite;
+}
+
+@keyframes season-sparkle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.72;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-season-ambient='sparkle'] .layout-topbar {
+    animation: none;
+  }
+}

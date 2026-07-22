@@ -1,0 +1,17 @@
+/* Ambient petals — data-season-ambient="petals" */
+
+html[data-season-ambient='petals'] .layout-topbar {
+  background-image:
+    radial-gradient(ellipse 3px 5px at 18% 40%, color-mix(in srgb, var(--season-accent) 55%, white) 0 55%, transparent 60%),
+    radial-gradient(ellipse 4px 6px at 48% 55%, color-mix(in srgb, var(--season-accent) 40%, white) 0 55%, transparent 60%),
+    radial-gradient(ellipse 3px 5px at 72% 30%, color-mix(in srgb, var(--season-accent) 50%, white) 0 55%, transparent 60%),
+    radial-gradient(ellipse 2px 4px at 90% 60%, color-mix(in srgb, var(--season-accent) 35%, white) 0 55%, transparent 60%);
+  background-size: 160px 52px;
+  background-repeat: repeat-x;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-season-ambient='petals'] .layout-topbar {
+    background-image: none;
+  }
+}

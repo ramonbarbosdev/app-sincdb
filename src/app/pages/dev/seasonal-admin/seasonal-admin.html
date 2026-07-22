@@ -1,0 +1,196 @@
+<p-card styleClass="w-full max-w-4xl mx-auto my-6">
+  <ng-template pTemplate="header">
+    <div class="p-4 border-b border-surface">
+      <p class="seasonal-eyebrow m-0">Administração</p>
+      <h5 class="m-0 text-xl font-semibold">Experiências sazonais</h5>
+      <p class="text-muted-color text-sm mt-2 mb-0">
+        Aqui você só liga/desliga e escolhe o modo. Visual e slots vivem no código.
+        Usuários podem desativar no perfil.
+      </p>
+    </div>
+  </ng-template>
+
+  <div class="flex flex-col gap-5 p-1" *ngIf="!loading">
+    <div class="flex items-center justify-between gap-3">
+      <div>
+        <div class="font-semibold">Ativar experiências</div>
+        <div class="text-sm text-muted-color">
+          Quando desligado, nenhum tema sazonal aparece.
+        </div>
+      </div>
+      <p-toggleswitch [(ngModel)]="form.enabled" name="enabled"></p-toggleswitch>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2">
+      <div>
+        <label class="block text-sm font-medium mb-2">Modo</label>
+        <p-select
+          class="w-full"
+          [options]="modeOptions"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="form.mode"
+          name="mode"
+        />
+      </div>
+
+      <div *ngIf="form.mode === 'manual'">
+        <label class="block text-sm font-medium mb-2">Tema forçado</label>
+        <p-select
+          class="w-full"
+          [options]="themeOptions"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="form.manualTheme"
+          name="manualTheme"
+        />
+      </div>
+
+      <div *ngIf="form.mode === 'auto'" class="md:col-span-2">
+        <div class="auto-hint">
+          Tema automático hoje:
+          <p-tag [value]="autoThemeLabel" severity="secondary"></p-tag>
+        </div>
+      </div>
+    </div>
+
+    <div class="theme-grid">
+      <div class="theme-card" *ngFor="let theme of themes" [style.--swatch]="theme.accent">
+        <div class="theme-swatch"></div>
+        <div>
+          <div class="font-semibold">{{ theme.label }}</div>
+          <div class="text-sm text-muted-color">{{ theme.description }}</div>
+          <div class="theme-slots-hint text-sm">
+            logo: {{ theme.slots.logo.overlay }} · ambient: {{ theme.slots.ambient.effect }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="preview-row">
+      <div>
+        <label class="block text-sm font-medium mb-2">Pré-visualizar tema</label>
+        <p-select
+          class="w-full"
+          [options]="previewOptions"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="previewThemeId"
+          name="previewThemeId"
+        />
+      </div>
+      <div class="preview-actions">
+        <p-button
+          label="Pré-visualizar"
+          icon="pi pi-eye"
+          [outlined]="true"
+          (click)="onPreview()"
+        />
+        <p-button
+          label="Limpar preview"
+          icon="pi pi-times"
+          [text]="true"
+          severity="secondary"
+          (click)="onClearPreview()"
+        />
+      </div>
+    </div>
+
+    <section class="howto-panel">
+      <h6 class="howto-title m-0">Como personalizar no código</h6>
+      <p class="text-sm text-muted-color mt-2 mb-3">
+        Não há editor de slots neste painel. Altere os arquivos abaixo e faça deploy/reload.
+      </p>
+
+      <ol class="howto-list">
+        <li>
+          <strong>Defaults do tema</strong> — edite
+          <code>src/app/models/seasonal/themes/*.theme.ts</code>
+          (ex.: <code>natal.theme.ts</code>). Em <code>slots</code> você define:
+          <ul>
+            <li><code>logo.overlay</code>: <code>none</code> | <code>hat</code> | <code>badge</code></li>
+            <li><code>topbar.accent</code>: cor hex + ligado/desligado</li>
+            <li><code>ambient.effect</code>: <code>none</code> | <code>snow</code> | <code>flags</code> | <code>petals</code> | <code>sparkle</code></li>
+            <li><code>greeting.message</code> / <code>icon</code></li>
+          </ul>
+        </li>
+        <li>
+          <strong>Janela de datas</strong> — no mesmo arquivo, campo <code>windows</code>
+          (mês/dia início e fim) controla o modo automático.
+        </li>
+        <li>
+          <strong>Visual do efeito</strong> — SCSS em
+          <code>src/app/theme/seasonal/_effects-*.scss</code>
+          e overlays de logo em <code>_logo-overlays.scss</code>.
+          Seletores usam <code>data-season-ambient</code> / <code>data-season-logo</code>.
+        </li>
+        <li>
+          <strong>Novo efeito</strong> —
+          1) union em <code>seasonal.types.ts</code>
+          → 2) arquivo <code>_effects-novo.scss</code> + import em <code>seasonal-theme.scss</code>
+          → 3) use o efeito no <code>slots.ambient</code> do tema.
+        </li>
+        <li>
+          <strong>Novo tema</strong> —
+          crie <code>meu-tema.theme.ts</code>, registre em
+          <code>models/seasonal/themes/index.ts</code> (lista + prioridade).
+        </li>
+      </ol>
+
+      <div class="structure-block">
+        <div class="font-semibold mb-2">Estrutura por arquivo</div>
+        <div class="structure-grid">
+          <article class="structure-card">
+            <div class="structure-label">1. Tema TS</div>
+            <code class="structure-path">models/seasonal/themes/*.theme.ts</code>
+            <pre class="structure-code">{{ themeFileStructure }}</pre>
+          </article>
+          <article class="structure-card">
+            <div class="structure-label">2. Efeito SCSS</div>
+            <code class="structure-path">theme/seasonal/_effects-*.scss</code>
+            <pre class="structure-code">{{ effectFileStructure }}</pre>
+          </article>
+          <article class="structure-card">
+            <div class="structure-label">3. Logo SCSS</div>
+            <code class="structure-path">theme/seasonal/_logo-overlays.scss</code>
+            <pre class="structure-code">{{ logoFileStructure }}</pre>
+          </article>
+          <article class="structure-card">
+            <div class="structure-label">4. Registro</div>
+            <code class="structure-path">themes/index.ts + seasonal.types.ts</code>
+            <pre class="structure-code">{{ registerFileStructure }}</pre>
+          </article>
+        </div>
+      </div>
+
+      <div class="prompt-block">
+        <div class="prompt-block-header">
+          <div>
+            <div class="font-semibold">Prompt para pedir à IA</div>
+            <div class="text-sm text-muted-color">
+              Já inclui a estrutura de cada arquivo. Complete os campos entre colchetes.
+            </div>
+          </div>
+          <p-button
+            [label]="promptCopied ? 'Copiado' : 'Copiar prompt'"
+            [icon]="promptCopied ? 'pi pi-check' : 'pi pi-copy'"
+            [outlined]="true"
+            size="small"
+            (click)="copyAiPrompt()"
+          />
+        </div>
+        <pre class="prompt-example">{{ aiPromptExample }}</pre>
+      </div>
+    </section>
+
+    <div class="flex flex-wrap gap-2 justify-end">
+      <p-button
+        label="Salvar"
+        icon="pi pi-check"
+        styleClass="action-press"
+        [loading]="saving"
+        (click)="salvar()"
+      />
+    </div>
+  </div>
+</p-card>

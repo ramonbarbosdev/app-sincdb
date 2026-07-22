@@ -12,6 +12,7 @@ import { Estruturaform } from './pages/client/estrutura/estruturaform/estruturaf
 import { Dadosform } from './pages/dados/dadosform/dadosform';
 import { Perfil } from './pages/client/perfil/perfil';
 import { ParametroMasterList } from './pages/dev/parametros/parametro-master-list/parametro-master-list';
+import { SeasonalAdminPage } from './pages/dev/seasonal-admin/seasonal-admin';
 import { ExploradorVisualPage } from './features/explorador-visual/pages/explorador-visual.page';
 import { SqlEditorPage } from './features/sql-editor/pages/sql-editor.page';
 
@@ -31,6 +32,7 @@ export const routes: Routes = [
       { path: 'planoassinatura', component: Planoassinaturalist },
       { path: 'empresa', component: Empresalist },
       { path: 'parametro', component: ParametroMasterList },
+      { path: 'sazonal', component: SeasonalAdminPage },
     ],
   },
   {

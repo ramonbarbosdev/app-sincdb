@@ -1,0 +1,73 @@
+/* Overlays de logo — data-season-logo */
+
+html[data-season-logo='hat'] .seasonal-logo-wrap::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 8px;
+  width: 16px;
+  height: 14px;
+  background: var(--season-accent, #c45c48);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  border-radius: 2px 2px 0 0;
+  z-index: 2;
+  pointer-events: none;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.35) inset;
+}
+
+html[data-season-logo='hat'] .seasonal-logo-wrap::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 6px;
+  width: 20px;
+  height: 4px;
+  background: #f5f5f5;
+  border-radius: 2px;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.95;
+}
+
+html[data-season-logo='badge'] .seasonal-logo-wrap::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--season-accent, #7f5af0);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--season-accent) 35%, transparent);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Dias de Chuva — nuvem + gota sobre o logo (slot "hat"), escopado à classe
+   do tema para não conflitar com outros temas que também usam overlay "hat" */
+   html.seasonal-dias-de-chuva[data-season-logo='hat'] .seasonal-logo-wrap::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 22px;
+    height: 12px;
+    background: #8FA3B3;
+    border-radius: 10px 10px 0 0;
+    box-shadow: -7px 3px 0 -1px #8FA3B3, 7px 3px 0 -1px #8FA3B3;
+    opacity: 0.9;
+  }
+  
+  html.seasonal-dias-de-chuva[data-season-logo='hat'] .seasonal-logo-wrap::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    width: 3px;
+    height: 7px;
+    background: #5C7A99;
+    border-radius: 0 0 3px 3px;
+    transform: translateX(-50%) rotate(3deg);
+    opacity: 0.85;
+  }

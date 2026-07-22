@@ -9,6 +9,7 @@ import { LayoutService } from '../service/layout.service';
 import { LoadingService } from '../../services/loading.service';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ProductTipBanner } from '../../components/product-tip-banner/product-tip-banner';
+import { SeasonalGreeting } from '../../components/seasonal-greeting/seasonal-greeting';
 @Component({
   selector: 'app-layout',
   standalone: true,
@@ -20,12 +21,14 @@ import { ProductTipBanner } from '../../components/product-tip-banner/product-ti
     AppFooter,
     ProgressSpinnerModule,
     ProductTipBanner,
+    SeasonalGreeting,
   ],
   template: `
     <div class="layout-wrapper" [ngClass]="containerClass">
       <app-topbar></app-topbar>
       <app-sidebar></app-sidebar>
       <div class="layout-main-container" style="position: relative;">
+        <app-seasonal-greeting></app-seasonal-greeting>
         <app-product-tip-banner></app-product-tip-banner>
         <div class="layout-main" style="position: relative;">
           <router-outlet></router-outlet>

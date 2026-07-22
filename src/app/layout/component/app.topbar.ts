@@ -29,7 +29,7 @@ import { UpdateService } from '../../services/update.service';
         <i class="pi pi-bars"></i>
       </button>
       <a class="layout-topbar-logo" routerLink="/client/home">
-        <span class="ml-10">
+        <span class="ml-10 seasonal-logo-wrap">
           <img
             *ngIf="!layoutService.isDarkTheme()"
             src="/logo.png"

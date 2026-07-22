@@ -1,0 +1,28 @@
+/* Ambient flags — data-season-ambient="flags" */
+
+html[data-season-ambient='flags'] .layout-topbar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--season-accent) 0 10px,
+    transparent 10px 14px,
+    #7f5af0 14px 24px,
+    transparent 24px 28px,
+    #2cb67d 28px 38px,
+    transparent 38px 42px
+  );
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-season-ambient='flags'] .layout-topbar::before {
+    opacity: 0.35;
+  }
+}

@@ -111,6 +111,21 @@
         />
       </app-layout-campo>
     </div>
+
+    <div class="flex-row-responsive w-full mt-2">
+      <app-layout-campo [label]="'Experiências sazonais:'" [width]="'w-full'">
+        <div class="flex items-center gap-3 h-10">
+          <p-toggleswitch
+            [ngModel]="experienciasSazonais"
+            (ngModelChange)="onToggleSazonal($event)"
+            name="experienciasSazonais"
+          />
+          <span class="text-sm text-muted-color">
+            Mostrar detalhes discretos de datas comemorativas (Natal, Ano Novo…)
+          </span>
+        </div>
+      </app-layout-campo>
+    </div>
   </ng-template>
 
   <!-- FOOTER -->
