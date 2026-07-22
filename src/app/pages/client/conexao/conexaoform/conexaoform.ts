@@ -45,7 +45,6 @@ export class Conexaoform {
   public salvando = false;
   public carregandoConexao = false;
   public senhaCloudProtegidaPorCertificado = false;
-  public senhaLocalProtegidaPorCertificado = false;
 
   private baseService = inject(BaseService);
   private cd = inject(ChangeDetectorRef);
@@ -300,11 +299,9 @@ export class Conexaoform {
     }
 
     this.senhaCloudProtegidaPorCertificado = !!conexao.db_cloud_password;
-    this.senhaLocalProtegidaPorCertificado = !!conexao.db_local_password;
   }
 
   private limparProtecaoSenhaCertificado() {
     this.senhaCloudProtegidaPorCertificado = false;
-    this.senhaLocalProtegidaPorCertificado = false;
   }
 }
