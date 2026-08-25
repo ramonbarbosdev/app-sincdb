@@ -247,6 +247,10 @@ export class HomeClient {
     }
   }
 
+  irParaMapaSincronizacao() {
+    this.router.navigate(['/client/sincronizacao-diagrama']);
+  }
+
   private encurtarHost(host?: string): string {
     if (!host) {
       return '—';

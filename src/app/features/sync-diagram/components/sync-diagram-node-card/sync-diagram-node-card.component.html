@@ -1,0 +1,98 @@
+<div
+  class="diagram-node-wrap"
+  [class.kind-bases]="node.kind === 'bases'"
+  [class.kind-schemas]="node.kind === 'schemas'"
+  [class.kind-tables]="node.kind === 'tables'"
+>
+  <div class="diagram-node" [class.is-active-path]="node.selectedItemId">
+    <header class="diagram-node-header" fDragHandle>
+      <div class="diagram-node-title">
+        <span class="diagram-icon">{{ iconLabel(node.kind) }}</span>
+        <div>
+          <strong>{{ node.title }}</strong>
+          <small *ngIf="node.subtitle">{{ node.subtitle }}</small>
+        </div>
+      </div>
+      <span class="diagram-node-badge" *ngIf="node.itemCount != null">{{ node.itemCount }}</span>
+    </header>
+
+    <div class="diagram-node-filter">
+      <input
+        type="search"
+        class="diagram-filter-input"
+        placeholder="Filtrar..."
+        [ngModel]="node.filter"
+        (ngModelChange)="filterChange.emit($event)"
+      />
+    </div>
+
+    <div class="diagram-node-body">
+      <div class="diagram-skeleton" *ngIf="node.loading">
+        <span class="skeleton-line"></span>
+        <span class="skeleton-line"></span>
+        <span class="skeleton-line"></span>
+        <span class="skeleton-line"></span>
+      </div>
+
+      <div class="diagram-list" *ngIf="!node.loading">
+        <button
+          type="button"
+          class="diagram-item"
+          *ngFor="let item of items"
+          [class.is-drill]="node.kind !== 'tables' && node.selectedItemId === item.id"
+          [class.is-selected]="node.kind === 'tables' && node.selectedItemId === item.id"
+          (click)="itemClick.emit(item.id)"
+        >
+          <span class="diagram-item-check" *ngIf="node.kind === 'tables'">
+            <span class="check-box" [class.checked]="node.selectedItemId === item.id"></span>
+          </span>
+          <span class="diagram-item-label">{{ item.label }}</span>
+          <span
+            class="drill-icon"
+            *ngIf="node.kind !== 'tables' && node.selectedItemId === item.id"
+          >›</span>
+        </button>
+      </div>
+
+      <div class="diagram-empty" *ngIf="!node.loading && !items.length">
+        Nenhum item encontrado.
+      </div>
+    </div>
+  </div>
+
+  <div class="diagram-fab-strip">
+    <button type="button" class="fab-btn" title="Fechar filhos" (click)="action.emit('close-children')">×</button>
+    <button
+      type="button"
+      class="fab-btn"
+      [class.fab-muted]="!estruturaMode"
+      [class.fab-highlight]="estruturaMode"
+      title="Verificar estrutura"
+      (click)="action.emit('verify-estrutura')"
+    >?</button>
+    <button
+      type="button"
+      class="fab-btn"
+      [class.fab-muted]="!estruturaMode"
+      [class.fab-highlight]="estruturaMode"
+      title="Sincronizar estrutura"
+      (click)="action.emit('sync-estrutura')"
+    >⌗</button>
+    <button
+      type="button"
+      class="fab-btn"
+      [class.fab-muted]="!dadosMode"
+      [class.fab-highlight]="dadosMode"
+      title="Verificar dados"
+      (click)="action.emit('verify-dados')"
+    >◉</button>
+    <button
+      type="button"
+      class="fab-btn"
+      [class.fab-muted]="!dadosMode"
+      [class.fab-highlight]="dadosMode"
+      title="Sincronizar dados"
+      (click)="action.emit('sync-dados')"
+    >↻</button>
+  </div>
+</div>

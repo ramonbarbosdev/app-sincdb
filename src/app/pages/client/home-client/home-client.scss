@@ -1,3 +1,49 @@
+.home-panels {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.home-map-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  max-width: 66rem;
+  border: 1px solid var(--p-content-border-color);
+}
+
+.home-map-copy h2 {
+  margin: 0.2rem 0 0.35rem;
+  font-size: 1.05rem;
+}
+
+.home-map-copy p {
+  margin: 0;
+  color: var(--p-text-muted-color);
+  font-size: 0.88rem;
+  max-width: 42rem;
+}
+
+.home-map-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--p-primary-color, #7f5af0);
+}
+
+@media (max-width: 768px) {
+  .home-map-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 .home-status {
   display: flex;
   justify-content: center;

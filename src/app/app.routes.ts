@@ -15,6 +15,7 @@ import { ParametroMasterList } from './pages/dev/parametros/parametro-master-lis
 import { SeasonalAdminPage } from './pages/dev/seasonal-admin/seasonal-admin';
 import { ExploradorVisualPage } from './features/explorador-visual/pages/explorador-visual.page';
 import { SqlEditorPage } from './features/sql-editor/pages/sql-editor.page';
+import { SyncDiagramPage } from './features/sync-diagram/pages/sync-diagram.page';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
@@ -45,6 +46,7 @@ export const routes: Routes = [
       { path: 'perfil', component: Perfil },
       { path: 'explorador', component: ExploradorVisualPage },
       { path: 'sql-editor', component: SqlEditorPage },
+      { path: 'sincronizacao-diagrama', component: SyncDiagramPage },
       { path: 'conexao', component: Conexaoform },
       { path: 'estrutura', component: Estruturaform },
       { path: 'dados', component: Dadosform }

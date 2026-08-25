@@ -1,0 +1,65 @@
+<div class="sync-diagram-canvas">
+  <div class="canvas-loading" *ngIf="state.loadingInitial()">
+    <span class="loading-spinner" aria-hidden="true"></span>
+    <span>Carregando bases...</span>
+  </div>
+
+  <f-flow
+    *ngIf="!state.loadingInitial()"
+    fDraggable
+    class="diagram-flow"
+    (fFullRendered)="onFlowReady()"
+  >
+    <f-background>
+      <f-circle-pattern id="sync-diagram-dots" [radius]="1.5" [color]="'var(--sync-diagram-dot-color)'" />
+    </f-background>
+
+    <f-canvas fZoom [fZoomMinimum]="0.4" [fZoomMaximum]="1.2">
+      <f-connection
+        *ngFor="let edge of state.flowConnections()"
+        [fConnectionId]="edge.id"
+        [fSourceId]="edge.sourceId"
+        [fTargetId]="edge.targetId"
+        [fType]="connectionType"
+        [fSelectionDisabled]="true"
+        [fReassignDisabled]="true"
+        [class.connection-active]="edge.active"
+      />
+
+      <div
+        *ngFor="let flowNode of state.flowNodes()"
+        fNode
+        [fNodeId]="flowNode.id"
+        [fNodePosition]="flowNode.position"
+        (fNodePositionChange)="onPositionChange(flowNode.id, $event)"
+        [fNodeSelectionDisabled]="true"
+        class="flow-node-shell"
+      >
+        <div
+          fConnector
+          [fConnectorId]="flowNode.sourceConnectorId"
+          fConnectorType="source"
+          fConnectorConnectableSide="right"
+          class="flow-connector flow-connector-out"
+        ></div>
+        <div
+          fConnector
+          [fConnectorId]="flowNode.targetConnectorId"
+          fConnectorType="target"
+          fConnectorConnectableSide="left"
+          class="flow-connector flow-connector-in"
+        ></div>
+
+        <app-sync-diagram-node-card
+          [node]="flowNode.meta"
+          [items]="filteredItems(flowNode.id)"
+          [estruturaMode]="isEstruturaMode()"
+          [dadosMode]="isDadosMode()"
+          (filterChange)="onFilterChange(flowNode.id, $event)"
+          (itemClick)="onItemClick(flowNode.meta, $event)"
+          (action)="onAction($event, flowNode.meta)"
+        />
+      </div>
+    </f-canvas>
+  </f-flow>
+</div>

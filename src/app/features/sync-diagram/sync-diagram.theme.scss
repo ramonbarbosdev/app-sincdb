@@ -1,0 +1,17 @@
+:host {
+  --sync-diagram-primary: var(--p-primary-color);
+  --sync-diagram-surface: var(--p-content-background);
+  --sync-diagram-surface-card: var(--p-content-background);
+  --sync-diagram-border: var(--p-content-border-color);
+  --sync-diagram-text: var(--p-text-color);
+  --sync-diagram-text-muted: var(--p-text-muted-color);
+  --sync-diagram-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+  --sync-diagram-glow: 0 0 0 4px color-mix(in srgb, var(--p-primary-color) 18%, transparent);
+  --sync-diagram-header-bg: color-mix(in srgb, var(--p-primary-color) 8%, var(--p-content-background));
+  --sync-diagram-mono: ui-monospace, 'JetBrains Mono', 'Cascadia Code', monospace;
+}
+
+:host-context(.app-dark),
+:host-context([data-p-theme='dark']) {
+  --sync-diagram-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}

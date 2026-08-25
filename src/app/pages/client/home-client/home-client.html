@@ -61,6 +61,24 @@
 </div>
 
 <div class="home-panels px-4 md:px-8 lg:px-12 pb-8">
+  <section class="home-map-card card mx-auto">
+    <div class="home-map-copy">
+      <span class="home-map-eyebrow"><i class="pi pi-map"></i> Alternativa visual</span>
+      <h2>Mapa de sincronização</h2>
+      <p>
+        Explore bases, schemas e tabelas em um canvas interativo com ações de estrutura e dados
+        ao lado de cada caixa.
+      </p>
+    </div>
+    <p-button
+      label="Abrir mapa"
+      icon="pi pi-external-link"
+      [rounded]="true"
+      styleClass="action-press"
+      (click)="irParaMapaSincronizacao()"
+    />
+  </section>
+
   <app-comparativo-estrutura></app-comparativo-estrutura>
   <div class="home-gap"></div>
   <app-info-atividades></app-info-atividades>

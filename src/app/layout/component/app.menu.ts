@@ -103,6 +103,11 @@ export class AppMenu {
               routerLink: ['/client/dados'],
             },
             {
+              label: 'Mapa de sincronização',
+              icon: 'pi pi-map',
+              routerLink: ['/client/sincronizacao-diagrama'],
+            },
+            {
               label: 'SQL Editor',
               icon: 'pi pi-code',
               routerLink: ['/client/sql-editor'],

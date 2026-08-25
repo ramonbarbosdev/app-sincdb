@@ -1,0 +1,165 @@
+.sync-diagram-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: calc(100vh - 5rem);
+  padding: 0.5rem 0.75rem 0.75rem;
+}
+
+.sync-diagram-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--sync-diagram-border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--sync-diagram-surface-card) 88%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--sync-diagram-shadow);
+}
+
+.topbar-left {
+  min-width: 0;
+}
+
+.topbar-eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--sync-diagram-text-muted);
+}
+
+.topbar-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--sync-diagram-mono);
+  font-size: 0.85rem;
+  color: var(--sync-diagram-text);
+}
+
+.breadcrumb-muted {
+  color: var(--sync-diagram-text-muted);
+}
+
+.breadcrumb-sep {
+  color: var(--sync-diagram-text-muted);
+}
+
+.topbar-center {
+  flex-shrink: 0;
+}
+
+.mode-pill {
+  display: inline-flex;
+  border: 1px solid var(--sync-diagram-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.mode-btn {
+  border: none;
+  background: transparent;
+  color: var(--sync-diagram-text-muted);
+  padding: 0.35rem 0.85rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+
+  &.active {
+    background: color-mix(in srgb, var(--sync-diagram-primary) 14%, transparent);
+    color: var(--sync-diagram-primary);
+    font-weight: 600;
+  }
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.btn {
+  border: 1px solid var(--sync-diagram-border);
+  border-radius: 8px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms ease, opacity 120ms ease;
+}
+
+.btn-primary {
+  background: var(--sync-diagram-primary);
+  border-color: color-mix(in srgb, var(--sync-diagram-primary) 80%, black);
+  color: #fff;
+}
+
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--sync-diagram-text);
+}
+
+.sync-diagram-main {
+  position: relative;
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.sync-diagram-legend {
+  position: absolute;
+  left: 0.75rem;
+  bottom: 0.75rem;
+  z-index: 2;
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--sync-diagram-border);
+  border-radius: 10px;
+  background: var(--sync-diagram-surface-card);
+  box-shadow: var(--sync-diagram-shadow);
+  font-size: 0.75rem;
+  color: var(--sync-diagram-text);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legend-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--sync-diagram-primary);
+  background: color-mix(in srgb, var(--sync-diagram-primary) 12%, transparent);
+}
+
+.legend-hint {
+  margin: 0.25rem 0 0;
+  color: var(--sync-diagram-text-muted);
+  font-size: 0.68rem;
+}
+
+@media (max-width: 900px) {
+  .sync-diagram-topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .topbar-right {
+    justify-content: flex-end;
+  }
+}

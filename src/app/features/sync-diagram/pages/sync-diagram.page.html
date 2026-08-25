@@ -1,0 +1,66 @@
+<div class="sync-diagram-page">
+  <header class="sync-diagram-topbar">
+    <div class="topbar-left">
+      <p class="topbar-eyebrow">Mapa de sincronização</p>
+      <nav class="topbar-breadcrumb" aria-label="Seleção atual">
+        <span *ngIf="!breadcrumbParts().length" class="breadcrumb-muted">base › schema › tabela</span>
+        <ng-container *ngFor="let part of breadcrumbParts(); let last = last">
+          <span class="breadcrumb-part">{{ part }}</span>
+          <span class="breadcrumb-sep" *ngIf="!last">›</span>
+        </ng-container>
+      </nav>
+    </div>
+
+    <div class="topbar-center">
+      <div class="mode-pill" role="group" aria-label="Modo de sincronização">
+        <button
+          type="button"
+          class="mode-btn"
+          [class.active]="isMode('estrutura')"
+          (click)="setMode('estrutura')"
+        >
+          Estrutura
+        </button>
+        <button
+          type="button"
+          class="mode-btn"
+          [class.active]="isMode('dados')"
+          (click)="setMode('dados')"
+        >
+          Dados
+        </button>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <app-cloud-local-pulse *ngIf="conexaoPadrao" [compact]="true"></app-cloud-local-pulse>
+      <button
+        *ngIf="!conexaoPadrao && !loadingConexao"
+        type="button"
+        class="btn btn-ghost"
+        (click)="irParaConexao()"
+      >
+        Conexão
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="!breadcrumbParts().length"
+        (click)="sincronizarSelecao()"
+      >
+        {{ syncButtonLabel() }}
+      </button>
+    </div>
+  </header>
+
+  <div class="sync-diagram-main">
+    <app-sync-diagram-canvas />
+
+    <aside class="sync-diagram-legend" aria-label="Legenda">
+      <div class="legend-item"><span class="legend-icon">B</span> Base</div>
+      <div class="legend-item"><span class="legend-icon">S</span> Schema</div>
+      <div class="legend-item"><span class="legend-icon">T</span> Tabela</div>
+      <p class="legend-hint">Arraste para mover · scroll para zoom</p>
+    </aside>
+  </div>
+</div>
