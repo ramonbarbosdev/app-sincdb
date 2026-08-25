@@ -1,17 +1,11 @@
+/* Tokens compartilhados (status, acentos) */
 :host {
   --sync-diagram-primary: var(--p-primary-color);
-  --sync-diagram-surface: var(--p-content-background);
-  --sync-diagram-surface-card: var(--p-content-background);
-  --sync-diagram-border: var(--p-content-border-color);
-  --sync-diagram-text: var(--p-text-color);
-  --sync-diagram-text-muted: var(--p-text-muted-color);
-  --sync-diagram-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
-  --sync-diagram-glow: 0 0 0 4px color-mix(in srgb, var(--p-primary-color) 18%, transparent);
-  --sync-diagram-header-bg: color-mix(in srgb, var(--p-primary-color) 8%, var(--p-content-background));
   --sync-diagram-mono: ui-monospace, 'JetBrains Mono', 'Cascadia Code', monospace;
 
   --sync-diagram-data-accent: color-mix(in srgb, var(--p-primary-color) 55%, #2dd4bf);
   --sync-diagram-data-glow: 0 0 0 4px color-mix(in srgb, var(--sync-diagram-data-accent) 18%, transparent);
+  --sync-diagram-glow: 0 0 0 4px color-mix(in srgb, var(--p-primary-color) 18%, transparent);
 
   --sync-diagram-status-created: #22c55e;
   --sync-diagram-status-altered: #f59e0b;
@@ -21,19 +15,67 @@
 
   --sync-diagram-zone-border: color-mix(in srgb, var(--p-primary-color) 35%, var(--p-content-border-color));
   --sync-diagram-zone-bg: color-mix(in srgb, var(--p-primary-color) 5%, var(--p-content-background));
+}
 
-  /* Canvas escuro (diagrama flutuante) */
+/* Dark — Foblex / IDE escuro */
+:host-context(.sync-diagram-canvas-theme-dark) {
   --sync-diagram-canvas-bg: #0b0e14;
   --sync-diagram-canvas-dot: rgba(255, 255, 255, 0.14);
+  --sync-diagram-dot-color: var(--sync-diagram-canvas-dot);
   --sync-diagram-rail-bg: #15172a;
   --sync-diagram-rail-border: rgba(255, 255, 255, 0.1);
   --sync-diagram-rail-divider: rgba(255, 255, 255, 0.12);
   --sync-diagram-rail-shadow: 0 10px 40px rgba(0, 0, 0, 0.55);
+
+  --sync-diagram-surface: #141825;
+  --sync-diagram-surface-card: #1a1d2e;
+  --sync-diagram-border: rgba(255, 255, 255, 0.1);
+  --sync-diagram-text: rgba(255, 255, 255, 0.92);
+  --sync-diagram-text-muted: rgba(255, 255, 255, 0.48);
+  --sync-diagram-header-bg: rgba(255, 255, 255, 0.04);
+  --sync-diagram-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+
+  --sync-diagram-connection-muted: rgba(255, 255, 255, 0.15);
+  --sync-diagram-toolbar-text: rgba(255, 255, 255, 0.82);
+  --sync-diagram-toolbar-text-muted: rgba(255, 255, 255, 0.5);
+  --sync-diagram-toolbar-hover-bg: rgba(255, 255, 255, 0.08);
+  --sync-diagram-loading-text: rgba(255, 255, 255, 0.55);
+}
+
+/* Light — Foblex / IDE claro */
+:host-context(.sync-diagram-canvas-theme-light) {
+  --sync-diagram-canvas-bg: #eef1f6;
+  --sync-diagram-canvas-dot: rgba(15, 23, 42, 0.12);
+  --sync-diagram-dot-color: var(--sync-diagram-canvas-dot);
+  --sync-diagram-rail-bg: #ffffff;
+  --sync-diagram-rail-border: rgba(15, 23, 42, 0.1);
+  --sync-diagram-rail-divider: rgba(15, 23, 42, 0.1);
+  --sync-diagram-rail-shadow: 0 8px 32px rgba(15, 23, 42, 0.12);
+
+  --sync-diagram-surface: #f4f6fa;
+  --sync-diagram-surface-card: #ffffff;
+  --sync-diagram-border: rgba(15, 23, 42, 0.1);
+  --sync-diagram-text: rgba(15, 23, 42, 0.92);
+  --sync-diagram-text-muted: rgba(15, 23, 42, 0.5);
+  --sync-diagram-header-bg: rgba(15, 23, 42, 0.03);
+  --sync-diagram-shadow: 0 6px 24px rgba(15, 23, 42, 0.1);
+
+  --sync-diagram-connection-muted: rgba(15, 23, 42, 0.18);
+  --sync-diagram-toolbar-text: rgba(15, 23, 42, 0.82);
+  --sync-diagram-toolbar-text-muted: rgba(15, 23, 42, 0.5);
+  --sync-diagram-toolbar-hover-bg: rgba(15, 23, 42, 0.06);
+  --sync-diagram-loading-text: rgba(15, 23, 42, 0.5);
+
+  --sync-diagram-shadow: 0 6px 24px rgba(15, 23, 42, 0.08);
+  --sync-diagram-status-created: #16a34a;
+  --sync-diagram-status-altered: #d97706;
+  --sync-diagram-status-linked: #4f46e5;
+  --sync-diagram-status-done: #15803d;
+  --sync-diagram-status-error: #dc2626;
 }
 
 :host-context(.app-dark),
 :host-context([data-p-theme='dark']) {
-  --sync-diagram-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
   --sync-diagram-status-created: #4ade80;
   --sync-diagram-status-altered: #fbbf24;
   --sync-diagram-status-linked: #818cf8;

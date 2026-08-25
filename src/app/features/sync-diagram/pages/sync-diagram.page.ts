@@ -11,6 +11,7 @@ import { SyncDiagramLayoutPersistenceService } from '../services/sync-diagram-la
 import { SyncDiagramLayoutService } from '../services/sync-diagram-layout.service';
 import { SyncDiagramOperationService } from '../services/sync-diagram-operation.service';
 import { SyncDiagramStateService } from '../services/sync-diagram-state.service';
+import { SyncDiagramThemeService } from '../services/sync-diagram-theme.service';
 
 @Component({
   selector: 'app-sync-diagram-page',
@@ -19,6 +20,7 @@ import { SyncDiagramStateService } from '../services/sync-diagram-state.service'
     SyncDiagramLayoutPersistenceService,
     SyncDiagramLayoutService,
     SyncDiagramCameraService,
+    SyncDiagramThemeService,
     SyncDiagramStateService,
     SyncDiagramOperationService,
     SyncDiagramActionsService,
@@ -32,6 +34,7 @@ export class SyncDiagramPage implements OnInit, OnDestroy {
   private progressoSync = inject(ProgressoSyncService);
   private actions = inject(SyncDiagramActionsService);
   readonly state = inject(SyncDiagramStateService);
+  readonly theme = inject(SyncDiagramThemeService);
   private operations = inject(SyncDiagramOperationService);
 
   private previousMenuInactive = false;

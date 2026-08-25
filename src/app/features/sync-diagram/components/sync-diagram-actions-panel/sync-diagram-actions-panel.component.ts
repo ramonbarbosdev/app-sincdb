@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { SyncDiagramMode } from '../../models/sync-diagram.model';
+import { SyncDiagramThemeService } from '../../services/sync-diagram-theme.service';
 
 @Component({
   selector: 'app-sync-diagram-actions-panel',
@@ -10,6 +11,8 @@ import { SyncDiagramMode } from '../../models/sync-diagram.model';
   styleUrls: ['../../sync-diagram.theme.scss', './sync-diagram-actions-panel.component.scss'],
 })
 export class SyncDiagramActionsPanelComponent {
+  readonly themeService = inject(SyncDiagramThemeService);
+
   @Input() mode: SyncDiagramMode = 'estrutura';
   @Input() scopeLabel = '—';
   @Input() hasSelection = false;

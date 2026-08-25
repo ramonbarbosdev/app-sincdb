@@ -1,4 +1,8 @@
-<div class="sync-diagram-page">
+<div
+  class="sync-diagram-page"
+  [class.sync-diagram-canvas-theme-dark]="theme.isDark()"
+  [class.sync-diagram-canvas-theme-light]="theme.isLight()"
+>
   <div class="sync-diagram-main">
     <app-sync-diagram-canvas>
       <app-sync-diagram-actions-panel
@@ -17,12 +21,5 @@
         (cancelar)="cancelarOperacao()"
       />
     </app-sync-diagram-canvas>
-
-    <aside class="sync-diagram-legend" aria-label="Legenda">
-      <div class="legend-item"><span class="legend-icon">B</span> Base</div>
-      <div class="legend-item"><span class="legend-icon">S</span> Schema</div>
-      <div class="legend-item"><span class="legend-icon">T</span> Tabela</div>
-      <p class="legend-hint">Arraste no fundo · scroll para zoom · barra inferior</p>
-    </aside>
   </div>
 </div>

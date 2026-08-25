@@ -1,15 +1,6 @@
 @use '@foblex/flow/styles/index' as flow-theme;
 
 :host {
-  --sync-diagram-dot-color: var(--sync-diagram-canvas-dot);
-  --sync-diagram-surface: #141825;
-  --sync-diagram-surface-card: #1a1d2e;
-  --sync-diagram-border: rgba(255, 255, 255, 0.1);
-  --sync-diagram-text: rgba(255, 255, 255, 0.92);
-  --sync-diagram-text-muted: rgba(255, 255, 255, 0.48);
-  --sync-diagram-header-bg: rgba(255, 255, 255, 0.04);
-  --sync-diagram-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
-
   flex: 1;
   min-height: 0;
   display: flex;
@@ -18,9 +9,8 @@
 .sync-diagram-canvas {
   position: relative;
   flex: 1;
-  min-height: calc(100vh - 5.5rem);
-  border: 1px solid color-mix(in srgb, var(--sync-diagram-rail-border) 80%, transparent);
-  border-radius: 12px;
+  min-height: 0;
+  height: 100%;
   background: var(--sync-diagram-canvas-bg);
   overflow: hidden;
 }
@@ -29,7 +19,7 @@
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: calc(100vh - 5.5rem);
+  min-height: 0;
 }
 
 .canvas-actions-float {
@@ -45,15 +35,16 @@
   display: block;
   width: 100%;
   height: 100%;
-  min-height: calc(100vh - 5.5rem);
+  min-height: 0;
 }
 
 .canvas-loading {
-  min-height: calc(100vh - 5.5rem);
+  height: 100%;
+  min-height: 0;
   display: grid;
   place-items: center;
   gap: 0.75rem;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--sync-diagram-loading-text);
   background: var(--sync-diagram-canvas-bg);
 }
 
@@ -105,14 +96,14 @@
   border: none;
   border-radius: 999px;
   background: transparent;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--sync-diagram-toolbar-text);
   font-size: 0.9rem;
   line-height: 1;
   cursor: pointer;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #fff;
+    background: var(--sync-diagram-toolbar-hover-bg);
+    color: var(--sync-diagram-text);
   }
 }
 
@@ -127,7 +118,7 @@
   text-align: center;
   font-size: 0.68rem;
   font-family: var(--sync-diagram-mono);
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--sync-diagram-toolbar-text-muted);
 }
 
 .tb-sep {
@@ -186,7 +177,7 @@
 }
 
 :host ::ng-deep .f-connection-path {
-  stroke: color-mix(in srgb, var(--sync-diagram-primary) 45%, rgba(255, 255, 255, 0.15));
+  stroke: color-mix(in srgb, var(--sync-diagram-primary) 45%, var(--sync-diagram-connection-muted));
   stroke-width: 1.5px;
 }
 
@@ -197,7 +188,7 @@
 }
 
 :host ::ng-deep .connection-erd-fk .f-connection-path {
-  stroke: color-mix(in srgb, var(--sync-diagram-status-linked) 55%, rgba(255, 255, 255, 0.15));
+  stroke: color-mix(in srgb, var(--sync-diagram-status-linked) 55%, var(--sync-diagram-connection-muted));
   stroke-dasharray: 4 3;
 }
 
@@ -207,7 +198,7 @@
 }
 
 :host ::ng-deep .connection-operation .f-connection-path {
-  stroke: color-mix(in srgb, var(--sync-diagram-primary) 50%, rgba(255, 255, 255, 0.15));
+  stroke: color-mix(in srgb, var(--sync-diagram-primary) 50%, var(--sync-diagram-connection-muted));
 }
 
 @media (prefers-reduced-motion: reduce) {
