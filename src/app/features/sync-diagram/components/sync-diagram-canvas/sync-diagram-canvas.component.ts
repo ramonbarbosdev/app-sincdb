@@ -3,12 +3,10 @@ import {
   EFConnectionType,
   FCanvasComponent,
   FFlowModule,
-  F_SCROLL_PAN_CONTROL_SCHEME,
   provideFFlow,
-  withControlScheme,
 } from '@foblex/flow';
 import { CommonModule } from '@angular/common';
-import { Component, inject, viewChild } from '@angular/core';
+import { Component, inject, signal, viewChild } from '@angular/core';
 import {
   SyncDiagramAction,
   SyncDiagramNodeData,
@@ -25,7 +23,7 @@ import { SyncOperationNodeCardComponent } from '../sync-operation-node-card/sync
 @Component({
   selector: 'app-sync-diagram-canvas',
   standalone: true,
-  providers: [provideFFlow(withControlScheme(F_SCROLL_PAN_CONTROL_SCHEME))],
+  providers: [provideFFlow()],
   imports: [
     CommonModule,
     FFlowModule,
@@ -45,16 +43,42 @@ export class SyncDiagramCanvasComponent {
   private canvas = viewChild(FCanvasComponent);
 
   readonly connectionType = EFConnectionType.SEGMENT;
+  readonly zoomLevel = signal(100);
 
   onFlowReady(): void {
     const canvasRef = this.canvas();
     if (canvasRef) {
       this.camera.registerCanvas(canvasRef);
       canvasRef.fitToScreen(PointExtensions.initialize(80, 80), false);
+      this.updateZoomLabel();
     }
   }
 
+  onCanvasChange(): void {
+    this.updateZoomLabel();
+  }
+
+  onUserCanvasInteraction(): void {
+    this.camera.pauseAutoFollow();
+  }
+
+  zoomIn(): void {
+    this.camera.zoomIn();
+    this.updateZoomLabel();
+  }
+
+  zoomOut(): void {
+    this.camera.zoomOut();
+    this.updateZoomLabel();
+  }
+
+  fitView(): void {
+    this.camera.fitToScreen();
+    this.updateZoomLabel();
+  }
+
   onPositionChange(nodeId: string, position: { x: number; y: number }): void {
+    this.camera.pauseAutoFollow();
     this.state.updateNodePosition(nodeId, position);
   }
 
@@ -112,6 +136,10 @@ export class SyncDiagramCanvasComponent {
 
   isDadosMode(): boolean {
     return this.state.syncMode() === 'dados';
+  }
+
+  private updateZoomLabel(): void {
+    this.zoomLevel.set(Math.round(this.camera.getScale() * 100));
   }
 
   private buildActionContext(node: SyncDiagramNodeData) {

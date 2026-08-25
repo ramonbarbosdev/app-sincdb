@@ -15,12 +15,7 @@
   padding: 0.45rem 0.65rem;
   background: color-mix(in srgb, var(--sync-diagram-primary) 10%, var(--sync-diagram-surface-card));
   border-bottom: 1px dashed color-mix(in srgb, var(--sync-diagram-primary) 20%, var(--sync-diagram-border));
-  cursor: grab;
-  pointer-events: auto;
-
-  &:active {
-    cursor: grabbing;
-  }
+  pointer-events: none;
 }
 
 .impact-zone-title {

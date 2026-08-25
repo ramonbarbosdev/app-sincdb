@@ -1,4 +1,3 @@
-import { FFlowModule } from '@foblex/flow';
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { ErdImpactZone, ImpactCategoryChip } from '../../models/sync-diagram.model';
@@ -6,7 +5,7 @@ import { ErdImpactZone, ImpactCategoryChip } from '../../models/sync-diagram.mod
 @Component({
   selector: 'app-sync-erd-impact-zone',
   standalone: true,
-  imports: [CommonModule, FFlowModule],
+  imports: [CommonModule],
   templateUrl: './sync-erd-impact-zone.component.html',
   styleUrls: ['../../sync-diagram.theme.scss', './sync-erd-impact-zone.component.scss'],
 })

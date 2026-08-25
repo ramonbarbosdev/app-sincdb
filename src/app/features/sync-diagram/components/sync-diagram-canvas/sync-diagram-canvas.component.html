@@ -9,12 +9,19 @@
     fDraggable
     class="diagram-flow"
     (fFullRendered)="onFlowReady()"
+    (pointerdown)="onUserCanvasInteraction()"
   >
     <f-background>
       <f-circle-pattern id="sync-diagram-dots" [radius]="1.5" [color]="'var(--sync-diagram-dot-color)'" />
     </f-background>
 
-    <f-canvas fZoom [fZoomMinimum]="0.4" [fZoomMaximum]="1.2">
+    <f-canvas
+      fZoom
+      [fZoomMinimum]="0.4"
+      [fZoomMaximum]="1.2"
+      [fZoomStep]="0.1"
+      (fCanvasChange)="onCanvasChange()"
+    >
       <f-connection
         *ngFor="let edge of state.flowConnections()"
         [fConnectionId]="edge.id"
@@ -86,4 +93,11 @@
       </div>
     </f-canvas>
   </f-flow>
+
+  <div class="canvas-zoom-controls" *ngIf="!state.loadingInitial()" aria-label="Controles de zoom">
+    <button type="button" class="zoom-btn" title="Diminuir zoom" (click)="zoomOut()">−</button>
+    <span class="zoom-label">{{ zoomLevel() }}%</span>
+    <button type="button" class="zoom-btn" title="Aumentar zoom" (click)="zoomIn()">+</button>
+    <button type="button" class="zoom-btn zoom-fit" title="Enquadrar diagrama" (click)="fitView()">⊡</button>
+  </div>
 </div>

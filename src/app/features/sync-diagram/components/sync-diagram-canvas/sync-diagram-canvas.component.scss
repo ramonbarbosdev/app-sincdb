@@ -51,10 +51,54 @@
 
 .flow-node-zone {
   z-index: 0;
+  pointer-events: none !important;
 }
 
 .flow-node-erd {
   z-index: 1;
+}
+
+.canvas-zoom-controls {
+  position: absolute;
+  right: 0.75rem;
+  top: 0.75rem;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.35rem;
+  border: 1px solid var(--sync-diagram-border);
+  border-radius: 10px;
+  background: var(--sync-diagram-surface-card);
+  box-shadow: var(--sync-diagram-shadow);
+}
+
+.zoom-btn {
+  width: 1.75rem;
+  height: 1.75rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--sync-diagram-text);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--sync-diagram-primary) 12%, transparent);
+  }
+}
+
+.zoom-fit {
+  font-size: 0.82rem;
+}
+
+.zoom-label {
+  min-width: 2.5rem;
+  text-align: center;
+  font-size: 0.72rem;
+  font-family: var(--sync-diagram-mono);
+  color: var(--sync-diagram-text-muted);
 }
 
 .flow-connector {

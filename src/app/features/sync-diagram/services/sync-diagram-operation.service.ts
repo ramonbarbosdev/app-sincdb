@@ -227,7 +227,7 @@ export class SyncDiagramOperationService implements OnDestroy {
         }
 
         if (focusAfter) {
-          this.scheduleFocusZone(operationId);
+          this.scheduleFocusZone(operationId, true);
         }
       },
       error: () => {
@@ -256,8 +256,8 @@ export class SyncDiagramOperationService implements OnDestroy {
     });
   }
 
-  private scheduleFocusZone(operationId: string): void {
-    setTimeout(() => this.camera.focusImpactZone(operationId), 150);
+  private scheduleFocusZone(operationId: string, force = false): void {
+    setTimeout(() => this.camera.focusImpactZone(operationId, undefined, force), 150);
   }
 
   private trackOperation(operationId: string): void {
