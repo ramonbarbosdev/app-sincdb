@@ -1,31 +1,45 @@
 import { Injectable, inject, signal } from '@angular/core';
+import { EstruturaResponse } from '../../../components/estrutura-preview/estrutura-preview';
 import { BaseService } from '../../../services/base.service';
 import {
+  ColumnVisualState,
   DiagramFlowConnection,
   DiagramFlowNode,
   DiagramFlowPoint,
+  ErdEdge,
+  ErdTableNode,
   SyncDiagramContext,
   SyncDiagramItem,
   SyncDiagramKind,
   SyncDiagramMode,
   SyncDiagramNodeData,
+  SyncOperation,
+  TableVisualStatus,
+  TabelaAfetadaDTO,
 } from '../models/sync-diagram.model';
+import { SyncDiagramLayoutPersistenceService } from './sync-diagram-layout-persistence.service';
+import { SyncDiagramLayoutService } from './sync-diagram-layout.service';
 
 const DEFAULT_POSITIONS: Record<string, DiagramFlowPoint> = {
   'node-bases': { x: 80, y: 100 },
 };
 
 const HORIZONTAL_GAP = 320;
+const OPERATION_GAP = 320;
+const ERD_ORIGIN_OFFSET_X = 280;
 
 @Injectable()
 export class SyncDiagramStateService {
   private baseService = inject(BaseService);
+  private layout = inject(SyncDiagramLayoutService);
+  private persistence = inject(SyncDiagramLayoutPersistenceService);
 
   readonly syncMode = signal<SyncDiagramMode>('estrutura');
   readonly flowNodes = signal<DiagramFlowNode[]>([]);
   readonly flowConnections = signal<DiagramFlowConnection[]>([]);
   readonly loadingInitial = signal(true);
   readonly selection = signal<SyncDiagramContext>({});
+  readonly operations = signal<SyncOperation[]>([]);
 
   private bases: SyncDiagramItem[] = [];
   private schemaCache = new Map<string, SyncDiagramItem[]>();
@@ -40,14 +54,21 @@ export class SyncDiagramStateService {
   private schemasNodeId?: string;
   private tablesNodeId?: string;
 
+  private erdTables = new Map<string, ErdTableNode>();
+  private erdEdges = new Map<string, ErdEdge>();
+  private activeOperationId?: string;
+  private persistTimer?: ReturnType<typeof setTimeout>;
+
   init(): void {
+    this.applyStoredLayout();
     this.loadingInitial.set(true);
     this.baseService.findAll('sincronizacao/bases/').subscribe({
       next: (res) => {
         this.bases = (res as string[]).map((name) => ({ id: name, label: name }));
-        this.filters.set(this.basesNodeId, '');
-        this.rebuildGraph();
-        this.loadingInitial.set(false);
+        if (!this.filters.has(this.basesNodeId)) {
+          this.filters.set(this.basesNodeId, '');
+        }
+        this.restoreDrillDownFromSelection();
       },
       error: () => {
         this.bases = [];
@@ -59,41 +80,214 @@ export class SyncDiagramStateService {
 
   setSyncMode(mode: SyncDiagramMode): void {
     this.syncMode.set(mode);
+    this.persistSoon();
   }
 
   setFilter(nodeId: string, value: string): void {
     this.filters.set(nodeId, value);
     this.rebuildGraph();
+    this.persistSoon();
   }
 
   updateNodePosition(nodeId: string, position: DiagramFlowPoint): void {
-    this.positions.set(nodeId, { x: position.x, y: position.y });
+    const point = { x: position.x, y: position.y };
+    this.positions.set(nodeId, point);
+
+    if (nodeId.startsWith('erd-')) {
+      const table = this.erdTables.get(nodeId);
+      if (table) {
+        const op = this.getOperation(table.operationId);
+        if (op?.context.base && op?.context.esquema) {
+          const grafoId = nodeId.replace(`erd-${table.operationId}-`, '');
+          this.positions.set(
+            this.erdStableKey(op.context.base, op.context.esquema, grafoId),
+            point
+          );
+        }
+      }
+    }
+
+    this.persistSoon();
+  }
+
+  spawnOperation(operation: SyncOperation): void {
+    this.operations.update((list) => {
+      const without = list.filter((o) => o.id !== operation.id);
+      return [...without, operation];
+    });
+    this.activeOperationId = operation.id;
+    this.closeAllOperationDetails(operation.id);
+    const opNodeId = this.operationNodeId(operation.id);
+    const anchor = this.lastSelectorNodeId();
+    const anchorPos = this.positions.get(anchor) ?? DEFAULT_POSITIONS[anchor] ?? { x: 80, y: 100 };
+    this.positions.set(opNodeId, { x: anchorPos.x + OPERATION_GAP, y: anchorPos.y });
+    this.rebuildGraph();
+  }
+
+  patchOperation(operationId: string, patch: Partial<SyncOperation>): void {
+    this.operations.update((list) =>
+      list.map((o) => (o.id === operationId ? { ...o, ...patch } : o))
+    );
+    this.rebuildGraph();
+  }
+
+  getOperation(operationId: string): SyncOperation | undefined {
+    return this.operations().find((o) => o.id === operationId);
+  }
+
+  toggleOperationDetail(operationId: string): void {
+    const op = this.getOperation(operationId);
+    if (!op) return;
+    const opening = !op.detailOpen;
+    this.closeAllOperationDetails(opening ? operationId : undefined);
+    this.patchOperation(operationId, { detailOpen: opening });
+    if (!opening) {
+      this.clearErdForOperation(operationId);
+    }
+  }
+
+  closeOperationDetail(operationId: string): void {
+    this.patchOperation(operationId, { detailOpen: false });
+    this.clearErdForOperation(operationId);
+  }
+
+  setErdGraph(operationId: string, tables: ErdTableNode[], edges: ErdEdge[]): void {
+    this.clearErdForOperation(operationId);
+    tables.forEach((t) => this.erdTables.set(t.id, t));
+    edges.forEach((e) => this.erdEdges.set(e.id, e));
+
+    const opNodeId = this.operationNodeId(operationId);
+    const opPos = this.positions.get(opNodeId) ?? { x: 1040, y: 100 };
+    const op = this.getOperation(operationId);
+    const base = op?.context.base;
+    const esquema = op?.context.esquema;
+    const layoutPositions = this.layout.layoutErd(
+      tables.map((t) => ({ id: t.id })),
+      { x: opPos.x + ERD_ORIGIN_OFFSET_X, y: opPos.y }
+    );
+    layoutPositions.forEach((pos, id) => {
+      let resolved = pos;
+      if (base && esquema) {
+        const grafoId = id.replace(`erd-${operationId}-`, '');
+        const stored = this.positions.get(this.erdStableKey(base, esquema, grafoId));
+        if (stored) resolved = stored;
+      }
+      this.positions.set(id, resolved);
+    });
+    this.rebuildGraph();
+  }
+
+  patchErdTable(tableId: string, patch: Partial<ErdTableNode>): void {
+    const current = this.erdTables.get(tableId);
+    if (!current) return;
+    this.erdTables.set(tableId, { ...current, ...patch });
+    this.rebuildGraph();
+  }
+
+  applyEstruturaVisuals(operationId: string, response: EstruturaResponse): void {
+    const tableStatus = new Map<string, TableVisualStatus>();
+    for (const cat of response.categorias ?? []) {
+      const titulo = cat.titulo ?? '';
+      for (const item of cat.items ?? []) {
+        const key = this.normalizeTableKey(item.objeto);
+        if (titulo.includes('Criação')) tableStatus.set(key, 'created');
+        else if (titulo.includes('Alterações')) tableStatus.set(key, 'altered');
+        else if (titulo.includes('Chaves')) tableStatus.set(key, 'linked');
+      }
+    }
+    this.applyTableStatusMap(operationId, tableStatus);
+
+    for (const edge of this.erdEdgesForOperation(operationId)) {
+      if (tableStatus.size > 0) {
+        this.erdEdges.set(edge.id, { ...edge, status: 'done' });
+      }
+    }
+    this.rebuildGraph();
+  }
+
+  applyDadosVisuals(operationId: string, tabelas: TabelaAfetadaDTO[]): void {
+    for (const row of tabelas) {
+      const key = this.normalizeTableKey(row.tabela ?? '');
+      const table = this.findErdTableByKey(operationId, key);
+      if (!table) continue;
+      const hasInsert = (row.linhaInseridas ?? 0) > 0;
+      const hasUpdate = (row.linhaAtualizadas ?? 0) > 0;
+      let status: TableVisualStatus = 'idle';
+      if (hasInsert && hasUpdate) status = 'syncing';
+      else if (hasInsert) status = 'created';
+      else if (hasUpdate) status = 'altered';
+      this.erdTables.set(table.id, { ...table, status });
+      if (table.mode === 'dados' && table.columns.length) {
+        const colStatus: ColumnVisualState[] = table.columns.map((c) => ({
+          nome: c.nome,
+          status: hasInsert ? 'insert' : hasUpdate ? 'update' : 'idle',
+        }));
+        this.erdTables.set(table.id, { ...this.erdTables.get(table.id)!, columns: colStatus });
+      }
+    }
+    this.rebuildGraph();
+  }
+
+  applySyncResultVisuals(
+    operationId: string,
+    tabelas: TabelaAfetadaDTO[],
+    errors?: string[]
+  ): void {
+    const errorTables = new Set(
+      (errors ?? []).map((e) => e.toLowerCase())
+    );
+    for (const table of this.erdTablesForOperation(operationId)) {
+      const key = this.normalizeTableKey(table.nome);
+      const row = tabelas.find((t) => this.normalizeTableKey(t.tabela ?? '') === key);
+      let status: TableVisualStatus = 'done';
+      if (row?.erro || errorTables.size > 0) status = row?.erro ? 'error' : 'done';
+      this.erdTables.set(table.id, { ...table, status });
+    }
+    this.rebuildGraph();
+  }
+
+  highlightRunningTable(operationId: string, tabelaAtual: string): void {
+    const key = this.normalizeTableKey(tabelaAtual);
+    for (const table of this.erdTablesForOperation(operationId)) {
+      const match = this.normalizeTableKey(table.nome) === key;
+      const status: TableVisualStatus = match ? 'running' : table.status === 'running' ? 'idle' : table.status;
+      let columns = table.columns;
+      if (table.mode === 'dados' && match && columns.length) {
+        columns = columns.map((c) => ({ ...c, status: 'running' as const }));
+      }
+      this.erdTables.set(table.id, { ...table, status, columns });
+    }
+    for (const edge of this.erdEdgesForOperation(operationId)) {
+      const source = this.erdTables.get(edge.sourceId);
+      const target = this.erdTables.get(edge.targetId);
+      if (source?.status === 'running' || target?.status === 'running') {
+        this.erdEdges.set(edge.id, { ...edge, status: 'active' });
+      }
+    }
+    this.rebuildGraph();
   }
 
   selectItem(kind: SyncDiagramKind, itemId: string, context: SyncDiagramContext): void {
     if (kind === 'bases') {
       this.selection.set({ base: itemId });
       this.spawnSchemas(itemId);
+      this.persistSoon();
       return;
     }
-
     if (kind === 'schemas') {
       const base = context.base ?? this.selection().base;
       if (!base) return;
       this.selection.set({ base, esquema: itemId });
       this.spawnTables(base, itemId);
+      this.persistSoon();
       return;
     }
-
     if (kind === 'tables') {
       const current = this.selection();
       const tabela = current.tabela === itemId ? undefined : itemId;
-      this.selection.set({
-        base: current.base,
-        esquema: current.esquema,
-        tabela,
-      });
+      this.selection.set({ base: current.base, esquema: current.esquema, tabela });
       this.rebuildGraph();
+      this.persistSoon();
     }
   }
 
@@ -108,6 +302,7 @@ export class SyncDiagramStateService {
       this.selection.set({ base: sel.base });
     }
     this.rebuildGraph();
+    this.persistSoon();
   }
 
   filteredItems(nodeId: string): SyncDiagramItem[] {
@@ -177,6 +372,74 @@ export class SyncDiagramStateService {
     });
   }
 
+  private closeAllOperationDetails(exceptId?: string): void {
+    this.operations.update((list) =>
+      list.map((o) => ({
+        ...o,
+        detailOpen: exceptId ? o.id === exceptId : false,
+      }))
+    );
+    if (!exceptId) {
+      this.erdTables.clear();
+      this.erdEdges.clear();
+    } else {
+      for (const [id, table] of this.erdTables.entries()) {
+        if (table.operationId !== exceptId) this.erdTables.delete(id);
+      }
+      for (const [id, edge] of this.erdEdges.entries()) {
+        if (edge.operationId !== exceptId) this.erdEdges.delete(id);
+      }
+    }
+  }
+
+  private clearErdForOperation(operationId: string): void {
+    for (const [id, table] of this.erdTables.entries()) {
+      if (table.operationId === operationId) this.erdTables.delete(id);
+    }
+    for (const [id, edge] of this.erdEdges.entries()) {
+      if (edge.operationId === operationId) this.erdEdges.delete(id);
+    }
+    this.rebuildGraph();
+  }
+
+  private erdTablesForOperation(operationId: string): ErdTableNode[] {
+    return [...this.erdTables.values()].filter((t) => t.operationId === operationId);
+  }
+
+  private erdEdgesForOperation(operationId: string): ErdEdge[] {
+    return [...this.erdEdges.values()].filter((e) => e.operationId === operationId);
+  }
+
+  private applyTableStatusMap(operationId: string, map: Map<string, TableVisualStatus>): void {
+    for (const table of this.erdTablesForOperation(operationId)) {
+      const key = this.normalizeTableKey(table.nome);
+      const status = map.get(key) ?? table.status;
+      this.erdTables.set(table.id, { ...table, status });
+    }
+  }
+
+  private findErdTableByKey(operationId: string, key: string): ErdTableNode | undefined {
+    return this.erdTablesForOperation(operationId).find(
+      (t) => this.normalizeTableKey(t.nome) === key
+    );
+  }
+
+  private normalizeTableKey(value: string): string {
+    const v = value.trim().toLowerCase();
+    if (v.includes('.')) return v.split('.').pop() ?? v;
+    return v;
+  }
+
+  private operationNodeId(operationId: string): string {
+    return `node-operation-${operationId}`;
+  }
+
+  private lastSelectorNodeId(): string {
+    if (this.tablesNodeId) return this.tablesNodeId;
+    if (this.schemasNodeId) return this.schemasNodeId;
+    return this.basesNodeId;
+  }
+
   private nextPosition(fromNodeId: string): DiagramFlowPoint {
     const from = this.positions.get(fromNodeId) ?? DEFAULT_POSITIONS[fromNodeId] ?? { x: 80, y: 100 };
     return { x: from.x + HORIZONTAL_GAP, y: from.y };
@@ -200,6 +463,153 @@ export class SyncDiagramStateService {
     return { source: `${nodeId}::out`, target: `${nodeId}::in` };
   }
 
+  private applyStoredLayout(): void {
+    const stored = this.persistence.load();
+    if (!stored) return;
+
+    this.syncMode.set(stored.syncMode ?? 'estrutura');
+    this.selection.set({ ...stored.selection });
+
+    for (const [nodeId, filter] of Object.entries(stored.filters ?? {})) {
+      this.filters.set(nodeId, filter);
+    }
+
+    for (const [key, pos] of Object.entries(stored.positions ?? {})) {
+      this.positions.set(key, { x: pos.x, y: pos.y });
+    }
+  }
+
+  private restoreDrillDownFromSelection(): void {
+    const sel = this.selection();
+    if (!sel.base) {
+      this.rebuildGraph();
+      this.loadingInitial.set(false);
+      return;
+    }
+
+    this.schemasNodeId = `node-schemas-${sel.base}`;
+    this.ensurePosition(this.schemasNodeId, this.nextPosition(this.basesNodeId));
+
+    if (this.schemaCache.has(sel.base)) {
+      this.finishDrillDownRestore(sel);
+      return;
+    }
+
+    this.loadingNodes.set(this.schemasNodeId, true);
+    this.rebuildGraph();
+
+    this.baseService.findAll(`sincronizacao/base/esquema/${sel.base}`).subscribe({
+      next: (res) => {
+        const items = (res as string[]).map((name) => ({ id: name, label: name }));
+        this.schemaCache.set(sel.base!, items);
+        this.loadingNodes.set(this.schemasNodeId!, false);
+        this.finishDrillDownRestore(sel);
+      },
+      error: () => {
+        this.schemaCache.set(sel.base!, []);
+        this.loadingNodes.set(this.schemasNodeId!, false);
+        this.finishDrillDownRestore(sel);
+      },
+    });
+  }
+
+  private finishDrillDownRestore(sel: SyncDiagramContext): void {
+    if (!sel.base || !sel.esquema) {
+      this.rebuildGraph();
+      this.loadingInitial.set(false);
+      return;
+    }
+
+    this.tablesNodeId = `node-tables-${sel.base}-${sel.esquema}`;
+    this.ensurePosition(this.tablesNodeId, this.nextPosition(this.schemasNodeId!));
+    const key = `${sel.base}|${sel.esquema}`;
+
+    if (this.tableCache.has(key)) {
+      this.rebuildGraph();
+      this.loadingInitial.set(false);
+      return;
+    }
+
+    this.loadingNodes.set(this.tablesNodeId, true);
+    this.rebuildGraph();
+
+    this.baseService
+      .findAll(`sincronizacao/base/tabela/${sel.base}/${sel.esquema}`)
+      .subscribe({
+        next: (res) => {
+          const items = (res as string[]).map((name) => ({ id: name, label: name }));
+          this.tableCache.set(key, items);
+          this.loadingNodes.set(this.tablesNodeId!, false);
+          this.rebuildGraph();
+          this.loadingInitial.set(false);
+        },
+        error: () => {
+          this.tableCache.set(key, []);
+          this.loadingNodes.set(this.tablesNodeId!, false);
+          this.rebuildGraph();
+          this.loadingInitial.set(false);
+        },
+      });
+  }
+
+  private erdStableKey(base: string, esquema: string, grafoNodeId: string): string {
+    return `erd:${base}:${esquema}:${grafoNodeId}`;
+  }
+
+  private persistSoon(): void {
+    if (this.persistTimer) {
+      clearTimeout(this.persistTimer);
+    }
+    this.persistTimer = setTimeout(() => this.persistNow(), 250);
+  }
+
+  flushPersist(): void {
+    if (this.persistTimer) {
+      clearTimeout(this.persistTimer);
+      this.persistTimer = undefined;
+    }
+    this.persistNow();
+  }
+
+  private persistNow(): void {
+    this.persistence.save({
+      version: 1,
+      syncMode: this.syncMode(),
+      selection: this.selection(),
+      filters: Object.fromEntries(this.filters.entries()),
+      positions: this.toPersistablePositions(),
+    });
+  }
+
+  private toPersistablePositions(): Record<string, DiagramFlowPoint> {
+    const out: Record<string, DiagramFlowPoint> = {};
+
+    for (const [nodeId, pos] of this.positions.entries()) {
+      if (nodeId.startsWith('node-operation-')) continue;
+
+      if (nodeId.startsWith('erd:')) {
+        out[nodeId] = { ...pos };
+        continue;
+      }
+
+      if (nodeId.startsWith('erd-')) {
+        const table = this.erdTables.get(nodeId);
+        if (table) {
+          const op = this.getOperation(table.operationId);
+          if (op?.context.base && op?.context.esquema) {
+            const grafoId = nodeId.replace(`erd-${table.operationId}-`, '');
+            out[this.erdStableKey(op.context.base, op.context.esquema, grafoId)] = { ...pos };
+          }
+        }
+        continue;
+      }
+
+      out[nodeId] = { ...pos };
+    }
+
+    return out;
+  }
+
   private rebuildGraph(): void {
     this.nodeMeta.clear();
     const nodes: DiagramFlowNode[] = [];
@@ -218,7 +628,7 @@ export class SyncDiagramStateService {
       itemCount: this.bases.length,
     };
     this.nodeMeta.set(this.basesNodeId, basesMeta);
-    nodes.push(this.createFlowNode(this.basesNodeId, basesMeta, DEFAULT_POSITIONS['node-bases']));
+    nodes.push(this.createSelectorNode(this.basesNodeId, basesMeta, DEFAULT_POSITIONS['node-bases']));
 
     if (sel.base && this.schemasNodeId) {
       const schemas = this.schemaCache.get(sel.base) ?? [];
@@ -235,10 +645,15 @@ export class SyncDiagramStateService {
         itemCount: schemas.length,
       };
       this.nodeMeta.set(this.schemasNodeId, schemasMeta);
-      const schemaPos = this.getPosition(this.schemasNodeId, this.nextPosition(this.basesNodeId));
-      nodes.push(this.createFlowNode(this.schemasNodeId, schemasMeta, schemaPos));
+      nodes.push(
+        this.createSelectorNode(
+          this.schemasNodeId,
+          schemasMeta,
+          this.getPosition(this.schemasNodeId, this.nextPosition(this.basesNodeId))
+        )
+      );
       connections.push(
-        this.createConnection(this.basesNodeId, this.schemasNodeId, !!sel.base && !!sel.esquema)
+        this.createSelectorConnection(this.basesNodeId, this.schemasNodeId, !!sel.esquema)
       );
     }
 
@@ -258,18 +673,73 @@ export class SyncDiagramStateService {
         itemCount: tables.length,
       };
       this.nodeMeta.set(this.tablesNodeId, tablesMeta);
-      const tablePos = this.getPosition(this.tablesNodeId, this.nextPosition(this.schemasNodeId!));
-      nodes.push(this.createFlowNode(this.tablesNodeId, tablesMeta, tablePos));
-      connections.push(
-        this.createConnection(this.schemasNodeId!, this.tablesNodeId, !!sel.tabela)
+      nodes.push(
+        this.createSelectorNode(
+          this.tablesNodeId,
+          tablesMeta,
+          this.getPosition(this.tablesNodeId, this.nextPosition(this.schemasNodeId!))
+        )
       );
+      connections.push(
+        this.createSelectorConnection(this.schemasNodeId!, this.tablesNodeId, !!sel.tabela)
+      );
+    }
+
+    const ops = this.operations();
+    let lastLinkId = this.lastSelectorNodeId();
+    for (const op of ops) {
+      const opNodeId = this.operationNodeId(op.id);
+      const fallback = this.nextPosition(lastLinkId);
+      const opPos = this.getPosition(opNodeId, fallback);
+      const connectors = this.connectorIds(opNodeId);
+      nodes.push({
+        id: opNodeId,
+        type: 'operation',
+        position: opPos,
+        sourceConnectorId: connectors.source,
+        targetConnectorId: connectors.target,
+        operationMeta: op,
+      });
+      connections.push({
+        id: `edge-op-link-${lastLinkId}-${opNodeId}`,
+        sourceId: this.connectorIds(lastLinkId).source,
+        targetId: connectors.target,
+        active: true,
+        kind: 'operation-link',
+      });
+      lastLinkId = opNodeId;
+
+      if (op.detailOpen) {
+        const erdTables = this.erdTablesForOperation(op.id);
+        for (const erd of erdTables) {
+          const erdConnectors = this.connectorIds(erd.id);
+          const erdPos = this.getPosition(erd.id, { x: opPos.x + ERD_ORIGIN_OFFSET_X, y: opPos.y });
+          nodes.push({
+            id: erd.id,
+            type: 'erd-table',
+            position: erdPos,
+            sourceConnectorId: erdConnectors.source,
+            targetConnectorId: erdConnectors.target,
+            erdMeta: erd,
+          });
+        }
+        for (const edge of this.erdEdgesForOperation(op.id)) {
+          connections.push({
+            id: edge.id,
+            sourceId: `${edge.sourceId}::out`,
+            targetId: `${edge.targetId}::in`,
+            active: edge.status === 'active' || edge.status === 'done',
+            kind: 'erd-fk',
+          });
+        }
+      }
     }
 
     this.flowNodes.set(nodes);
     this.flowConnections.set(connections);
   }
 
-  private createFlowNode(
+  private createSelectorNode(
     id: string,
     meta: SyncDiagramNodeData,
     defaultPosition: DiagramFlowPoint
@@ -277,14 +747,15 @@ export class SyncDiagramStateService {
     const connectors = this.connectorIds(id);
     return {
       id,
-      meta,
+      type: 'selector',
       position: this.getPosition(id, defaultPosition),
       sourceConnectorId: connectors.source,
       targetConnectorId: connectors.target,
+      selectorMeta: meta,
     };
   }
 
-  private createConnection(
+  private createSelectorConnection(
     sourceNodeId: string,
     targetNodeId: string,
     active: boolean
@@ -296,6 +767,7 @@ export class SyncDiagramStateService {
       sourceId: source.source,
       targetId: target.target,
       active,
+      kind: 'selector',
     };
   }
 }

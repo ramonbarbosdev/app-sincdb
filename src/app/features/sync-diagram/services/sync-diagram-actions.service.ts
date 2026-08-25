@@ -1,14 +1,22 @@
 import { Injectable, inject } from '@angular/core';
 import { MessageService } from 'primeng/api';
+import { EstruturaResponse } from '../../../components/estrutura-preview/estrutura-preview';
 import { BaseService } from '../../../services/base.service';
 import { ProgressoSyncService } from '../../../services/progresso-sync-service';
-import { SyncDiagramContext, SyncDiagramMode } from '../models/sync-diagram.model';
+import {
+  OperationActionKind,
+  SyncDiagramContext,
+  SyncDiagramMode,
+  TabelaAfetadaDTO,
+} from '../models/sync-diagram.model';
+import { SyncDiagramOperationService } from './sync-diagram-operation.service';
 
 @Injectable()
 export class SyncDiagramActionsService {
   private baseService = inject(BaseService);
   private progressoSync = inject(ProgressoSyncService);
   private messageService = inject(MessageService);
+  private operations = inject(SyncDiagramOperationService);
 
   private resolveTabelaParam(context: SyncDiagramContext): string | null {
     const base = context.base;
@@ -38,6 +46,7 @@ export class SyncDiagramActionsService {
     const tabelaParam = this.resolveTabelaParam(context);
     if (!base || !esquema || !tabelaParam) return;
 
+    const opId = this.operations.createOperation('estrutura', 'verificar', context);
     this.progressoSync.iniciarGenericoProgressoLocal();
 
     this.baseService.findAll(`sincronizacao/verificaesquema/${base}/${esquema}`).subscribe({
@@ -45,17 +54,24 @@ export class SyncDiagramActionsService {
         this.baseService
           .findAll(`estrutura/verificar/${base}/${esquema}/${tabelaParam}`)
           .subscribe({
-            next: () => {
+            next: (res) => {
+              this.operations.completeVerificar(opId, 'estrutura', res as EstruturaResponse);
               this.messageService.add({
                 severity: 'success',
                 summary: 'Estrutura verificada',
                 detail: `${base}.${esquema}`,
               });
             },
-            error: () => this.progressoSync.marcarErro('Falha na verificação de estrutura'),
+            error: () => {
+              this.operations.failOperation(opId);
+              this.progressoSync.marcarErro('Falha na verificação de estrutura');
+            },
           });
       },
-      error: () => this.progressoSync.marcarErro('Falha ao verificar esquema'),
+      error: () => {
+        this.operations.failOperation(opId);
+        this.progressoSync.marcarErro('Falha ao verificar esquema');
+      },
     });
   }
 
@@ -69,15 +85,27 @@ export class SyncDiagramActionsService {
     const tabelaParam = this.resolveTabelaParam(context);
     if (!base || !esquema || !tabelaParam) return;
 
+    const opId = this.operations.createOperation('estrutura', 'verificar-sync', context);
     this.progressoSync.iniciarGenericoProgressoLocal();
 
     this.baseService.findAll(`estrutura/verificar/${base}/${esquema}/${tabelaParam}`).subscribe({
-      next: () => this.sincronizarEstruturaInterno(context, true),
-      error: () => this.progressoSync.marcarErro('Falha na verificação de estrutura'),
+      next: (res) => {
+        this.operations.completeVerificar(opId, 'estrutura', res as EstruturaResponse);
+        this.operations.beginSyncPhase(opId);
+        this.sincronizarEstruturaInterno(context, true, opId);
+      },
+      error: () => {
+        this.operations.failOperation(opId);
+        this.progressoSync.marcarErro('Falha na verificação de estrutura');
+      },
     });
   }
 
-  private sincronizarEstruturaInterno(context: SyncDiagramContext, jaIniciado: boolean): void {
+  private sincronizarEstruturaInterno(
+    context: SyncDiagramContext,
+    jaIniciado: boolean,
+    existingOpId?: string
+  ): void {
     const base = context.base;
     const esquema = context.esquema;
     if (!base || !esquema) {
@@ -89,23 +117,36 @@ export class SyncDiagramActionsService {
       return;
     }
 
+    const opId =
+      existingOpId ?? this.operations.createOperation('estrutura', 'sincronizar', context);
+
     if (!jaIniciado) {
       this.progressoSync.iniciarGenericoProgressoLocal();
+    } else if (!existingOpId) {
+      this.operations.beginSyncPhase(opId);
     }
 
     this.baseService.findAll(`estrutura/${base}/${esquema}`).subscribe({
-      next: (res: { errors?: unknown[] }) => {
+      next: (res: { errors?: string[]; tabelas_afetadas?: TabelaAfetadaDTO[] }) => {
         if (res?.errors?.length) {
+          this.operations.completeSync(opId, { errors: res.errors, tabelas_afetadas: res.tabelas_afetadas });
           this.progressoSync.marcarErro('Sincronização de estrutura com erros');
           return;
         }
+        this.operations.completeSync(opId, {
+          tabelas_afetadas: res.tabelas_afetadas,
+          errors: res.errors,
+        });
         this.messageService.add({
           severity: 'success',
           summary: 'Estrutura sincronizada',
           detail: `${base}.${esquema}`,
         });
       },
-      error: () => this.progressoSync.marcarErro('Falha na sincronização de estrutura'),
+      error: () => {
+        this.operations.failOperation(opId);
+        this.progressoSync.marcarErro('Falha na sincronização de estrutura');
+      },
     });
   }
 
@@ -115,6 +156,7 @@ export class SyncDiagramActionsService {
     const tabelaParam = this.resolveTabelaParam(context);
     if (!base || !esquema || !tabelaParam) return;
 
+    const opId = this.operations.createOperation('dados', 'verificar', context);
     this.progressoSync.iniciarGenericoProgressoLocal();
 
     this.baseService.findAll(`sincronizacao/verificaesquema/${base}/${esquema}`).subscribe({
@@ -122,17 +164,24 @@ export class SyncDiagramActionsService {
         this.baseService
           .findAll(`dados/verificar/${base}/${esquema}/${tabelaParam}`)
           .subscribe({
-            next: () => {
+            next: (res) => {
+              this.operations.completeVerificar(opId, 'dados', res as { tabelas_afetadas?: TabelaAfetadaDTO[] });
               this.messageService.add({
                 severity: 'success',
                 summary: 'Dados verificados',
                 detail: `${base}.${esquema}`,
               });
             },
-            error: () => this.progressoSync.marcarErro('Falha na verificação de dados'),
+            error: () => {
+              this.operations.failOperation(opId);
+              this.progressoSync.marcarErro('Falha na verificação de dados');
+            },
           });
       },
-      error: () => this.progressoSync.marcarErro('Falha ao verificar esquema'),
+      error: () => {
+        this.operations.failOperation(opId);
+        this.progressoSync.marcarErro('Falha ao verificar esquema');
+      },
     });
   }
 
@@ -146,15 +195,27 @@ export class SyncDiagramActionsService {
     const tabelaParam = this.resolveTabelaParam(context);
     if (!base || !esquema || !tabelaParam) return;
 
+    const opId = this.operations.createOperation('dados', 'verificar-sync', context);
     this.progressoSync.iniciarGenericoProgressoLocal();
 
     this.baseService.findAll(`dados/verificar/${base}/${esquema}/${tabelaParam}`).subscribe({
-      next: () => this.sincronizarDadosInterno(context, true),
-      error: () => this.progressoSync.marcarErro('Falha na verificação de dados'),
+      next: (res) => {
+        this.operations.completeVerificar(opId, 'dados', res as { tabelas_afetadas?: TabelaAfetadaDTO[] });
+        this.operations.beginSyncPhase(opId);
+        this.sincronizarDadosInterno(context, true, opId);
+      },
+      error: () => {
+        this.operations.failOperation(opId);
+        this.progressoSync.marcarErro('Falha na verificação de dados');
+      },
     });
   }
 
-  private sincronizarDadosInterno(context: SyncDiagramContext, jaIniciado: boolean): void {
+  private sincronizarDadosInterno(
+    context: SyncDiagramContext,
+    jaIniciado: boolean,
+    existingOpId?: string
+  ): void {
     const base = context.base;
     const esquema = context.esquema;
     if (!base || !esquema) {
@@ -166,23 +227,36 @@ export class SyncDiagramActionsService {
       return;
     }
 
+    const opId =
+      existingOpId ?? this.operations.createOperation('dados', 'sincronizar', context);
+
     if (!jaIniciado) {
       this.progressoSync.iniciarGenericoProgressoLocal();
+    } else if (!existingOpId) {
+      this.operations.beginSyncPhase(opId);
     }
 
     this.baseService.findAll(`dados/${base}/${esquema}`).subscribe({
-      next: (res: { errors?: unknown[] }) => {
+      next: (res: { errors?: string[]; tabelas_afetadas?: TabelaAfetadaDTO[] }) => {
         if (res?.errors?.length) {
+          this.operations.completeSync(opId, { errors: res.errors, tabelas_afetadas: res.tabelas_afetadas });
           this.progressoSync.marcarErro('Sincronização de dados com erros');
           return;
         }
+        this.operations.completeSync(opId, {
+          tabelas_afetadas: res.tabelas_afetadas,
+          errors: res.errors,
+        });
         this.messageService.add({
           severity: 'success',
           summary: 'Dados sincronizados',
           detail: `${base}.${esquema}`,
         });
       },
-      error: () => this.progressoSync.marcarErro('Falha na sincronização de dados'),
+      error: () => {
+        this.operations.failOperation(opId);
+        this.progressoSync.marcarErro('Falha na sincronização de dados');
+      },
     });
   }
 }

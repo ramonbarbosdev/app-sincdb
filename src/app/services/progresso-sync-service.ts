@@ -27,17 +27,35 @@ export class ProgressoSyncService {
 
   progressoState$ = this.progressoState.asObservable();
 
+  private normalizeStatus(raw: string | undefined | null): ProgressoStatus | null {
+    if (!raw) return null;
+    const normalized = raw
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toUpperCase()
+      .trim();
+    if (normalized === 'CONCLUIDO') return 'CONCLUIDO';
+    if (normalized === 'CANCELADO') return 'CANCELADO';
+    if (normalized === 'ERRO') return 'ERRO';
+    if (
+      normalized === 'RUNNING' ||
+      normalized === 'EXECUTANDO' ||
+      normalized === 'PROCESSANDO' ||
+      normalized === 'INICIANDO'
+    ) {
+      return 'RUNNING';
+    }
+    if (normalized === 'IDLE') return 'IDLE';
+    return null;
+  }
+
   updateProgresso(data: any) {
+    const normalizedStatus = this.normalizeStatus(data.status);
     const nextStatus: ProgressoStatus =
-      data.status === 'CONCLUIDO'
-        ? 'CONCLUIDO'
-        : data.status === 'CANCELADO'
-          ? 'CANCELADO'
-          : data.status === 'ERRO'
-            ? 'ERRO'
-            : data.progresso > 0 || data.mensagem
-              ? 'RUNNING'
-              : this.progressoState.value.status;
+      normalizedStatus ??
+      (data.progresso > 0 || data.mensagem
+        ? 'RUNNING'
+        : this.progressoState.value.status);
 
     this.progressoState.next({
       progresso: data.progresso ?? 0,
@@ -48,7 +66,7 @@ export class ProgressoSyncService {
       duracaoMs: data.duracaoMs ?? this.progressoState.value.duracaoMs,
     });
 
-    if (data.status === 'CONCLUIDO' || data.status === 'CANCELADO') {
+    if (normalizedStatus === 'CONCLUIDO' || normalizedStatus === 'CANCELADO') {
       setTimeout(() => this.resetar(), 2200);
     }
   }

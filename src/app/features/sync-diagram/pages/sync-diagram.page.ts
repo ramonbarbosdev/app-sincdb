@@ -9,12 +9,21 @@ import { LayoutService } from '../../../layout/service/layout.service';
 import { SyncDiagramCanvasComponent } from '../components/sync-diagram-canvas/sync-diagram-canvas.component';
 import { SyncDiagramMode } from '../models/sync-diagram.model';
 import { SyncDiagramActionsService } from '../services/sync-diagram-actions.service';
+import { SyncDiagramLayoutPersistenceService } from '../services/sync-diagram-layout-persistence.service';
+import { SyncDiagramLayoutService } from '../services/sync-diagram-layout.service';
+import { SyncDiagramOperationService } from '../services/sync-diagram-operation.service';
 import { SyncDiagramStateService } from '../services/sync-diagram-state.service';
 
 @Component({
   selector: 'app-sync-diagram-page',
   standalone: true,
-  providers: [SyncDiagramStateService, SyncDiagramActionsService],
+  providers: [
+    SyncDiagramLayoutPersistenceService,
+    SyncDiagramLayoutService,
+    SyncDiagramStateService,
+    SyncDiagramOperationService,
+    SyncDiagramActionsService,
+  ],
   imports: [CommonModule, CloudLocalPulse, SyncDiagramCanvasComponent],
   templateUrl: './sync-diagram.page.html',
   styleUrls: ['../sync-diagram.theme.scss', './sync-diagram.page.scss'],
@@ -25,6 +34,7 @@ export class SyncDiagramPage implements OnInit, OnDestroy {
   private progressoSync = inject(ProgressoSyncService);
   private actions = inject(SyncDiagramActionsService);
   readonly state = inject(SyncDiagramStateService);
+  private operations = inject(SyncDiagramOperationService);
   private router = inject(Router);
 
   conexaoPadrao?: Conexao;
@@ -44,6 +54,7 @@ export class SyncDiagramPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.state.flushPersist();
     this.layoutService.layoutState.update((prev) => ({
       ...prev,
       staticMenuDesktopInactive: this.previousMenuInactive,
@@ -81,6 +92,14 @@ export class SyncDiagramPage implements OnInit, OnDestroy {
   sincronizarSelecao(): void {
     const context = this.state.selection();
     this.actions.verificarESincronizar(context, this.state.syncMode());
+  }
+
+  hasRunningOperation(): boolean {
+    return this.operations.hasRunningOperation();
+  }
+
+  cancelarOperacao(): void {
+    this.operations.cancelActiveOperation();
   }
 
   irParaConexao(): void {

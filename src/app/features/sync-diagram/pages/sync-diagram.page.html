@@ -43,9 +43,17 @@
         Conexão
       </button>
       <button
+        *ngIf="hasRunningOperation()"
+        type="button"
+        class="btn btn-ghost btn-cancel"
+        (click)="cancelarOperacao()"
+      >
+        Cancelar
+      </button>
+      <button
         type="button"
         class="btn btn-primary"
-        [disabled]="!breadcrumbParts().length"
+        [disabled]="!breadcrumbParts().length || hasRunningOperation()"
         (click)="sincronizarSelecao()"
       >
         {{ syncButtonLabel() }}

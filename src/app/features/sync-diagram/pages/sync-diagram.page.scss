@@ -106,6 +106,15 @@
   color: var(--sync-diagram-text);
 }
 
+.btn-cancel {
+  color: var(--sync-diagram-status-error);
+  border-color: color-mix(in srgb, var(--sync-diagram-status-error) 35%, var(--sync-diagram-border));
+
+  &:hover {
+    background: color-mix(in srgb, var(--sync-diagram-status-error) 10%, transparent);
+  }
+}
+
 .sync-diagram-main {
   position: relative;
   flex: 1;

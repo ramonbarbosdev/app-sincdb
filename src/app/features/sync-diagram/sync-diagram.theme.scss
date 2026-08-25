@@ -9,9 +9,23 @@
   --sync-diagram-glow: 0 0 0 4px color-mix(in srgb, var(--p-primary-color) 18%, transparent);
   --sync-diagram-header-bg: color-mix(in srgb, var(--p-primary-color) 8%, var(--p-content-background));
   --sync-diagram-mono: ui-monospace, 'JetBrains Mono', 'Cascadia Code', monospace;
+
+  --sync-diagram-data-accent: color-mix(in srgb, var(--p-primary-color) 55%, #2dd4bf);
+  --sync-diagram-data-glow: 0 0 0 4px color-mix(in srgb, var(--sync-diagram-data-accent) 18%, transparent);
+
+  --sync-diagram-status-created: #22c55e;
+  --sync-diagram-status-altered: #f59e0b;
+  --sync-diagram-status-linked: #6366f1;
+  --sync-diagram-status-done: #16a34a;
+  --sync-diagram-status-error: #ef4444;
 }
 
 :host-context(.app-dark),
 :host-context([data-p-theme='dark']) {
   --sync-diagram-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  --sync-diagram-status-created: #4ade80;
+  --sync-diagram-status-altered: #fbbf24;
+  --sync-diagram-status-linked: #818cf8;
+  --sync-diagram-status-done: #22c55e;
+  --sync-diagram-status-error: #f87171;
 }

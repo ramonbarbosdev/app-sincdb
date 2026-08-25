@@ -80,6 +80,20 @@
   opacity: 0.95;
 }
 
+:host ::ng-deep .connection-erd-fk .f-connection-path {
+  stroke: color-mix(in srgb, var(--sync-diagram-status-linked) 55%, var(--sync-diagram-border));
+  stroke-dasharray: 4 3;
+}
+
+:host ::ng-deep .connection-erd-fk.connection-active .f-connection-path {
+  stroke: var(--sync-diagram-status-linked);
+  stroke-dasharray: none;
+}
+
+:host ::ng-deep .connection-operation .f-connection-path {
+  stroke: color-mix(in srgb, var(--sync-diagram-primary) 50%, var(--sync-diagram-border));
+}
+
 @media (prefers-reduced-motion: reduce) {
   .loading-spinner {
     animation: none;

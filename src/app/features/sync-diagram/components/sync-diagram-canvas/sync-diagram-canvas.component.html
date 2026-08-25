@@ -24,6 +24,8 @@
         [fSelectionDisabled]="true"
         [fReassignDisabled]="true"
         [class.connection-active]="edge.active"
+        [class.connection-erd-fk]="edge.kind === 'erd-fk'"
+        [class.connection-operation]="edge.kind === 'operation-link'"
       />
 
       <div
@@ -51,13 +53,27 @@
         ></div>
 
         <app-sync-diagram-node-card
-          [node]="flowNode.meta"
+          *ngIf="flowNode.type === 'selector' && flowNode.selectorMeta"
+          [node]="flowNode.selectorMeta"
           [items]="filteredItems(flowNode.id)"
           [estruturaMode]="isEstruturaMode()"
           [dadosMode]="isDadosMode()"
           (filterChange)="onFilterChange(flowNode.id, $event)"
-          (itemClick)="onItemClick(flowNode.meta, $event)"
-          (action)="onAction($event, flowNode.meta)"
+          (itemClick)="onItemClick(flowNode.selectorMeta, $event)"
+          (action)="onAction($event, flowNode.selectorMeta)"
+        />
+
+        <app-sync-operation-node-card
+          *ngIf="flowNode.type === 'operation' && flowNode.operationMeta"
+          [operation]="flowNode.operationMeta"
+          (toggleDetail)="onToggleOperationDetail(flowNode.operationMeta!.id)"
+          (closeDetail)="onCloseOperationDetail(flowNode.operationMeta!.id)"
+          (cancel)="onCancelOperation(flowNode.operationMeta!.id)"
+        />
+
+        <app-sync-erd-table-node
+          *ngIf="flowNode.type === 'erd-table' && flowNode.erdMeta"
+          [table]="flowNode.erdMeta"
         />
       </div>
     </f-canvas>

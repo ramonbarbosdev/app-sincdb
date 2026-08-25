@@ -1,0 +1,38 @@
+<div
+  class="erd-table-wrap"
+  [class.mode-estrutura]="table.mode === 'estrutura'"
+  [class.mode-dados]="table.mode === 'dados'"
+  [class.status-idle]="table.status === 'idle'"
+  [class.status-running]="table.status === 'running'"
+  [class.status-created]="table.status === 'created'"
+  [class.status-altered]="table.status === 'altered'"
+  [class.status-linked]="table.status === 'linked'"
+  [class.status-syncing]="table.status === 'syncing'"
+  [class.status-done]="table.status === 'done'"
+  [class.status-error]="table.status === 'error'"
+>
+  <div class="erd-table-node">
+    <header class="erd-table-header" fDragHandle>
+      <span class="erd-table-icon">T</span>
+      <strong>{{ displayName() }}</strong>
+    </header>
+
+    <ul class="erd-column-list" *ngIf="table.mode === 'dados' && table.columns.length">
+      <li
+        *ngFor="let col of table.columns"
+        class="erd-column-row"
+        [class.col-idle]="col.status === 'idle'"
+        [class.col-running]="col.status === 'running'"
+        [class.col-insert]="col.status === 'insert'"
+        [class.col-update]="col.status === 'update'"
+        [class.col-done]="col.status === 'done'"
+      >
+        <span class="erd-column-name">{{ col.nome }}</span>
+      </li>
+    </ul>
+
+    <div class="erd-table-empty" *ngIf="table.mode === 'dados' && !table.columns.length">
+      <span>Colunas...</span>
+    </div>
+  </div>
+</div>

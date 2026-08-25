@@ -11,24 +11,33 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, viewChild } from '@angular/core';
 import {
   SyncDiagramAction,
-  SyncDiagramKind,
   SyncDiagramNodeData,
 } from '../../models/sync-diagram.model';
 import { SyncDiagramActionsService } from '../../services/sync-diagram-actions.service';
+import { SyncDiagramOperationService } from '../../services/sync-diagram-operation.service';
 import { SyncDiagramStateService } from '../../services/sync-diagram-state.service';
 import { SyncDiagramNodeCardComponent } from '../sync-diagram-node-card/sync-diagram-node-card.component';
+import { SyncErdTableNodeComponent } from '../sync-erd-table-node/sync-erd-table-node.component';
+import { SyncOperationNodeCardComponent } from '../sync-operation-node-card/sync-operation-node-card.component';
 
 @Component({
   selector: 'app-sync-diagram-canvas',
   standalone: true,
   providers: [provideFFlow(withControlScheme(F_SCROLL_PAN_CONTROL_SCHEME))],
-  imports: [CommonModule, FFlowModule, SyncDiagramNodeCardComponent],
+  imports: [
+    CommonModule,
+    FFlowModule,
+    SyncDiagramNodeCardComponent,
+    SyncOperationNodeCardComponent,
+    SyncErdTableNodeComponent,
+  ],
   templateUrl: './sync-diagram-canvas.component.html',
   styleUrls: ['../../sync-diagram.theme.scss', './sync-diagram-canvas.component.scss'],
 })
 export class SyncDiagramCanvasComponent {
   readonly state = inject(SyncDiagramStateService);
   private actions = inject(SyncDiagramActionsService);
+  private operations = inject(SyncDiagramOperationService);
   private canvas = viewChild(FCanvasComponent);
 
   readonly connectionType = EFConnectionType.SEGMENT;
@@ -51,6 +60,19 @@ export class SyncDiagramCanvasComponent {
 
   onItemClick(node: SyncDiagramNodeData, itemId: string): void {
     this.state.selectItem(node.kind, itemId, node.context);
+  }
+
+  onToggleOperationDetail(operationId: string): void {
+    this.operations.toggleDetail(operationId);
+    setTimeout(() => this.canvas()?.fitToScreen(PointExtensions.initialize(80, 80), false), 120);
+  }
+
+  onCloseOperationDetail(operationId: string): void {
+    this.operations.closeDetail(operationId);
+  }
+
+  onCancelOperation(operationId: string): void {
+    this.operations.cancelOperation(operationId);
   }
 
   onAction(action: SyncDiagramAction, node: SyncDiagramNodeData): void {

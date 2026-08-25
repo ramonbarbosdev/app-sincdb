@@ -1,0 +1,204 @@
+.operation-node-wrap {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.operation-node {
+  width: 260px;
+  border: 1px solid var(--sync-diagram-border);
+  border-radius: 10px;
+  background: var(--sync-diagram-surface-card);
+  box-shadow: var(--sync-diagram-shadow);
+  overflow: hidden;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  transition: box-shadow 160ms ease, border-color 160ms ease;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--sync-diagram-primary) 45%, var(--sync-diagram-border));
+  }
+
+  &.is-running {
+    border-color: color-mix(in srgb, var(--sync-diagram-primary) 55%, var(--sync-diagram-border));
+    box-shadow: var(--sync-diagram-shadow), var(--sync-diagram-glow);
+  }
+}
+
+.mode-dados .operation-node {
+  border-color: color-mix(in srgb, var(--sync-diagram-data-accent) 35%, var(--sync-diagram-border));
+}
+
+.detail-open .operation-node {
+  border-color: color-mix(in srgb, var(--sync-diagram-primary) 60%, var(--sync-diagram-border));
+  box-shadow: var(--sync-diagram-shadow), var(--sync-diagram-glow);
+}
+
+.operation-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  background: var(--sync-diagram-header-bg);
+  border-bottom: 1px solid var(--sync-diagram-border);
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.operation-icon {
+  font-size: 0.9rem;
+  line-height: 1;
+  color: var(--sync-diagram-primary);
+}
+
+.mode-dados .operation-icon {
+  color: var(--sync-diagram-data-accent);
+}
+
+.operation-titles {
+  flex: 1;
+  min-width: 0;
+
+  strong {
+    display: block;
+    font-size: 0.82rem;
+    color: var(--sync-diagram-text);
+    line-height: 1.3;
+  }
+
+  small {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--sync-diagram-text-muted);
+    margin-top: 0.15rem;
+  }
+}
+
+.operation-mode-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  background: color-mix(in srgb, var(--sync-diagram-primary) 12%, transparent);
+  color: var(--sync-diagram-primary);
+}
+
+.mode-dados .operation-mode-badge {
+  background: color-mix(in srgb, var(--sync-diagram-data-accent) 14%, transparent);
+  color: var(--sync-diagram-data-accent);
+}
+
+.operation-body {
+  padding: 0.6rem 0.75rem 0.75rem;
+}
+
+.operation-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.operation-progress-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--sync-diagram-text-muted) 18%, transparent);
+  overflow: hidden;
+}
+
+.operation-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--sync-diagram-primary);
+  transition: width 200ms ease;
+}
+
+.mode-dados .operation-progress-fill {
+  background: var(--sync-diagram-data-accent);
+}
+
+.operation-progress-label {
+  font-size: 0.72rem;
+  font-family: var(--sync-diagram-mono);
+  color: var(--sync-diagram-text-muted);
+}
+
+.operation-table-hint {
+  margin: 0.45rem 0 0;
+  font-size: 0.72rem;
+  color: var(--sync-diagram-text-muted);
+
+  span {
+    font-family: var(--sync-diagram-mono);
+    color: var(--sync-diagram-text);
+  }
+}
+
+.operation-error {
+  margin: 0.45rem 0 0;
+  font-size: 0.72rem;
+  color: var(--sync-diagram-status-error);
+}
+
+.phase-erro .operation-header {
+  background: color-mix(in srgb, var(--sync-diagram-status-error) 10%, var(--sync-diagram-surface-card));
+}
+
+.phase-cancelado .operation-header {
+  background: color-mix(in srgb, var(--sync-diagram-text-muted) 12%, var(--sync-diagram-surface-card));
+}
+
+.operation-message {
+  margin: 0.45rem 0 0;
+  font-size: 0.72rem;
+  color: var(--sync-diagram-text-muted);
+}
+
+.phase-concluido .operation-progress-fill {
+  background: var(--sync-diagram-status-done);
+}
+
+.operation-fab-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.35rem;
+  border: 1px solid var(--sync-diagram-border);
+  border-radius: 10px;
+  background: var(--sync-diagram-surface-card);
+  box-shadow: var(--sync-diagram-shadow);
+}
+
+.fab-btn {
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--sync-diagram-text);
+  cursor: pointer;
+  font-size: 0.82rem;
+
+  &:hover {
+    background: color-mix(in srgb, var(--sync-diagram-primary) 12%, transparent);
+  }
+
+  &.fab-cancel:hover {
+    background: color-mix(in srgb, var(--sync-diagram-status-error) 14%, transparent);
+    color: var(--sync-diagram-status-error);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .operation-node,
+  .operation-progress-fill {
+    transition: none;
+  }
+}
