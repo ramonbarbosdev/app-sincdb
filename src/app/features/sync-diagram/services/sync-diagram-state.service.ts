@@ -319,6 +319,23 @@ export class SyncDiagramStateService {
     this.persistSoon();
   }
 
+  recolherNivel(): void {
+    const sel = this.selection();
+    if (sel.tabela) {
+      this.selection.set({ base: sel.base, esquema: sel.esquema });
+      this.rebuildGraph();
+      this.persistSoon();
+      return;
+    }
+    if (sel.esquema) {
+      this.closeChildren('schemas');
+      return;
+    }
+    if (sel.base) {
+      this.closeChildren('bases');
+    }
+  }
+
   filteredItems(nodeId: string): SyncDiagramItem[] {
     const meta = this.nodeMeta.get(nodeId);
     if (!meta) return [];

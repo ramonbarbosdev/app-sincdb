@@ -12,7 +12,11 @@
     (pointerdown)="onUserCanvasInteraction()"
   >
     <f-background>
-      <f-circle-pattern id="sync-diagram-dots" [radius]="1.5" [color]="'var(--sync-diagram-dot-color)'" />
+      <f-circle-pattern
+        id="sync-diagram-dots"
+        [radius]="1.2"
+        [color]="'var(--sync-diagram-dot-color)'"
+      />
     </f-background>
 
     <f-canvas
@@ -66,11 +70,9 @@
           *ngIf="flowNode.type === 'selector' && flowNode.selectorMeta"
           [node]="flowNode.selectorMeta"
           [items]="filteredItems(flowNode.id)"
-          [estruturaMode]="isEstruturaMode()"
-          [dadosMode]="isDadosMode()"
           (filterChange)="onFilterChange(flowNode.id, $event)"
           (itemClick)="onItemClick(flowNode.selectorMeta, $event)"
-          (action)="onAction($event, flowNode.selectorMeta)"
+          (action)="onNodeAction($event, flowNode.selectorMeta)"
         />
 
         <app-sync-operation-node-card
@@ -92,12 +94,24 @@
         />
       </div>
     </f-canvas>
+
+    <div class="minimap-shell">
+      <f-minimap [fMinSize]="56" />
+    </div>
   </f-flow>
 
-  <div class="canvas-zoom-controls" *ngIf="!state.loadingInitial()" aria-label="Controles de zoom">
-    <button type="button" class="zoom-btn" title="Diminuir zoom" (click)="zoomOut()">−</button>
-    <span class="zoom-label">{{ zoomLevel() }}%</span>
-    <button type="button" class="zoom-btn" title="Aumentar zoom" (click)="zoomIn()">+</button>
-    <button type="button" class="zoom-btn zoom-fit" title="Enquadrar diagrama" (click)="fitView()">⊡</button>
+  <div class="canvas-ui" *ngIf="!state.loadingInitial()">
+    <div class="canvas-ui-actions">
+      <ng-content />
+    </div>
+
+    <nav class="canvas-toolbar" aria-label="Controles de zoom">
+      <button type="button" class="tb-btn" title="Diminuir zoom" (click)="zoomOut()">−</button>
+      <span class="tb-zoom">{{ zoomLevel() }}%</span>
+      <button type="button" class="tb-btn" title="Aumentar zoom" (click)="zoomIn()">+</button>
+      <span class="tb-sep" aria-hidden="true"></span>
+      <button type="button" class="tb-btn" title="Enquadrar diagrama" (click)="fitView()">⊡</button>
+      <button type="button" class="tb-btn tb-label" title="Zoom 100%" (click)="resetView()">1:1</button>
+    </nav>
   </div>
 </div>

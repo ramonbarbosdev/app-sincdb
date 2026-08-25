@@ -222,14 +222,6 @@
   &:hover {
     background: color-mix(in srgb, var(--sync-diagram-primary) 12%, transparent);
   }
-
-  &.fab-muted {
-    opacity: 0.45;
-  }
-
-  &.fab-highlight {
-    opacity: 1;
-  }
 }
 
 .diagram-node-wrap:hover .diagram-fab-strip,

@@ -21,6 +21,14 @@
 
   --sync-diagram-zone-border: color-mix(in srgb, var(--p-primary-color) 35%, var(--p-content-border-color));
   --sync-diagram-zone-bg: color-mix(in srgb, var(--p-primary-color) 5%, var(--p-content-background));
+
+  /* Canvas escuro (diagrama flutuante) */
+  --sync-diagram-canvas-bg: #0b0e14;
+  --sync-diagram-canvas-dot: rgba(255, 255, 255, 0.14);
+  --sync-diagram-rail-bg: #15172a;
+  --sync-diagram-rail-border: rgba(255, 255, 255, 0.1);
+  --sync-diagram-rail-divider: rgba(255, 255, 255, 0.12);
+  --sync-diagram-rail-shadow: 0 10px 40px rgba(0, 0, 0, 0.55);
 }
 
 :host-context(.app-dark),

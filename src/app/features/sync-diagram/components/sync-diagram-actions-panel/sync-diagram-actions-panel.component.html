@@ -1,0 +1,102 @@
+<nav class="actions-rail" aria-label="Ações de sincronização">
+  <div class="actions-rail-pill">
+    <ng-container *ngIf="isEstrutura()">
+      <button
+        type="button"
+        class="rail-btn rail-accent-green"
+        title="Verificar estrutura"
+        [attr.aria-label]="'Verificar estrutura · ' + scopeLabel"
+        [disabled]="!hasSelection || running"
+        (click)="verifyEstrutura.emit()"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" />
+          <path d="M20 20l-3.5-3.5" stroke-linecap="round" />
+          <path d="M8 11h6" stroke-linecap="round" />
+        </svg>
+      </button>
+
+      <button
+        type="button"
+        class="rail-btn rail-accent-blue"
+        title="Sincronizar estrutura"
+        [attr.aria-label]="'Sincronizar estrutura · ' + scopeLabel"
+        [disabled]="!hasSelection || running"
+        (click)="syncEstrutura.emit()"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M4 12a4 4 0 0 1 4-4h2" stroke-linecap="round" />
+          <path d="M20 12a4 4 0 0 1-4 4h-2" stroke-linecap="round" />
+          <path d="M16 4l2 2-2 2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M8 20l-2-2 2-2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+    </ng-container>
+
+    <ng-container *ngIf="isDados()">
+      <button
+        type="button"
+        class="rail-btn rail-accent-orange"
+        title="Verificar dados"
+        [attr.aria-label]="'Verificar dados · ' + scopeLabel"
+        [disabled]="!hasSelection || running"
+        (click)="verifyDados.emit()"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="8" />
+          <circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none" />
+        </svg>
+      </button>
+
+      <button
+        type="button"
+        class="rail-btn rail-accent-cyan"
+        title="Sincronizar dados"
+        [attr.aria-label]="'Sincronizar dados · ' + scopeLabel"
+        [disabled]="!hasSelection || running"
+        (click)="syncDados.emit()"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M12 3v3" stroke-linecap="round" />
+          <path d="M12 18v3" stroke-linecap="round" />
+          <path d="M3 12h3" stroke-linecap="round" />
+          <path d="M18 12h3" stroke-linecap="round" />
+          <path d="M5.6 5.6l2.1 2.1" stroke-linecap="round" />
+          <path d="M16.4 16.4l2.1 2.1" stroke-linecap="round" />
+          <path d="M18.4 5.6l-2.1 2.1" stroke-linecap="round" />
+          <path d="M7.6 16.4l-2.1 2.1" stroke-linecap="round" />
+        </svg>
+      </button>
+    </ng-container>
+
+    <span class="rail-divider" aria-hidden="true"></span>
+
+    <button
+      type="button"
+      class="rail-btn rail-accent-violet"
+      title="Recolher nível"
+      aria-label="Recolher nível"
+      [disabled]="!canRecolher"
+      (click)="recolher.emit()"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M8 6l-4 4 4 4" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M4 10h12a4 4 0 0 1 0 8H8" stroke-linecap="round" />
+      </svg>
+    </button>
+
+    <button
+      *ngIf="running"
+      type="button"
+      class="rail-btn rail-accent-red"
+      title="Cancelar operação"
+      aria-label="Cancelar operação"
+      (click)="cancelar.emit()"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="12" cy="12" r="8" />
+        <path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round" />
+      </svg>
+    </button>
+  </div>
+</nav>

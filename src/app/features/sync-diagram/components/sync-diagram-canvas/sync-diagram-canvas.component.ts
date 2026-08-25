@@ -3,6 +3,7 @@ import {
   EFConnectionType,
   FCanvasComponent,
   FFlowModule,
+  FZoomDirective,
   provideFFlow,
 } from '@foblex/flow';
 import { CommonModule } from '@angular/common';
@@ -11,7 +12,6 @@ import {
   SyncDiagramAction,
   SyncDiagramNodeData,
 } from '../../models/sync-diagram.model';
-import { SyncDiagramActionsService } from '../../services/sync-diagram-actions.service';
 import { SyncDiagramCameraService } from '../../services/sync-diagram-camera.service';
 import { SyncDiagramOperationService } from '../../services/sync-diagram-operation.service';
 import { SyncDiagramStateService } from '../../services/sync-diagram-state.service';
@@ -37,21 +37,25 @@ import { SyncOperationNodeCardComponent } from '../sync-operation-node-card/sync
 })
 export class SyncDiagramCanvasComponent {
   readonly state = inject(SyncDiagramStateService);
-  private actions = inject(SyncDiagramActionsService);
   private operations = inject(SyncDiagramOperationService);
   private camera = inject(SyncDiagramCameraService);
   private canvas = viewChild(FCanvasComponent);
+  private zoom = viewChild(FZoomDirective);
 
   readonly connectionType = EFConnectionType.SEGMENT;
   readonly zoomLevel = signal(100);
 
   onFlowReady(): void {
     const canvasRef = this.canvas();
-    if (canvasRef) {
-      this.camera.registerCanvas(canvasRef);
-      canvasRef.fitToScreen(PointExtensions.initialize(80, 80), false);
-      this.updateZoomLabel();
+    const zoomRef = this.zoom();
+    if (!canvasRef) return;
+
+    this.camera.registerCanvas(canvasRef);
+    if (zoomRef) {
+      this.camera.registerZoom(zoomRef);
     }
+    canvasRef.fitToScreen(PointExtensions.initialize(80, 80), false);
+    this.updateZoomLabel();
   }
 
   onCanvasChange(): void {
@@ -74,6 +78,11 @@ export class SyncDiagramCanvasComponent {
 
   fitView(): void {
     this.camera.fitToScreen();
+    this.updateZoomLabel();
+  }
+
+  resetView(): void {
+    this.camera.resetScaleAndCenter();
     this.updateZoomLabel();
   }
 
@@ -106,57 +115,13 @@ export class SyncDiagramCanvasComponent {
     this.operations.cancelOperation(operationId);
   }
 
-  onAction(action: SyncDiagramAction, node: SyncDiagramNodeData): void {
+  onNodeAction(action: SyncDiagramAction, node: SyncDiagramNodeData): void {
     if (action === 'close-children') {
       this.state.closeChildren(node.kind);
-      return;
     }
-
-    const context = this.buildActionContext(node);
-
-    switch (action) {
-      case 'verify-estrutura':
-        this.actions.verificarEstrutura(context);
-        break;
-      case 'sync-estrutura':
-        this.actions.sincronizarEstrutura(context);
-        break;
-      case 'verify-dados':
-        this.actions.verificarDados(context);
-        break;
-      case 'sync-dados':
-        this.actions.sincronizarDados(context);
-        break;
-    }
-  }
-
-  isEstruturaMode(): boolean {
-    return this.state.syncMode() === 'estrutura';
-  }
-
-  isDadosMode(): boolean {
-    return this.state.syncMode() === 'dados';
   }
 
   private updateZoomLabel(): void {
     this.zoomLevel.set(Math.round(this.camera.getScale() * 100));
-  }
-
-  private buildActionContext(node: SyncDiagramNodeData) {
-    const sel = this.state.selection();
-    if (node.kind === 'tables') {
-      return {
-        base: node.context.base ?? sel.base,
-        esquema: node.context.esquema ?? sel.esquema,
-        tabela: sel.tabela,
-      };
-    }
-    if (node.kind === 'schemas') {
-      return {
-        base: node.context.base ?? sel.base,
-        esquema: sel.esquema,
-      };
-    }
-    return { ...sel };
   }
 }

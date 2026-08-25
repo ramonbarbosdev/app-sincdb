@@ -1,0 +1,80 @@
+.actions-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.actions-rail-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.4rem;
+  border-radius: 999px;
+  background: var(--sync-diagram-rail-bg);
+  border: 1px solid var(--sync-diagram-rail-border);
+  box-shadow: var(--sync-diagram-rail-shadow);
+}
+
+.rail-btn {
+  width: 2.2rem;
+  height: 2.2rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background 120ms ease, opacity 120ms ease;
+
+  svg {
+    width: 1.15rem;
+    height: 1.15rem;
+  }
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, currentColor 16%, transparent);
+  }
+
+  &:disabled {
+    opacity: 0.28;
+    cursor: not-allowed;
+  }
+}
+
+.rail-accent-green {
+  color: #7ed957;
+}
+
+.rail-accent-blue {
+  color: #6cb4ee;
+}
+
+.rail-accent-orange {
+  color: #f5a623;
+}
+
+.rail-accent-cyan {
+  color: #2dd4bf;
+}
+
+.rail-accent-violet {
+  color: #a78bfa;
+}
+
+.rail-accent-red {
+  color: #f87171;
+}
+
+.rail-divider {
+  width: 1.25rem;
+  height: 1px;
+  background: var(--sync-diagram-rail-divider);
+  margin: 0.05rem 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail-btn {
+    transition: none;
+  }
+}

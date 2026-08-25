@@ -19,8 +19,6 @@ import {
 export class SyncDiagramNodeCardComponent {
   @Input({ required: true }) node!: SyncDiagramNodeData;
   @Input() items: SyncDiagramItem[] = [];
-  @Input() estruturaMode = true;
-  @Input() dadosMode = false;
 
   @Output() filterChange = new EventEmitter<string>();
   @Output() itemClick = new EventEmitter<string>();
@@ -33,5 +31,9 @@ export class SyncDiagramNodeCardComponent {
       tables: 'T',
     };
     return map[kind];
+  }
+
+  canCloseChildren(): boolean {
+    return this.node.kind !== 'tables' && !!this.node.selectedItemId;
   }
 }

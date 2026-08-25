@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { PointExtensions } from '@foblex/2d';
-import { FCanvasComponent } from '@foblex/flow';
+import { FCanvasComponent, FZoomDirective } from '@foblex/flow';
 
 const MIN_ZOOM = 0.4;
 const MAX_ZOOM = 1.2;
@@ -10,11 +10,16 @@ const AUTO_FOLLOW_PAUSE_MS = 12000;
 @Injectable()
 export class SyncDiagramCameraService {
   private canvas?: FCanvasComponent;
+  private zoom?: FZoomDirective;
   private focusTimer?: ReturnType<typeof setTimeout>;
   private autoFollowPausedUntil = 0;
 
   registerCanvas(canvas: FCanvasComponent): void {
     this.canvas = canvas;
+  }
+
+  registerZoom(zoom: FZoomDirective): void {
+    this.zoom = zoom;
   }
 
   getScale(): number {
@@ -55,6 +60,10 @@ export class SyncDiagramCameraService {
 
   zoomIn(): void {
     this.pauseAutoFollow();
+    if (this.zoom) {
+      this.zoom.zoomIn();
+      return;
+    }
     if (!this.canvas) return;
     const next = Math.min(this.canvas.getScale() + ZOOM_STEP, MAX_ZOOM);
     this.canvas.setScale(next);
@@ -62,6 +71,10 @@ export class SyncDiagramCameraService {
 
   zoomOut(): void {
     this.pauseAutoFollow();
+    if (this.zoom) {
+      this.zoom.zoomOut();
+      return;
+    }
     if (!this.canvas) return;
     const next = Math.max(this.canvas.getScale() - ZOOM_STEP, MIN_ZOOM);
     this.canvas.setScale(next);
@@ -70,7 +83,16 @@ export class SyncDiagramCameraService {
   fitToScreen(animated = true): void {
     this.pauseAutoFollow();
     if (!this.canvas) return;
-    this.canvas.fitToScreen(PointExtensions.initialize(80, 80), animated && !this.prefersReducedMotion());
+    this.canvas.fitToScreen(
+      PointExtensions.initialize(80, 80),
+      animated && !this.prefersReducedMotion()
+    );
+  }
+
+  resetScaleAndCenter(animated = true): void {
+    this.pauseAutoFollow();
+    if (!this.canvas) return;
+    this.canvas.resetScaleAndCenter(animated && !this.prefersReducedMotion());
   }
 
   private canAutoFollow(): boolean {

@@ -60,39 +60,12 @@
     </div>
   </div>
 
-  <div class="diagram-fab-strip">
-    <button type="button" class="fab-btn" title="Fechar filhos" (click)="action.emit('close-children')">×</button>
+  <div class="diagram-fab-strip" *ngIf="canCloseChildren()">
     <button
       type="button"
       class="fab-btn"
-      [class.fab-muted]="!estruturaMode"
-      [class.fab-highlight]="estruturaMode"
-      title="Verificar estrutura"
-      (click)="action.emit('verify-estrutura')"
-    >?</button>
-    <button
-      type="button"
-      class="fab-btn"
-      [class.fab-muted]="!estruturaMode"
-      [class.fab-highlight]="estruturaMode"
-      title="Sincronizar estrutura"
-      (click)="action.emit('sync-estrutura')"
-    >⌗</button>
-    <button
-      type="button"
-      class="fab-btn"
-      [class.fab-muted]="!dadosMode"
-      [class.fab-highlight]="dadosMode"
-      title="Verificar dados"
-      (click)="action.emit('verify-dados')"
-    >◉</button>
-    <button
-      type="button"
-      class="fab-btn"
-      [class.fab-muted]="!dadosMode"
-      [class.fab-highlight]="dadosMode"
-      title="Sincronizar dados"
-      (click)="action.emit('sync-dados')"
-    >↻</button>
+      title="Fechar filhos"
+      (click)="action.emit('close-children')"
+    >×</button>
   </div>
 </div>

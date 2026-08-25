@@ -130,12 +130,12 @@
   display: grid;
   gap: 0.35rem;
   padding: 0.55rem 0.7rem;
-  border: 1px solid var(--sync-diagram-border);
+  border: 1px solid var(--sync-diagram-rail-border);
   border-radius: 10px;
-  background: var(--sync-diagram-surface-card);
-  box-shadow: var(--sync-diagram-shadow);
+  background: var(--sync-diagram-rail-bg);
+  box-shadow: var(--sync-diagram-rail-shadow);
   font-size: 0.75rem;
-  color: var(--sync-diagram-text);
+  color: rgba(255, 255, 255, 0.88);
 }
 
 .legend-item {
@@ -158,7 +158,7 @@
 
 .legend-hint {
   margin: 0.25rem 0 0;
-  color: var(--sync-diagram-text-muted);
+  color: rgba(255, 255, 255, 0.45);
   font-size: 0.68rem;
 }
 

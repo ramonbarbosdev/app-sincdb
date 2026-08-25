@@ -1,5 +1,15 @@
+@use '@foblex/flow/styles/index' as flow-theme;
+
 :host {
-  --sync-diagram-dot-color: color-mix(in srgb, var(--sync-diagram-text-muted) 35%, transparent);
+  --sync-diagram-dot-color: var(--sync-diagram-canvas-dot);
+  --sync-diagram-surface: #141825;
+  --sync-diagram-surface-card: #1a1d2e;
+  --sync-diagram-border: rgba(255, 255, 255, 0.1);
+  --sync-diagram-text: rgba(255, 255, 255, 0.92);
+  --sync-diagram-text-muted: rgba(255, 255, 255, 0.48);
+  --sync-diagram-header-bg: rgba(255, 255, 255, 0.04);
+  --sync-diagram-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+
   flex: 1;
   min-height: 0;
   display: flex;
@@ -9,9 +19,9 @@
   position: relative;
   flex: 1;
   min-height: calc(100vh - 7rem);
-  border: 1px solid var(--sync-diagram-border);
+  border: 1px solid color-mix(in srgb, var(--sync-diagram-rail-border) 80%, transparent);
   border-radius: 12px;
-  background: var(--sync-diagram-surface);
+  background: var(--sync-diagram-canvas-bg);
   overflow: hidden;
 }
 
@@ -27,7 +37,8 @@
   display: grid;
   place-items: center;
   gap: 0.75rem;
-  color: var(--sync-diagram-text-muted);
+  color: rgba(255, 255, 255, 0.55);
+  background: var(--sync-diagram-canvas-bg);
 }
 
 .loading-spinner {
@@ -45,6 +56,84 @@
   }
 }
 
+.minimap-shell {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  width: 148px;
+  height: 104px;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.canvas-ui {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.canvas-ui-actions {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  pointer-events: auto;
+}
+
+.canvas-toolbar {
+  position: absolute;
+  left: 50%;
+  bottom: 0.85rem;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  background: var(--sync-diagram-rail-bg);
+  border: 1px solid var(--sync-diagram-rail-border);
+  box-shadow: var(--sync-diagram-rail-shadow);
+  pointer-events: auto;
+}
+
+.tb-btn {
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
+}
+
+.tb-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  font-family: var(--sync-diagram-mono);
+}
+
+.tb-zoom {
+  min-width: 2.6rem;
+  text-align: center;
+  font-size: 0.68rem;
+  font-family: var(--sync-diagram-mono);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.tb-sep {
+  width: 1px;
+  height: 1.25rem;
+  background: var(--sync-diagram-rail-divider);
+  margin: 0 0.15rem;
+}
+
 .flow-node-shell {
   position: relative;
 }
@@ -56,49 +145,6 @@
 
 .flow-node-erd {
   z-index: 1;
-}
-
-.canvas-zoom-controls {
-  position: absolute;
-  right: 0.75rem;
-  top: 0.75rem;
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.35rem;
-  border: 1px solid var(--sync-diagram-border);
-  border-radius: 10px;
-  background: var(--sync-diagram-surface-card);
-  box-shadow: var(--sync-diagram-shadow);
-}
-
-.zoom-btn {
-  width: 1.75rem;
-  height: 1.75rem;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--sync-diagram-text);
-  font-size: 0.9rem;
-  line-height: 1;
-  cursor: pointer;
-
-  &:hover {
-    background: color-mix(in srgb, var(--sync-diagram-primary) 12%, transparent);
-  }
-}
-
-.zoom-fit {
-  font-size: 0.82rem;
-}
-
-.zoom-label {
-  min-width: 2.5rem;
-  text-align: center;
-  font-size: 0.72rem;
-  font-family: var(--sync-diagram-mono);
-  color: var(--sync-diagram-text-muted);
 }
 
 .flow-connector {
@@ -121,8 +167,23 @@
   transform: translateY(-50%);
 }
 
+:host ::ng-deep .f-background {
+  background-color: var(--sync-diagram-canvas-bg);
+}
+
+:host ::ng-deep f-flow {
+  @include flow-theme.minimap($scoped: false);
+}
+
+:host ::ng-deep .f-minimap {
+  background: var(--sync-diagram-rail-bg) !important;
+  border-color: var(--sync-diagram-rail-border) !important;
+  border-radius: 10px !important;
+  box-shadow: var(--sync-diagram-rail-shadow) !important;
+}
+
 :host ::ng-deep .f-connection-path {
-  stroke: color-mix(in srgb, var(--sync-diagram-primary) 40%, var(--sync-diagram-border));
+  stroke: color-mix(in srgb, var(--sync-diagram-primary) 45%, rgba(255, 255, 255, 0.15));
   stroke-width: 1.5px;
 }
 
@@ -133,7 +194,7 @@
 }
 
 :host ::ng-deep .connection-erd-fk .f-connection-path {
-  stroke: color-mix(in srgb, var(--sync-diagram-status-linked) 55%, var(--sync-diagram-border));
+  stroke: color-mix(in srgb, var(--sync-diagram-status-linked) 55%, rgba(255, 255, 255, 0.15));
   stroke-dasharray: 4 3;
 }
 
@@ -143,11 +204,22 @@
 }
 
 :host ::ng-deep .connection-operation .f-connection-path {
-  stroke: color-mix(in srgb, var(--sync-diagram-primary) 50%, var(--sync-diagram-border));
+  stroke: color-mix(in srgb, var(--sync-diagram-primary) 50%, rgba(255, 255, 255, 0.15));
 }
 
 @media (prefers-reduced-motion: reduce) {
   .loading-spinner {
     animation: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .canvas-toolbar {
+    bottom: 6.5rem;
+  }
+
+  .minimap-shell {
+    width: 120px;
+    height: 88px;
   }
 }

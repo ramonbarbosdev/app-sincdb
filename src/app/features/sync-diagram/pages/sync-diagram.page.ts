@@ -7,6 +7,7 @@ import { BaseService } from '../../../services/base.service';
 import { ProgressoSyncService } from '../../../services/progresso-sync-service';
 import { LayoutService } from '../../../layout/service/layout.service';
 import { SyncDiagramCanvasComponent } from '../components/sync-diagram-canvas/sync-diagram-canvas.component';
+import { SyncDiagramActionsPanelComponent } from '../components/sync-diagram-actions-panel/sync-diagram-actions-panel.component';
 import { SyncDiagramMode } from '../models/sync-diagram.model';
 import { SyncDiagramActionsService } from '../services/sync-diagram-actions.service';
 import { SyncDiagramCameraService } from '../services/sync-diagram-camera.service';
@@ -26,7 +27,7 @@ import { SyncDiagramStateService } from '../services/sync-diagram-state.service'
     SyncDiagramOperationService,
     SyncDiagramActionsService,
   ],
-  imports: [CommonModule, CloudLocalPulse, SyncDiagramCanvasComponent],
+  imports: [CommonModule, CloudLocalPulse, SyncDiagramCanvasComponent, SyncDiagramActionsPanelComponent],
   templateUrl: './sync-diagram.page.html',
   styleUrls: ['../sync-diagram.theme.scss', './sync-diagram.page.scss'],
 })
@@ -102,6 +103,36 @@ export class SyncDiagramPage implements OnInit, OnDestroy {
 
   cancelarOperacao(): void {
     this.operations.cancelActiveOperation();
+  }
+
+  scopeLabel(): string {
+    const parts = this.breadcrumbParts();
+    return parts.length ? parts.join(' › ') : 'Selecione base, schema ou tabela';
+  }
+
+  canRecolher(): boolean {
+    const sel = this.state.selection();
+    return !!(sel.base || sel.esquema || sel.tabela);
+  }
+
+  verificarEstrutura(): void {
+    this.actions.verificarEstrutura(this.state.selection());
+  }
+
+  sincronizarEstrutura(): void {
+    this.actions.sincronizarEstrutura(this.state.selection());
+  }
+
+  verificarDados(): void {
+    this.actions.verificarDados(this.state.selection());
+  }
+
+  sincronizarDados(): void {
+    this.actions.sincronizarDados(this.state.selection());
+  }
+
+  recolherNivel(): void {
+    this.state.recolherNivel();
   }
 
   irParaConexao(): void {

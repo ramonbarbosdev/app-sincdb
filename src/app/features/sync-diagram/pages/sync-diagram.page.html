@@ -62,13 +62,27 @@
   </header>
 
   <div class="sync-diagram-main">
-    <app-sync-diagram-canvas />
+    <app-sync-diagram-canvas>
+      <app-sync-diagram-actions-panel
+        [mode]="state.syncMode()"
+        [scopeLabel]="scopeLabel()"
+        [hasSelection]="breadcrumbParts().length > 0"
+        [running]="hasRunningOperation()"
+        [canRecolher]="canRecolher()"
+        (verifyEstrutura)="verificarEstrutura()"
+        (syncEstrutura)="sincronizarEstrutura()"
+        (verifyDados)="verificarDados()"
+        (syncDados)="sincronizarDados()"
+        (recolher)="recolherNivel()"
+        (cancelar)="cancelarOperacao()"
+      />
+    </app-sync-diagram-canvas>
 
     <aside class="sync-diagram-legend" aria-label="Legenda">
       <div class="legend-item"><span class="legend-icon">B</span> Base</div>
       <div class="legend-item"><span class="legend-icon">S</span> Schema</div>
       <div class="legend-item"><span class="legend-icon">T</span> Tabela</div>
-      <p class="legend-hint">Arraste no fundo para mover · scroll para zoom · botões +/− no canto</p>
+      <p class="legend-hint">Arraste no fundo · scroll para zoom · barra inferior</p>
     </aside>
   </div>
 </div>
