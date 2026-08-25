@@ -28,7 +28,22 @@ export type ErdEdgeStatus = 'idle' | 'active' | 'done';
 
 export type ColumnVisualStatus = 'idle' | 'running' | 'insert' | 'update' | 'done';
 
-export type FlowNodeType = 'selector' | 'operation' | 'erd-table';
+export type FlowNodeType = 'selector' | 'operation' | 'erd-zone' | 'erd-table';
+
+export type ImpactChipKey =
+  | 'created'
+  | 'altered'
+  | 'linked'
+  | 'syncing'
+  | 'insert'
+  | 'update'
+  | 'error';
+
+export interface ImpactCategoryChip {
+  key: ImpactChipKey;
+  label: string;
+  count: number;
+}
 
 export interface SyncDiagramItem {
   id: string;
@@ -96,6 +111,19 @@ export interface ErdTableNode {
   status: TableVisualStatus;
   columns: ColumnVisualState[];
   mode: SyncDiagramMode;
+  spotlightDim?: boolean;
+}
+
+export interface ErdImpactZone {
+  id: string;
+  operationId: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  title: string;
+  chips: ImpactCategoryChip[];
+  tableIds: string[];
 }
 
 export interface ErdEdge {
@@ -119,6 +147,7 @@ export interface DiagramFlowNode {
   targetConnectorId: string;
   selectorMeta?: SyncDiagramNodeData;
   operationMeta?: SyncOperation;
+  erdZoneMeta?: ErdImpactZone;
   erdMeta?: ErdTableNode;
 }
 

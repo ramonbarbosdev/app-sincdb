@@ -1,7 +1,7 @@
 import { FFlowModule } from '@foblex/flow';
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
-import { ErdTableNode } from '../../models/sync-diagram.model';
+import { ErdTableNode, TableVisualStatus } from '../../models/sync-diagram.model';
 
 @Component({
   selector: 'app-sync-erd-table-node',
@@ -17,5 +17,18 @@ export class SyncErdTableNodeComponent {
     const nome = this.table.nome;
     if (nome.includes('.')) return nome.split('.').pop() ?? nome;
     return nome;
+  }
+
+  statusBadge(status: TableVisualStatus): string | null {
+    const map: Partial<Record<TableVisualStatus, string>> = {
+      created: '+',
+      altered: 'Δ',
+      linked: '→',
+      syncing: '◎',
+      running: '◎',
+      done: '✓',
+      error: '!',
+    };
+    return map[status] ?? null;
   }
 }

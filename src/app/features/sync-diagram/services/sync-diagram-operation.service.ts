@@ -16,6 +16,7 @@ import {
   TableVisualStatus,
   TabelaAfetadaDTO,
 } from '../models/sync-diagram.model';
+import { SyncDiagramCameraService } from './sync-diagram-camera.service';
 import { SyncDiagramStateService } from './sync-diagram-state.service';
 
 @Injectable()
@@ -25,6 +26,7 @@ export class SyncDiagramOperationService implements OnDestroy {
   private progressoSync = inject(ProgressoSyncService);
   private ws = inject(WebsocketService);
   private baseService = inject(BaseService);
+  private camera = inject(SyncDiagramCameraService);
 
   private progressSub?: Subscription;
   private wsBridgeSub?: Subscription;
@@ -64,11 +66,12 @@ export class SyncDiagramOperationService implements OnDestroy {
       phase: action === 'sincronizar' ? 'sincronizando' : 'verificando',
       progress: 0,
       label: `${actionLabel} ${modeLabel} · ${scope}`,
-      detailOpen: false,
+      detailOpen: true,
     };
 
     this.state.spawnOperation(operation);
     this.trackOperation(id);
+    this.loadErdGraph(id, true);
     return id;
   }
 
@@ -78,6 +81,7 @@ export class SyncDiagramOperationService implements OnDestroy {
       progress: 0,
     });
     this.trackOperation(operationId);
+    this.scheduleFocusZone(operationId);
   }
 
   completeVerificar(
@@ -102,6 +106,7 @@ export class SyncDiagramOperationService implements OnDestroy {
       });
       this.state.applyDadosVisuals(operationId, tabelas);
     }
+    this.scheduleFocusZone(operationId);
   }
 
   completeSync(
@@ -119,6 +124,7 @@ export class SyncDiagramOperationService implements OnDestroy {
       this.state.applySyncResultVisuals(operationId, res.tabelas_afetadas, res.errors);
     }
     this.activeOperationId = undefined;
+    this.scheduleFocusZone(operationId);
   }
 
   failOperation(operationId: string): void {
@@ -168,7 +174,20 @@ export class SyncDiagramOperationService implements OnDestroy {
   }
 
   toggleDetail(operationId: string): void {
+    const op = this.state.getOperation(operationId);
+    if (!op) return;
+    const opening = !op.detailOpen;
     this.state.toggleOperationDetail(operationId);
+    if (opening) {
+      this.loadErdGraph(operationId, true);
+    }
+  }
+
+  closeDetail(operationId: string): void {
+    this.state.closeOperationDetail(operationId);
+  }
+
+  private loadErdGraph(operationId: string, focusAfter = false): void {
     const op = this.state.getOperation(operationId);
     if (!op?.detailOpen) return;
 
@@ -195,25 +214,26 @@ export class SyncDiagramOperationService implements OnDestroy {
         }));
         this.state.setErdGraph(operationId, nodes, edges);
 
-        if (op.estruturaResponse) {
-          this.state.applyEstruturaVisuals(operationId, op.estruturaResponse);
+        const refreshed = this.state.getOperation(operationId);
+        if (refreshed?.estruturaResponse) {
+          this.state.applyEstruturaVisuals(operationId, refreshed.estruturaResponse);
         }
-        if (op.tabelasAfetadas) {
-          this.state.applyDadosVisuals(operationId, op.tabelasAfetadas);
+        if (refreshed?.tabelasAfetadas) {
+          this.state.applyDadosVisuals(operationId, refreshed.tabelasAfetadas);
         }
 
         if (op.mode === 'dados') {
           this.loadColumnsForOperation(operationId, base, esquema, nodes);
+        }
+
+        if (focusAfter) {
+          this.scheduleFocusZone(operationId);
         }
       },
       error: () => {
         this.state.setErdGraph(operationId, [], []);
       },
     });
-  }
-
-  closeDetail(operationId: string): void {
-    this.state.closeOperationDetail(operationId);
   }
 
   private loadColumnsForOperation(
@@ -236,17 +256,21 @@ export class SyncDiagramOperationService implements OnDestroy {
     });
   }
 
+  private scheduleFocusZone(operationId: string): void {
+    setTimeout(() => this.camera.focusImpactZone(operationId), 150);
+  }
+
   private trackOperation(operationId: string): void {
     this.activeOperationId = operationId;
     if (!this.progressSub) {
       this.progressSub = this.progressoSync.progressoState$.subscribe((estado) => {
-        const operationId = this.activeOperationId;
-        if (!operationId) return;
+        const opId = this.activeOperationId;
+        if (!opId) return;
 
         const status = estado.status;
         if (status === 'IDLE') return;
 
-        const op = this.state.getOperation(operationId);
+        const op = this.state.getOperation(opId);
         if (!op) return;
 
         const patch: Partial<SyncOperation> = {
@@ -263,7 +287,11 @@ export class SyncDiagramOperationService implements OnDestroy {
         }
 
         if (estado.tabelaAtual) {
-          this.state.highlightRunningTable(operationId, estado.tabelaAtual);
+          this.state.highlightRunningTable(opId, estado.tabelaAtual);
+          const tableNodeId = this.state.findErdTableNodeId(opId, estado.tabelaAtual);
+          if (tableNodeId) {
+            this.camera.focusTableDebounced(tableNodeId);
+          }
         }
 
         if (status === 'ERRO') {
@@ -281,7 +309,7 @@ export class SyncDiagramOperationService implements OnDestroy {
           patch.progress = 100;
         }
 
-        this.state.patchOperation(operationId, patch);
+        this.state.patchOperation(opId, patch);
       });
     }
   }

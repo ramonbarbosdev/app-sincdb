@@ -10,11 +10,22 @@
   [class.status-syncing]="table.status === 'syncing'"
   [class.status-done]="table.status === 'done'"
   [class.status-error]="table.status === 'error'"
+  [class.spotlight-dim]="table.spotlightDim"
 >
   <div class="erd-table-node">
     <header class="erd-table-header" fDragHandle>
       <span class="erd-table-icon">T</span>
       <strong>{{ displayName() }}</strong>
+      <span
+        class="erd-status-badge"
+        *ngIf="statusBadge(table.status) as badge"
+        [class.badge-created]="table.status === 'created'"
+        [class.badge-altered]="table.status === 'altered'"
+        [class.badge-linked]="table.status === 'linked'"
+        [class.badge-running]="table.status === 'running' || table.status === 'syncing'"
+        [class.badge-done]="table.status === 'done'"
+        [class.badge-error]="table.status === 'error'"
+      >{{ badge }}</span>
     </header>
 
     <ul class="erd-column-list" *ngIf="table.mode === 'dados' && table.columns.length">

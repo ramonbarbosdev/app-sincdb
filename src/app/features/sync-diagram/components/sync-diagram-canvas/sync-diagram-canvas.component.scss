@@ -49,6 +49,14 @@
   position: relative;
 }
 
+.flow-node-zone {
+  z-index: 0;
+}
+
+.flow-node-erd {
+  z-index: 1;
+}
+
 .flow-connector {
   position: absolute;
   width: 8px;

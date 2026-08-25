@@ -1,0 +1,24 @@
+<div
+  class="impact-zone"
+  [style.width.px]="zone.width"
+  [style.height.px]="zone.height"
+>
+  <header class="impact-zone-header" fDragHandle>
+    <strong class="impact-zone-title">{{ zone.title }}</strong>
+    <div class="impact-zone-chips" *ngIf="zone.chips.length">
+      <span
+        *ngFor="let chip of zone.chips"
+        class="impact-chip"
+        [class.chip-created]="chip.key === 'created' || chip.key === 'insert'"
+        [class.chip-altered]="chip.key === 'altered' || chip.key === 'update'"
+        [class.chip-linked]="chip.key === 'linked'"
+        [class.chip-syncing]="chip.key === 'syncing'"
+        [class.chip-error]="chip.key === 'error'"
+      >
+        <span class="chip-prefix">{{ chipPrefix(chip) }}</span>
+        {{ chip.count }} {{ chip.label }}
+      </span>
+    </div>
+  </header>
+  <div class="impact-zone-body" aria-hidden="true"></div>
+</div>

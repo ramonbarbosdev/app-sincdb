@@ -7,7 +7,10 @@ import {
   DiagramFlowNode,
   DiagramFlowPoint,
   ErdEdge,
+  ErdImpactZone,
   ErdTableNode,
+  ImpactCategoryChip,
+  ImpactChipKey,
   SyncDiagramContext,
   SyncDiagramItem,
   SyncDiagramKind,
@@ -93,7 +96,7 @@ export class SyncDiagramStateService {
     const point = { x: position.x, y: position.y };
     this.positions.set(nodeId, point);
 
-    if (nodeId.startsWith('erd-')) {
+    if (nodeId.startsWith('erd-') && !nodeId.startsWith('erd-zone-')) {
       const table = this.erdTables.get(nodeId);
       if (table) {
         const op = this.getOperation(table.operationId);
@@ -104,6 +107,7 @@ export class SyncDiagramStateService {
             point
           );
         }
+        this.rebuildGraph();
       }
     }
 
@@ -149,6 +153,16 @@ export class SyncDiagramStateService {
   closeOperationDetail(operationId: string): void {
     this.patchOperation(operationId, { detailOpen: false });
     this.clearErdForOperation(operationId);
+  }
+
+  openOperationDetail(operationId: string): void {
+    this.closeAllOperationDetails(operationId);
+    this.patchOperation(operationId, { detailOpen: true });
+  }
+
+  findErdTableNodeId(operationId: string, tableName: string): string | undefined {
+    const key = this.normalizeTableKey(tableName);
+    return this.findErdTableByKey(operationId, key)?.id;
   }
 
   setErdGraph(operationId: string, tables: ErdTableNode[], edges: ErdEdge[]): void {
@@ -556,6 +570,132 @@ export class SyncDiagramStateService {
     return `erd:${base}:${esquema}:${grafoNodeId}`;
   }
 
+  private impactZoneNodeId(operationId: string): string {
+    return `erd-zone-${operationId}`;
+  }
+
+  private isAffectedStatus(status: TableVisualStatus): boolean {
+    return status !== 'idle' && status !== 'queued';
+  }
+
+  private computeImpactZone(
+    op: SyncOperation,
+    erdTables: ErdTableNode[],
+    opPos: DiagramFlowPoint
+  ): ErdImpactZone {
+    const affected = erdTables.filter((t) => this.isAffectedStatus(t.status));
+    const targetTables = affected.length ? affected : erdTables;
+    const chips = this.buildImpactChips(op, erdTables);
+
+    const boundsInputs = targetTables.map((table) => {
+      const pos = this.getPosition(table.id, { x: opPos.x + ERD_ORIGIN_OFFSET_X, y: opPos.y });
+      return {
+        id: table.id,
+        position: pos,
+        width: this.layout.tableWidth,
+        height: this.layout.estimateTableHeight(table),
+      };
+    });
+
+    const bounds = this.layout.computeImpactBounds(boundsInputs);
+    const esquema = op.context.esquema ?? 'schema';
+    const title = `Alterações · ${esquema}`;
+
+    if (!bounds) {
+      return {
+        id: this.impactZoneNodeId(op.id),
+        operationId: op.id,
+        x: opPos.x + ERD_ORIGIN_OFFSET_X - 48,
+        y: opPos.y - 48,
+        width: 320,
+        height: 200,
+        title,
+        chips,
+        tableIds: targetTables.map((t) => t.id),
+      };
+    }
+
+    return {
+      id: this.impactZoneNodeId(op.id),
+      operationId: op.id,
+      x: bounds.x,
+      y: bounds.y,
+      width: bounds.width,
+      height: bounds.height,
+      title,
+      chips,
+      tableIds: targetTables.map((t) => t.id),
+    };
+  }
+
+  private buildImpactChips(op: SyncOperation, tables: ErdTableNode[]): ImpactCategoryChip[] {
+    const counts: Record<ImpactChipKey, number> = {
+      created: 0,
+      altered: 0,
+      linked: 0,
+      syncing: 0,
+      insert: 0,
+      update: 0,
+      error: 0,
+    };
+
+    if (op.mode === 'estrutura' && op.estruturaResponse?.categorias) {
+      for (const cat of op.estruturaResponse.categorias) {
+        const titulo = cat.titulo ?? '';
+        const n = cat.items?.length ?? cat.total ?? 0;
+        if (titulo.includes('Criação')) counts.created += n;
+        else if (titulo.includes('Alterações')) counts.altered += n;
+        else if (titulo.includes('Chaves')) counts.linked += n;
+      }
+    } else if (op.tabelasAfetadas?.length) {
+      for (const row of op.tabelasAfetadas) {
+        const ins = row.linhaInseridas ?? 0;
+        const upd = row.linhaAtualizadas ?? 0;
+        if (ins > 0) counts.insert++;
+        if (upd > 0) counts.update++;
+        if (row.erro) counts.error++;
+      }
+    }
+
+    for (const table of tables) {
+      switch (table.status) {
+        case 'created':
+          counts.created++;
+          break;
+        case 'altered':
+          counts.altered++;
+          break;
+        case 'linked':
+          counts.linked++;
+          break;
+        case 'syncing':
+          counts.syncing++;
+          break;
+        case 'error':
+          counts.error++;
+          break;
+        case 'running':
+          counts.syncing++;
+          break;
+      }
+    }
+
+    const chips: ImpactCategoryChip[] = [];
+    const push = (key: ImpactChipKey, label: string, count: number) => {
+      if (count > 0) chips.push({ key, label, count });
+    };
+
+    push('created', 'Criação', counts.created);
+    push('altered', 'Alterações', counts.altered);
+    push('linked', 'FK', counts.linked);
+    push('syncing', 'Em progresso', counts.syncing);
+    push('insert', 'Inserções', counts.insert);
+    push('update', 'Atualizações', counts.update);
+    push('error', 'Erros', counts.error);
+
+    return chips;
+  }
+
   private persistSoon(): void {
     if (this.persistTimer) {
       clearTimeout(this.persistTimer);
@@ -711,16 +851,35 @@ export class SyncDiagramStateService {
 
       if (op.detailOpen) {
         const erdTables = this.erdTablesForOperation(op.id);
+        const zone = this.computeImpactZone(op, erdTables, opPos);
+        const hasAffected = zone.chips.length > 0;
+
+        if (zone.width > 0 && zone.height > 0) {
+          const zoneConnectors = this.connectorIds(zone.id);
+          nodes.push({
+            id: zone.id,
+            type: 'erd-zone',
+            position: { x: zone.x, y: zone.y },
+            sourceConnectorId: zoneConnectors.source,
+            targetConnectorId: zoneConnectors.target,
+            erdZoneMeta: zone,
+          });
+        }
+
         for (const erd of erdTables) {
           const erdConnectors = this.connectorIds(erd.id);
           const erdPos = this.getPosition(erd.id, { x: opPos.x + ERD_ORIGIN_OFFSET_X, y: opPos.y });
+          const erdMeta: ErdTableNode = {
+            ...erd,
+            spotlightDim: hasAffected && erd.status === 'idle',
+          };
           nodes.push({
             id: erd.id,
             type: 'erd-table',
             position: erdPos,
             sourceConnectorId: erdConnectors.source,
             targetConnectorId: erdConnectors.target,
-            erdMeta: erd,
+            erdMeta,
           });
         }
         for (const edge of this.erdEdgesForOperation(op.id)) {

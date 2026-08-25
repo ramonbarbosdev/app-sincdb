@@ -18,6 +18,9 @@
   --sync-diagram-status-linked: #6366f1;
   --sync-diagram-status-done: #16a34a;
   --sync-diagram-status-error: #ef4444;
+
+  --sync-diagram-zone-border: color-mix(in srgb, var(--p-primary-color) 35%, var(--p-content-border-color));
+  --sync-diagram-zone-bg: color-mix(in srgb, var(--p-primary-color) 5%, var(--p-content-background));
 }
 
 :host-context(.app-dark),

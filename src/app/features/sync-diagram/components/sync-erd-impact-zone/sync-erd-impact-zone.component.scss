@@ -1,0 +1,79 @@
+.impact-zone {
+  pointer-events: none;
+  border: 1px dashed color-mix(in srgb, var(--sync-diagram-primary) 35%, var(--sync-diagram-border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--sync-diagram-primary) 4%, var(--sync-diagram-surface-card));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sync-diagram-primary) 8%, transparent);
+  overflow: hidden;
+}
+
+.impact-zone-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  padding: 0.45rem 0.65rem;
+  background: color-mix(in srgb, var(--sync-diagram-primary) 10%, var(--sync-diagram-surface-card));
+  border-bottom: 1px dashed color-mix(in srgb, var(--sync-diagram-primary) 20%, var(--sync-diagram-border));
+  cursor: grab;
+  pointer-events: auto;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.impact-zone-title {
+  font-size: 0.72rem;
+  color: var(--sync-diagram-text);
+  margin-right: 0.25rem;
+}
+
+.impact-zone-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.impact-chip {
+  font-size: 0.62rem;
+  font-weight: 600;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--sync-diagram-text-muted) 12%, transparent);
+  color: var(--sync-diagram-text-muted);
+}
+
+.chip-prefix {
+  margin-right: 0.15rem;
+}
+
+.chip-created {
+  background: color-mix(in srgb, var(--sync-diagram-status-created) 18%, transparent);
+  color: var(--sync-diagram-status-created);
+}
+
+.chip-altered {
+  background: color-mix(in srgb, var(--sync-diagram-status-altered) 18%, transparent);
+  color: var(--sync-diagram-status-altered);
+}
+
+.chip-linked {
+  background: color-mix(in srgb, var(--sync-diagram-status-linked) 18%, transparent);
+  color: var(--sync-diagram-status-linked);
+}
+
+.chip-syncing {
+  background: color-mix(in srgb, var(--sync-diagram-primary) 14%, transparent);
+  color: var(--sync-diagram-primary);
+}
+
+.chip-error {
+  background: color-mix(in srgb, var(--sync-diagram-status-error) 16%, transparent);
+  color: var(--sync-diagram-status-error);
+}
+
+.impact-zone-body {
+  flex: 1;
+  min-height: 40px;
+}

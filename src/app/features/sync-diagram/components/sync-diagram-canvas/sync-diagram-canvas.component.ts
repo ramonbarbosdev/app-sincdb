@@ -14,9 +14,11 @@ import {
   SyncDiagramNodeData,
 } from '../../models/sync-diagram.model';
 import { SyncDiagramActionsService } from '../../services/sync-diagram-actions.service';
+import { SyncDiagramCameraService } from '../../services/sync-diagram-camera.service';
 import { SyncDiagramOperationService } from '../../services/sync-diagram-operation.service';
 import { SyncDiagramStateService } from '../../services/sync-diagram-state.service';
 import { SyncDiagramNodeCardComponent } from '../sync-diagram-node-card/sync-diagram-node-card.component';
+import { SyncErdImpactZoneComponent } from '../sync-erd-impact-zone/sync-erd-impact-zone.component';
 import { SyncErdTableNodeComponent } from '../sync-erd-table-node/sync-erd-table-node.component';
 import { SyncOperationNodeCardComponent } from '../sync-operation-node-card/sync-operation-node-card.component';
 
@@ -30,6 +32,7 @@ import { SyncOperationNodeCardComponent } from '../sync-operation-node-card/sync
     SyncDiagramNodeCardComponent,
     SyncOperationNodeCardComponent,
     SyncErdTableNodeComponent,
+    SyncErdImpactZoneComponent,
   ],
   templateUrl: './sync-diagram-canvas.component.html',
   styleUrls: ['../../sync-diagram.theme.scss', './sync-diagram-canvas.component.scss'],
@@ -38,12 +41,17 @@ export class SyncDiagramCanvasComponent {
   readonly state = inject(SyncDiagramStateService);
   private actions = inject(SyncDiagramActionsService);
   private operations = inject(SyncDiagramOperationService);
+  private camera = inject(SyncDiagramCameraService);
   private canvas = viewChild(FCanvasComponent);
 
   readonly connectionType = EFConnectionType.SEGMENT;
 
   onFlowReady(): void {
-    this.canvas()?.fitToScreen(PointExtensions.initialize(80, 80), false);
+    const canvasRef = this.canvas();
+    if (canvasRef) {
+      this.camera.registerCanvas(canvasRef);
+      canvasRef.fitToScreen(PointExtensions.initialize(80, 80), false);
+    }
   }
 
   onPositionChange(nodeId: string, position: { x: number; y: number }): void {
@@ -64,7 +72,6 @@ export class SyncDiagramCanvasComponent {
 
   onToggleOperationDetail(operationId: string): void {
     this.operations.toggleDetail(operationId);
-    setTimeout(() => this.canvas()?.fitToScreen(PointExtensions.initialize(80, 80), false), 120);
   }
 
   onCloseOperationDetail(operationId: string): void {

@@ -35,7 +35,10 @@
         [fNodePosition]="flowNode.position"
         (fNodePositionChange)="onPositionChange(flowNode.id, $event)"
         [fNodeSelectionDisabled]="true"
+        [fNodeDraggingDisabled]="flowNode.type === 'erd-zone'"
         class="flow-node-shell"
+        [class.flow-node-zone]="flowNode.type === 'erd-zone'"
+        [class.flow-node-erd]="flowNode.type === 'erd-table'"
       >
         <div
           fConnector
@@ -69,6 +72,11 @@
           (toggleDetail)="onToggleOperationDetail(flowNode.operationMeta!.id)"
           (closeDetail)="onCloseOperationDetail(flowNode.operationMeta!.id)"
           (cancel)="onCancelOperation(flowNode.operationMeta!.id)"
+        />
+
+        <app-sync-erd-impact-zone
+          *ngIf="flowNode.type === 'erd-zone' && flowNode.erdZoneMeta"
+          [zone]="flowNode.erdZoneMeta"
         />
 
         <app-sync-erd-table-node

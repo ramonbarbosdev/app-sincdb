@@ -1,5 +1,14 @@
 .erd-table-wrap {
   width: 200px;
+  transition: opacity 160ms ease;
+}
+
+.erd-table-wrap.spotlight-dim {
+  opacity: 0.35;
+}
+
+.erd-table-wrap.spotlight-dim:hover {
+  opacity: 0.65;
 }
 
 .erd-table-node {
@@ -25,6 +34,7 @@
   }
 
   strong {
+    flex: 1;
     font-size: 0.78rem;
     font-family: var(--sync-diagram-mono);
     color: var(--sync-diagram-text);
@@ -32,6 +42,47 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+}
+
+.erd-status-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.badge-created {
+  color: var(--sync-diagram-status-created);
+  background: color-mix(in srgb, var(--sync-diagram-status-created) 16%, transparent);
+}
+
+.badge-altered {
+  color: var(--sync-diagram-status-altered);
+  background: color-mix(in srgb, var(--sync-diagram-status-altered) 16%, transparent);
+}
+
+.badge-linked {
+  color: var(--sync-diagram-status-linked);
+  background: color-mix(in srgb, var(--sync-diagram-status-linked) 16%, transparent);
+}
+
+.badge-running {
+  color: var(--sync-diagram-primary);
+  background: color-mix(in srgb, var(--sync-diagram-primary) 14%, transparent);
+}
+
+.badge-done {
+  color: var(--sync-diagram-status-done);
+  background: color-mix(in srgb, var(--sync-diagram-status-done) 14%, transparent);
+}
+
+.badge-error {
+  color: var(--sync-diagram-status-error);
+  background: color-mix(in srgb, var(--sync-diagram-status-error) 14%, transparent);
 }
 
 .erd-table-icon {

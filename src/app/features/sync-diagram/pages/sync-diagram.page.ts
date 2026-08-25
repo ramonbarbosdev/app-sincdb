@@ -9,6 +9,7 @@ import { LayoutService } from '../../../layout/service/layout.service';
 import { SyncDiagramCanvasComponent } from '../components/sync-diagram-canvas/sync-diagram-canvas.component';
 import { SyncDiagramMode } from '../models/sync-diagram.model';
 import { SyncDiagramActionsService } from '../services/sync-diagram-actions.service';
+import { SyncDiagramCameraService } from '../services/sync-diagram-camera.service';
 import { SyncDiagramLayoutPersistenceService } from '../services/sync-diagram-layout-persistence.service';
 import { SyncDiagramLayoutService } from '../services/sync-diagram-layout.service';
 import { SyncDiagramOperationService } from '../services/sync-diagram-operation.service';
@@ -20,6 +21,7 @@ import { SyncDiagramStateService } from '../services/sync-diagram-state.service'
   providers: [
     SyncDiagramLayoutPersistenceService,
     SyncDiagramLayoutService,
+    SyncDiagramCameraService,
     SyncDiagramStateService,
     SyncDiagramOperationService,
     SyncDiagramActionsService,
