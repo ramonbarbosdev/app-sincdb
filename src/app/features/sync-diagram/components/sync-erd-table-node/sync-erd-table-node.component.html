@@ -10,7 +10,6 @@
   [class.status-syncing]="table.status === 'syncing'"
   [class.status-done]="table.status === 'done'"
   [class.status-error]="table.status === 'error'"
-  [class.spotlight-dim]="table.spotlightDim"
 >
   <div class="erd-table-node">
     <header class="erd-table-header" fDragHandle>
@@ -28,7 +27,7 @@
       >{{ badge }}</span>
     </header>
 
-    <ul class="erd-column-list" *ngIf="table.mode === 'dados' && table.columns.length">
+    <ul class="erd-column-list" *ngIf="table.columns.length">
       <li
         *ngFor="let col of table.columns"
         class="erd-column-row"
@@ -42,7 +41,7 @@
       </li>
     </ul>
 
-    <div class="erd-table-empty" *ngIf="table.mode === 'dados' && !table.columns.length">
+    <div class="erd-table-empty" *ngIf="!table.columns.length">
       <span>Colunas...</span>
     </div>
   </div>

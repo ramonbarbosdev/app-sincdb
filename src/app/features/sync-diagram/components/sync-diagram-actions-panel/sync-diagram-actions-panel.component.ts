@@ -16,6 +16,8 @@ export class SyncDiagramActionsPanelComponent {
   @Input() running = false;
   @Input() canRecolher = false;
 
+  @Output() modeChange = new EventEmitter<SyncDiagramMode>();
+  @Output() sincronizarSelecao = new EventEmitter<void>();
   @Output() verifyEstrutura = new EventEmitter<void>();
   @Output() syncEstrutura = new EventEmitter<void>();
   @Output() verifyDados = new EventEmitter<void>();
@@ -29,5 +31,11 @@ export class SyncDiagramActionsPanelComponent {
 
   isDados(): boolean {
     return this.mode === 'dados';
+  }
+
+  selectMode(mode: SyncDiagramMode): void {
+    if (this.mode !== mode) {
+      this.modeChange.emit(mode);
+    }
   }
 }

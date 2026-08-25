@@ -1,111 +1,107 @@
 <div class="sync-diagram-canvas">
-  <div class="canvas-loading" *ngIf="state.loadingInitial()">
-    <span class="loading-spinner" aria-hidden="true"></span>
-    <span>Carregando bases...</span>
-  </div>
+  <div class="canvas-workspace">
+    <div class="canvas-loading" *ngIf="state.loadingInitial()">
+      <span class="loading-spinner" aria-hidden="true"></span>
+      <span>Carregando bases...</span>
+    </div>
 
-  <f-flow
-    *ngIf="!state.loadingInitial()"
-    fDraggable
-    class="diagram-flow"
-    (fFullRendered)="onFlowReady()"
-    (pointerdown)="onUserCanvasInteraction()"
-  >
-    <f-background>
-      <f-circle-pattern
-        id="sync-diagram-dots"
-        [radius]="1.2"
-        [color]="'var(--sync-diagram-dot-color)'"
-      />
-    </f-background>
-
-    <f-canvas
-      fZoom
-      [fZoomMinimum]="0.4"
-      [fZoomMaximum]="1.2"
-      [fZoomStep]="0.1"
-      (fCanvasChange)="onCanvasChange()"
+    <f-flow
+      *ngIf="!state.loadingInitial()"
+      fDraggable
+      class="diagram-flow"
+      (fFullRendered)="onFlowReady()"
+      (pointerdown)="onUserCanvasInteraction()"
     >
-      <f-connection
-        *ngFor="let edge of state.flowConnections()"
-        [fConnectionId]="edge.id"
-        [fSourceId]="edge.sourceId"
-        [fTargetId]="edge.targetId"
-        [fType]="connectionType"
-        [fSelectionDisabled]="true"
-        [fReassignDisabled]="true"
-        [class.connection-active]="edge.active"
-        [class.connection-erd-fk]="edge.kind === 'erd-fk'"
-        [class.connection-operation]="edge.kind === 'operation-link'"
-      />
+      <f-background>
+        <f-circle-pattern
+          id="sync-diagram-dots"
+          [radius]="1.2"
+          [color]="'var(--sync-diagram-dot-color)'"
+        />
+      </f-background>
 
-      <div
-        *ngFor="let flowNode of state.flowNodes()"
-        fNode
-        [fNodeId]="flowNode.id"
-        [fNodePosition]="flowNode.position"
-        (fNodePositionChange)="onPositionChange(flowNode.id, $event)"
-        [fNodeSelectionDisabled]="true"
-        [fNodeDraggingDisabled]="flowNode.type === 'erd-zone'"
-        class="flow-node-shell"
-        [class.flow-node-zone]="flowNode.type === 'erd-zone'"
-        [class.flow-node-erd]="flowNode.type === 'erd-table'"
+      <f-canvas
+        fZoom
+        [fZoomMinimum]="0.4"
+        [fZoomMaximum]="1.2"
+        [fZoomStep]="0.1"
+        (fCanvasChange)="onCanvasChange()"
       >
+        <f-connection
+          *ngFor="let edge of state.flowConnections()"
+          [fConnectionId]="edge.id"
+          [fSourceId]="edge.sourceId"
+          [fTargetId]="edge.targetId"
+          [fType]="connectionType"
+          [fSelectionDisabled]="true"
+          [fReassignDisabled]="true"
+          [class.connection-active]="edge.active"
+          [class.connection-erd-fk]="edge.kind === 'erd-fk'"
+          [class.connection-operation]="edge.kind === 'operation-link'"
+        />
+
         <div
-          fConnector
-          [fConnectorId]="flowNode.sourceConnectorId"
-          fConnectorType="source"
-          fConnectorConnectableSide="right"
-          class="flow-connector flow-connector-out"
-        ></div>
-        <div
-          fConnector
-          [fConnectorId]="flowNode.targetConnectorId"
-          fConnectorType="target"
-          fConnectorConnectableSide="left"
-          class="flow-connector flow-connector-in"
-        ></div>
+          *ngFor="let flowNode of state.flowNodes()"
+          fNode
+          [fNodeId]="flowNode.id"
+          [fNodePosition]="flowNode.position"
+          (fNodePositionChange)="onPositionChange(flowNode.id, $event)"
+          [fNodeSelectionDisabled]="true"
+          [fNodeDraggingDisabled]="flowNode.type === 'erd-zone'"
+          class="flow-node-shell"
+          [class.flow-node-zone]="flowNode.type === 'erd-zone'"
+          [class.flow-node-erd]="flowNode.type === 'erd-table'"
+        >
+          <div
+            fConnector
+            [fConnectorId]="flowNode.sourceConnectorId"
+            fConnectorType="source"
+            fConnectorConnectableSide="right"
+            class="flow-connector flow-connector-out"
+          ></div>
+          <div
+            fConnector
+            [fConnectorId]="flowNode.targetConnectorId"
+            fConnectorType="target"
+            fConnectorConnectableSide="left"
+            class="flow-connector flow-connector-in"
+          ></div>
 
-        <app-sync-diagram-node-card
-          *ngIf="flowNode.type === 'selector' && flowNode.selectorMeta"
-          [node]="flowNode.selectorMeta"
-          [items]="filteredItems(flowNode.id)"
-          (filterChange)="onFilterChange(flowNode.id, $event)"
-          (itemClick)="onItemClick(flowNode.selectorMeta, $event)"
-          (action)="onNodeAction($event, flowNode.selectorMeta)"
-        />
+          <app-sync-diagram-node-card
+            *ngIf="flowNode.type === 'selector' && flowNode.selectorMeta"
+            [node]="flowNode.selectorMeta"
+            [items]="filteredItems(flowNode.id)"
+            (filterChange)="onFilterChange(flowNode.id, $event)"
+            (itemClick)="onItemClick(flowNode.selectorMeta, $event)"
+            (action)="onNodeAction($event, flowNode.selectorMeta)"
+          />
 
-        <app-sync-operation-node-card
-          *ngIf="flowNode.type === 'operation' && flowNode.operationMeta"
-          [operation]="flowNode.operationMeta"
-          (toggleDetail)="onToggleOperationDetail(flowNode.operationMeta!.id)"
-          (closeDetail)="onCloseOperationDetail(flowNode.operationMeta!.id)"
-          (cancel)="onCancelOperation(flowNode.operationMeta!.id)"
-        />
+          <app-sync-operation-node-card
+            *ngIf="flowNode.type === 'operation' && flowNode.operationMeta"
+            [operation]="flowNode.operationMeta"
+            (toggleDetail)="onToggleOperationDetail(flowNode.operationMeta!.id)"
+            (closeDetail)="onCloseOperationDetail(flowNode.operationMeta!.id)"
+            (cancel)="onCancelOperation(flowNode.operationMeta!.id)"
+          />
 
-        <app-sync-erd-impact-zone
-          *ngIf="flowNode.type === 'erd-zone' && flowNode.erdZoneMeta"
-          [zone]="flowNode.erdZoneMeta"
-        />
+          <app-sync-erd-impact-zone
+            *ngIf="flowNode.type === 'erd-zone' && flowNode.erdZoneMeta"
+            [zone]="flowNode.erdZoneMeta"
+          />
 
-        <app-sync-erd-table-node
-          *ngIf="flowNode.type === 'erd-table' && flowNode.erdMeta"
-          [table]="flowNode.erdMeta"
-        />
+          <app-sync-erd-table-node
+            *ngIf="flowNode.type === 'erd-table' && flowNode.erdMeta"
+            [table]="flowNode.erdMeta"
+          />
+        </div>
+      </f-canvas>
+
+      <div class="minimap-shell">
+        <f-minimap [fMinSize]="56" />
       </div>
-    </f-canvas>
+    </f-flow>
 
-    <div class="minimap-shell">
-      <f-minimap [fMinSize]="56" />
-    </div>
-  </f-flow>
-
-  <div class="canvas-ui" *ngIf="!state.loadingInitial()">
-    <div class="canvas-ui-actions">
-      <ng-content />
-    </div>
-
-    <nav class="canvas-toolbar" aria-label="Controles de zoom">
+    <nav class="canvas-toolbar" *ngIf="!state.loadingInitial()" aria-label="Controles de zoom">
       <button type="button" class="tb-btn" title="Diminuir zoom" (click)="zoomOut()">−</button>
       <span class="tb-zoom">{{ zoomLevel() }}%</span>
       <button type="button" class="tb-btn" title="Aumentar zoom" (click)="zoomIn()">+</button>
@@ -113,5 +109,9 @@
       <button type="button" class="tb-btn" title="Enquadrar diagrama" (click)="fitView()">⊡</button>
       <button type="button" class="tb-btn tb-label" title="Zoom 100%" (click)="resetView()">1:1</button>
     </nav>
+  </div>
+
+  <div class="canvas-actions-float" *ngIf="!state.loadingInitial()">
+    <ng-content />
   </div>
 </div>

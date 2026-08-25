@@ -8,8 +8,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.55rem 0.4rem;
+  gap: 0.4rem;
+  padding: 0.5rem 0.35rem;
   border-radius: 999px;
   background: var(--sync-diagram-rail-bg);
   border: 1px solid var(--sync-diagram-rail-border);
@@ -17,15 +17,16 @@
 }
 
 .rail-btn {
-  width: 2.2rem;
-  height: 2.2rem;
+  width: 2.15rem;
+  height: 2.15rem;
   border: none;
   border-radius: 999px;
   background: transparent;
   cursor: pointer;
   display: grid;
   place-items: center;
-  transition: background 120ms ease, opacity 120ms ease;
+  opacity: 0.55;
+  transition: background 120ms ease, opacity 120ms ease, transform 120ms ease;
 
   svg {
     width: 1.15rem;
@@ -33,12 +34,28 @@
   }
 
   &:hover:not(:disabled) {
+    opacity: 1;
     background: color-mix(in srgb, currentColor 16%, transparent);
   }
 
+  &.is-active {
+    opacity: 1;
+    background: color-mix(in srgb, currentColor 18%, transparent);
+  }
+
   &:disabled {
-    opacity: 0.28;
+    opacity: 0.25;
     cursor: not-allowed;
+  }
+}
+
+.rail-accent-primary {
+  color: var(--sync-diagram-primary);
+  opacity: 0.85;
+
+  &:hover:not(:disabled),
+  &:not(:disabled) {
+    opacity: 1;
   }
 }
 

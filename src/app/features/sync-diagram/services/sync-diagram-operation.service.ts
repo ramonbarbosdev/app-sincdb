@@ -16,7 +16,6 @@ import {
   TableVisualStatus,
   TabelaAfetadaDTO,
 } from '../models/sync-diagram.model';
-import { SyncDiagramCameraService } from './sync-diagram-camera.service';
 import { SyncDiagramStateService } from './sync-diagram-state.service';
 
 @Injectable()
@@ -26,7 +25,6 @@ export class SyncDiagramOperationService implements OnDestroy {
   private progressoSync = inject(ProgressoSyncService);
   private ws = inject(WebsocketService);
   private baseService = inject(BaseService);
-  private camera = inject(SyncDiagramCameraService);
 
   private progressSub?: Subscription;
   private wsBridgeSub?: Subscription;
@@ -71,7 +69,7 @@ export class SyncDiagramOperationService implements OnDestroy {
 
     this.state.spawnOperation(operation);
     this.trackOperation(id);
-    this.loadErdGraph(id, true);
+    this.loadErdGraph(id);
     return id;
   }
 
@@ -81,7 +79,6 @@ export class SyncDiagramOperationService implements OnDestroy {
       progress: 0,
     });
     this.trackOperation(operationId);
-    this.scheduleFocusZone(operationId);
   }
 
   completeVerificar(
@@ -106,7 +103,7 @@ export class SyncDiagramOperationService implements OnDestroy {
       });
       this.state.applyDadosVisuals(operationId, tabelas);
     }
-    this.scheduleFocusZone(operationId);
+    this.reloadColumnsAfterVerify(operationId);
   }
 
   completeSync(
@@ -124,7 +121,6 @@ export class SyncDiagramOperationService implements OnDestroy {
       this.state.applySyncResultVisuals(operationId, res.tabelas_afetadas, res.errors);
     }
     this.activeOperationId = undefined;
-    this.scheduleFocusZone(operationId);
   }
 
   failOperation(operationId: string): void {
@@ -179,7 +175,7 @@ export class SyncDiagramOperationService implements OnDestroy {
     const opening = !op.detailOpen;
     this.state.toggleOperationDetail(operationId);
     if (opening) {
-      this.loadErdGraph(operationId, true);
+      this.loadErdGraph(operationId);
     }
   }
 
@@ -187,7 +183,7 @@ export class SyncDiagramOperationService implements OnDestroy {
     this.state.closeOperationDetail(operationId);
   }
 
-  private loadErdGraph(operationId: string, focusAfter = false): void {
+  private loadErdGraph(operationId: string): void {
     const op = this.state.getOperation(operationId);
     if (!op?.detailOpen) return;
 
@@ -222,18 +218,19 @@ export class SyncDiagramOperationService implements OnDestroy {
           this.state.applyDadosVisuals(operationId, refreshed.tabelasAfetadas);
         }
 
-        if (op.mode === 'dados') {
-          this.loadColumnsForOperation(operationId, base, esquema, nodes);
-        }
-
-        if (focusAfter) {
-          this.scheduleFocusZone(operationId, true);
-        }
+        this.loadColumnsForOperation(operationId, base, esquema, nodes);
       },
       error: () => {
         this.state.setErdGraph(operationId, [], []);
       },
     });
+  }
+
+  private reloadColumnsAfterVerify(operationId: string): void {
+    const op = this.state.getOperation(operationId);
+    if (!op?.context.base || !op.context.esquema) return;
+    const tables = this.state.erdTablesForOperation(operationId);
+    this.loadColumnsForOperation(operationId, op.context.base, op.context.esquema, tables);
   }
 
   private loadColumnsForOperation(
@@ -251,13 +248,10 @@ export class SyncDiagramOperationService implements OnDestroy {
             status: 'idle',
           }));
           this.state.patchErdTable(table.id, { columns });
+          this.state.syncErdTableColumnVisuals(table.id);
         },
       });
     });
-  }
-
-  private scheduleFocusZone(operationId: string, force = false): void {
-    setTimeout(() => this.camera.focusImpactZone(operationId, undefined, force), 150);
   }
 
   private trackOperation(operationId: string): void {
@@ -283,14 +277,6 @@ export class SyncDiagramOperationService implements OnDestroy {
             patch.phase = 'sincronizando';
           } else if (op.phase === 'verificando') {
             patch.phase = 'verificando';
-          }
-        }
-
-        if (estado.tabelaAtual) {
-          this.state.highlightRunningTable(opId, estado.tabelaAtual);
-          const tableNodeId = this.state.findErdTableNodeId(opId, estado.tabelaAtual);
-          if (tableNodeId) {
-            this.camera.focusTableDebounced(tableNodeId);
           }
         }
 

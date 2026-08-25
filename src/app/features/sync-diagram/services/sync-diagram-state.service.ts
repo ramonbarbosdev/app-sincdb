@@ -209,7 +209,8 @@ export class SyncDiagramStateService {
         else if (titulo.includes('Chaves')) tableStatus.set(key, 'linked');
       }
     }
-    this.applyTableStatusMap(operationId, tableStatus);
+    this.applyTableStatusMap(operationId, tableStatus, true);
+    this.markSyncedTablesAfterVerify(operationId);
 
     for (const edge of this.erdEdgesForOperation(operationId)) {
       if (tableStatus.size > 0) {
@@ -231,7 +232,7 @@ export class SyncDiagramStateService {
       else if (hasInsert) status = 'created';
       else if (hasUpdate) status = 'altered';
       this.erdTables.set(table.id, { ...table, status });
-      if (table.mode === 'dados' && table.columns.length) {
+      if (table.columns.length) {
         const colStatus: ColumnVisualState[] = table.columns.map((c) => ({
           nome: c.nome,
           status: hasInsert ? 'insert' : hasUpdate ? 'update' : 'idle',
@@ -239,7 +240,35 @@ export class SyncDiagramStateService {
         this.erdTables.set(table.id, { ...this.erdTables.get(table.id)!, columns: colStatus });
       }
     }
+    this.markSyncedTablesAfterVerify(operationId);
     this.rebuildGraph();
+  }
+
+  erdTablesForOperation(operationId: string): ErdTableNode[] {
+    return [...this.erdTables.values()].filter((t) => t.operationId === operationId);
+  }
+
+  syncErdTableColumnVisuals(tableId: string): void {
+    const table = this.erdTables.get(tableId);
+    if (!table || !table.columns.length) return;
+
+    if (table.status === 'done') {
+      this.erdTables.set(tableId, {
+        ...table,
+        columns: table.columns.map((c) => ({ ...c, status: 'done' })),
+      });
+      this.rebuildGraph();
+    }
+  }
+
+  private markSyncedTablesAfterVerify(operationId: string): void {
+    for (const table of this.erdTablesForOperation(operationId)) {
+      if (table.status !== 'idle') continue;
+      const columns = table.columns.length
+        ? table.columns.map((c) => ({ ...c, status: 'done' as const }))
+        : table.columns;
+      this.erdTables.set(table.id, { ...table, status: 'done', columns });
+    }
   }
 
   applySyncResultVisuals(
@@ -260,25 +289,8 @@ export class SyncDiagramStateService {
     this.rebuildGraph();
   }
 
-  highlightRunningTable(operationId: string, tabelaAtual: string): void {
-    const key = this.normalizeTableKey(tabelaAtual);
-    for (const table of this.erdTablesForOperation(operationId)) {
-      const match = this.normalizeTableKey(table.nome) === key;
-      const status: TableVisualStatus = match ? 'running' : table.status === 'running' ? 'idle' : table.status;
-      let columns = table.columns;
-      if (table.mode === 'dados' && match && columns.length) {
-        columns = columns.map((c) => ({ ...c, status: 'running' as const }));
-      }
-      this.erdTables.set(table.id, { ...table, status, columns });
-    }
-    for (const edge of this.erdEdgesForOperation(operationId)) {
-      const source = this.erdTables.get(edge.sourceId);
-      const target = this.erdTables.get(edge.targetId);
-      if (source?.status === 'running' || target?.status === 'running') {
-        this.erdEdges.set(edge.id, { ...edge, status: 'active' });
-      }
-    }
-    this.rebuildGraph();
+  private erdEdgesForOperation(operationId: string): ErdEdge[] {
+    return [...this.erdEdges.values()].filter((e) => e.operationId === operationId);
   }
 
   selectItem(kind: SyncDiagramKind, itemId: string, context: SyncDiagramContext): void {
@@ -433,18 +445,14 @@ export class SyncDiagramStateService {
     this.rebuildGraph();
   }
 
-  private erdTablesForOperation(operationId: string): ErdTableNode[] {
-    return [...this.erdTables.values()].filter((t) => t.operationId === operationId);
-  }
-
-  private erdEdgesForOperation(operationId: string): ErdEdge[] {
-    return [...this.erdEdges.values()].filter((e) => e.operationId === operationId);
-  }
-
-  private applyTableStatusMap(operationId: string, map: Map<string, TableVisualStatus>): void {
+  private applyTableStatusMap(
+    operationId: string,
+    map: Map<string, TableVisualStatus>,
+    syncedDefault = false
+  ): void {
     for (const table of this.erdTablesForOperation(operationId)) {
       const key = this.normalizeTableKey(table.nome);
-      const status = map.get(key) ?? table.status;
+      const status = map.get(key) ?? (syncedDefault ? 'done' : table.status);
       this.erdTables.set(table.id, { ...table, status });
     }
   }
@@ -886,10 +894,7 @@ export class SyncDiagramStateService {
         for (const erd of erdTables) {
           const erdConnectors = this.connectorIds(erd.id);
           const erdPos = this.getPosition(erd.id, { x: opPos.x + ERD_ORIGIN_OFFSET_X, y: opPos.y });
-          const erdMeta: ErdTableNode = {
-            ...erd,
-            spotlightDim: hasAffected && erd.status === 'idle',
-          };
+          const erdMeta: ErdTableNode = { ...erd };
           nodes.push({
             id: erd.id,
             type: 'erd-table',

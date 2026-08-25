@@ -1,5 +1,48 @@
 <nav class="actions-rail" aria-label="Ações de sincronização">
   <div class="actions-rail-pill">
+    <button
+      type="button"
+      class="rail-btn rail-accent-violet"
+      [class.is-active]="isEstrutura()"
+      title="Modo estrutura"
+      aria-label="Modo estrutura"
+      (click)="selectMode('estrutura')"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M4 7h16M4 12h10M4 17h6" stroke-linecap="round" />
+      </svg>
+    </button>
+
+    <button
+      type="button"
+      class="rail-btn rail-accent-cyan"
+      [class.is-active]="isDados()"
+      title="Modo dados"
+      aria-label="Modo dados"
+      (click)="selectMode('dados')"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <rect x="5" y="5" width="14" height="14" rx="2" />
+        <path d="M5 10h14M10 5v14" stroke-linecap="round" />
+      </svg>
+    </button>
+
+    <button
+      type="button"
+      class="rail-btn rail-accent-primary"
+      title="Sincronizar seleção"
+      [attr.aria-label]="'Sincronizar seleção · ' + scopeLabel"
+      [disabled]="!hasSelection || running"
+      (click)="sincronizarSelecao.emit()"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M7 7h10v10H7z" stroke-linejoin="round" />
+        <path d="M4 12h3M17 12h3M12 4v3M12 17v3" stroke-linecap="round" />
+      </svg>
+    </button>
+
+    <span class="rail-divider" aria-hidden="true"></span>
+
     <ng-container *ngIf="isEstrutura()">
       <button
         type="button"

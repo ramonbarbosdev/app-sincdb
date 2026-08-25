@@ -164,6 +164,11 @@
 
 .status-done .erd-table-node {
   border-color: var(--sync-diagram-status-done);
+  background: color-mix(in srgb, var(--sync-diagram-status-done) 6%, var(--sync-diagram-surface-card));
+}
+
+.status-done .erd-table-header strong {
+  color: var(--sync-diagram-status-done);
 }
 
 .status-error .erd-table-node {
@@ -195,6 +200,7 @@
 .col-done {
   color: var(--sync-diagram-status-done);
   border-left-color: var(--sync-diagram-status-done);
+  background: color-mix(in srgb, var(--sync-diagram-status-done) 10%, transparent);
 }
 
 @keyframes erd-pulse {
