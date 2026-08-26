@@ -43,6 +43,20 @@
   width: 100%;
   height: 100%;
   min-height: 0;
+  background: transparent;
+}
+
+/* Dot grid via f-circle-pattern (pan/zoom pelo Foblex) — base sólida no host */
+:host ::ng-deep f-background.f-background,
+:host ::ng-deep .f-background {
+  pointer-events: none;
+  z-index: 0;
+  background-color: var(--sync-diagram-canvas-bg);
+}
+
+:host ::ng-deep f-canvas,
+:host ::ng-deep .f-canvas {
+  background: transparent !important;
 }
 
 .canvas-loading {
@@ -235,27 +249,9 @@
   transform: translateY(-50%);
 }
 
-:host ::ng-deep .f-background {
-  background-color: var(--sync-diagram-canvas-bg);
-  background-image: radial-gradient(
-    circle,
-    rgba(
-      var(--sync-diagram-canvas-dot-rgb, 138, 144, 172),
-      var(--sync-diagram-canvas-dot-alpha, 0.38)
-    ) var(--sync-diagram-canvas-dot-size, 0.5px),
-    transparent calc(var(--sync-diagram-canvas-dot-size, 0.5px) + 0.5px)
-  );
-  background-size: var(--sync-diagram-canvas-dot-gap, 22px) var(--sync-diagram-canvas-dot-gap, 22px);
-  background-repeat: repeat;
-  background-position: 0 0;
-
-  svg {
-    display: none;
-  }
-}
-
 :host ::ng-deep f-flow {
   display: block;
+  background: transparent;
 }
 
 :host ::ng-deep f-minimap.f-minimap {

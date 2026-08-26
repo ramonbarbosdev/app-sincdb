@@ -29,7 +29,7 @@ import { SeasonalGreeting } from '../../components/seasonal-greeting/seasonal-gr
       <app-sidebar></app-sidebar>
       <div class="layout-main-container" style="position: relative;">
         <app-seasonal-greeting></app-seasonal-greeting>
-        <app-product-tip-banner></app-product-tip-banner>
+        <!-- <app-product-tip-banner></app-product-tip-banner> -->
         <div class="layout-main" style="position: relative;">
           <router-outlet></router-outlet>
 

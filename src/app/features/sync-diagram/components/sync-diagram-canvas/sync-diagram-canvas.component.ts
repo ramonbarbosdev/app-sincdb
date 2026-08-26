@@ -7,7 +7,7 @@ import {
   provideFFlow,
 } from '@foblex/flow';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, HostListener, Input, Output, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, HostListener, Input, Output, computed, inject, signal, viewChild } from '@angular/core';
 import { TooltipModule } from 'primeng/tooltip';
 import {
   SyncDiagramAction,
@@ -70,7 +70,12 @@ export class SyncDiagramCanvasComponent {
 
   readonly connectionType = EFConnectionType.SEGMENT;
   readonly zoomLevel = signal(100);
-  readonly canvasDotAlpha = signal(0.38);
+  readonly canvasDotGap = 22;
+  readonly canvasDotColor = computed(() =>
+    this.themeService.isDark()
+      ? 'rgba(160, 166, 194, 0.14)'
+      : 'rgba(72, 68, 96, 0.16)'
+  );
   readonly blockFlowWheelZoom = (): boolean => false;
 
   onFlowReady(): void {
@@ -179,19 +184,5 @@ export class SyncDiagramCanvasComponent {
   private updateZoomLabel(): void {
     const scale = this.camera.getScale();
     this.zoomLevel.set(Math.round(scale * 100));
-    this.canvasDotAlpha.set(this.computeDotAlpha(scale));
-  }
-
-  /** Pontos somem no zoom baixo; perceptíveis em ~100% durante pan/zoom. */
-  private computeDotAlpha(scale: number): number {
-    const minZoom = 0.4;
-    const refZoom = 1;
-    const minAlpha = 0.05;
-    const refAlpha = 0.4;
-
-    if (scale <= minZoom) return minAlpha;
-    if (scale >= refZoom) return refAlpha + Math.min((scale - refZoom) * 0.12, 0.08);
-    const t = (scale - minZoom) / (refZoom - minZoom);
-    return minAlpha + t * (refAlpha - minAlpha);
   }
 }
