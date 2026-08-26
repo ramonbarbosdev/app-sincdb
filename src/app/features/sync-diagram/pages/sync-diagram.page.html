@@ -27,11 +27,13 @@
         [syncDisabled]="isSyncDisabled()"
         [enqueueDisabled]="isEnqueueDisabled()"
         [canRecolher]="canRecolher()"
+        [treeLayout]="state.treeLayout()"
         (modeChange)="setMode($event)"
         (sincronizarSelecao)="sincronizarSelecao()"
         (adicionarFila)="adicionarFila()"
         (recolher)="recolherNivel()"
         (autoLayout)="organizarCanvas()"
+        (treeLayoutChange)="setTreeLayout($event)"
       />
     </app-sync-diagram-canvas>
   </div>

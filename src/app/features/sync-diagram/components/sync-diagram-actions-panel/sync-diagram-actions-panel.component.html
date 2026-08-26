@@ -66,6 +66,36 @@
   <button
     type="button"
     class="rail-btn"
+    [class.is-active]="treeLayout === 'vertical'"
+    pTooltip="Árvore vertical · ramos empilhados (fluxo à direita)"
+    tooltipPosition="right"
+    [tooltipStyleClass]="tip.styleClass"
+    [showDelay]="tip.showDelay"
+    [hideDelay]="tip.hideDelay"
+    aria-label="Layout em árvore vertical"
+    (click)="selectTreeLayout('vertical')"
+  >
+    <i class="pi pi-align-left" aria-hidden="true"></i>
+  </button>
+
+  <button
+    type="button"
+    class="rail-btn"
+    [class.is-active]="treeLayout === 'horizontal'"
+    pTooltip="Árvore horizontal · ramos lado a lado"
+    tooltipPosition="right"
+    [tooltipStyleClass]="tip.styleClass"
+    [showDelay]="tip.showDelay"
+    [hideDelay]="tip.hideDelay"
+    aria-label="Layout em árvore horizontal"
+    (click)="selectTreeLayout('horizontal')"
+  >
+    <i class="pi pi-align-center" aria-hidden="true"></i>
+  </button>
+
+  <button
+    type="button"
+    class="rail-btn"
     pTooltip="Recolher um nível"
     tooltipPosition="right"
     [tooltipStyleClass]="tip.styleClass"

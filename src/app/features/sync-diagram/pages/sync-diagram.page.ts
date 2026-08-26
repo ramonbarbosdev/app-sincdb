@@ -4,7 +4,7 @@ import { ProgressoSyncService } from '../../../services/progresso-sync-service';
 import { LayoutService } from '../../../layout/service/layout.service';
 import { SyncDiagramCanvasComponent } from '../components/sync-diagram-canvas/sync-diagram-canvas.component';
 import { SyncDiagramActionsPanelComponent } from '../components/sync-diagram-actions-panel/sync-diagram-actions-panel.component';
-import { SyncDiagramMode } from '../models/sync-diagram.model';
+import { SyncDiagramMode, SyncDiagramTreeLayout } from '../models/sync-diagram.model';
 import { SyncDiagramActionsService } from '../services/sync-diagram-actions.service';
 import { SyncDiagramCameraService } from '../services/sync-diagram-camera.service';
 import { SyncDiagramLayoutPersistenceService } from '../services/sync-diagram-layout-persistence.service';
@@ -85,6 +85,10 @@ export class SyncDiagramPage implements OnInit, OnDestroy {
 
   setMode(mode: SyncDiagramMode): void {
     this.state.setSyncMode(mode);
+  }
+
+  setTreeLayout(mode: SyncDiagramTreeLayout): void {
+    this.state.setTreeLayout(mode);
   }
 
   sincronizarSelecao(): void {

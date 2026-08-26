@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { TooltipModule } from 'primeng/tooltip';
-import { SyncDiagramMode } from '../../models/sync-diagram.model';
+import { SyncDiagramMode, SyncDiagramTreeLayout } from '../../models/sync-diagram.model';
 import { SYNC_DIAGRAM_TOOLTIP } from '../../sync-diagram-chrome.constants';
 
 @Component({
@@ -21,12 +21,14 @@ export class SyncDiagramActionsPanelComponent {
   @Input() syncDisabled = false;
   @Input() enqueueDisabled = false;
   @Input() canRecolher = false;
+  @Input() treeLayout: SyncDiagramTreeLayout = 'vertical';
 
   @Output() modeChange = new EventEmitter<SyncDiagramMode>();
   @Output() sincronizarSelecao = new EventEmitter<void>();
   @Output() adicionarFila = new EventEmitter<void>();
   @Output() recolher = new EventEmitter<void>();
   @Output() autoLayout = new EventEmitter<void>();
+  @Output() treeLayoutChange = new EventEmitter<SyncDiagramTreeLayout>();
 
   isEstrutura(): boolean {
     return this.mode === 'estrutura';
@@ -39,6 +41,12 @@ export class SyncDiagramActionsPanelComponent {
   selectMode(mode: SyncDiagramMode): void {
     if (this.mode !== mode) {
       this.modeChange.emit(mode);
+    }
+  }
+
+  selectTreeLayout(mode: SyncDiagramTreeLayout): void {
+    if (this.treeLayout !== mode) {
+      this.treeLayoutChange.emit(mode);
     }
   }
 }

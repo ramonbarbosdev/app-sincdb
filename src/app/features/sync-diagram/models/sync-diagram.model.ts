@@ -2,6 +2,8 @@ import { EstruturaResponse } from '../../../components/estrutura-preview/estrutu
 
 export type SyncDiagramKind = 'bases' | 'schemas' | 'schema' | 'tables';
 export type SyncDiagramMode = 'estrutura' | 'dados';
+/** Disposição dos ramos ao abrir várias bases no canvas. */
+export type SyncDiagramTreeLayout = 'vertical' | 'horizontal';
 
 export type OperationPhase =
   | 'aguardando'

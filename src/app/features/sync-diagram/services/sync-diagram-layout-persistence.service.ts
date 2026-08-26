@@ -3,6 +3,7 @@ import {
   DiagramFlowPoint,
   SyncDiagramContext,
   SyncDiagramMode,
+  SyncDiagramTreeLayout,
 } from '../models/sync-diagram.model';
 
 const STORAGE_KEY = 'sync-diagram-layout-v1';
@@ -16,6 +17,7 @@ export interface SyncDiagramPersistedLayout {
   openSchemaListBases?: string[];
   openSchemaBoxes?: string[];
   openTablesKeys?: string[];
+  treeLayout?: SyncDiagramTreeLayout;
 }
 
 @Injectable()
