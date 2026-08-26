@@ -133,6 +133,18 @@
   padding: 0 0.15rem;
 }
 
+.diagram-item-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 0.1rem;
+
+  &.has-open-action .diagram-item {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
 .diagram-item {
   width: 100%;
   display: flex;
@@ -154,9 +166,38 @@
   }
 
   &.is-drill,
-  &.is-selected {
+  &.is-selected,
+  &.is-schema-selected {
     color: var(--sync-diagram-primary);
     background: color-mix(in srgb, var(--sync-diagram-primary) 10%, transparent);
+  }
+}
+
+.diagram-open-icon {
+  flex-shrink: 0;
+  margin-right: 0.35rem;
+  padding: 0.2rem;
+  border: none;
+  background: transparent;
+  color: var(--sync-diagram-text-muted);
+  font-size: 0.72rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: color 120ms ease, opacity 120ms ease;
+
+  .pi {
+    font-size: 0.72rem;
+  }
+
+  &:hover {
+    color: var(--sync-diagram-primary);
+    opacity: 1;
+  }
+
+  &.is-open {
+    color: var(--sync-diagram-primary);
+    opacity: 1;
   }
 }
 

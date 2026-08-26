@@ -532,7 +532,7 @@ export class SyncDiagramStateService {
       const base = context.base ?? this.selection().base;
       if (!base) return;
       this.selection.set({ base, esquema: itemId });
-      this.spawnTables(base, itemId);
+      this.rebuildGraph();
       this.persistSoon();
       return;
     }
@@ -550,6 +550,22 @@ export class SyncDiagramStateService {
         tabelas: [...tabelas],
       });
       this.rebuildGraph();
+      this.persistSoon();
+    }
+  }
+
+  drillToItem(kind: SyncDiagramKind, itemId: string, context: SyncDiagramContext): void {
+    if (kind === 'schemas') {
+      const base = context.base ?? this.selection().base;
+      if (!base) return;
+      this.selection.set({ base, esquema: itemId });
+      this.spawnTables(base, itemId);
+      this.persistSoon();
+      return;
+    }
+    if (kind === 'bases') {
+      this.selection.set({ base: itemId });
+      this.spawnSchemas(itemId);
       this.persistSoon();
     }
   }
@@ -1097,6 +1113,15 @@ export class SyncDiagramStateService {
     return out;
   }
 
+  private isTablesOpenFor(base: string, esquema: string): boolean {
+    return this.tablesNodeId === `node-tables-${base}-${esquema}`;
+  }
+
+  private openedSchemaId(base: string): string | undefined {
+    if (!this.tablesNodeId?.startsWith(`node-tables-${base}-`)) return undefined;
+    return this.tablesNodeId.slice(`node-tables-${base}-`.length);
+  }
+
   private rebuildGraph(): void {
     this.nodeMeta.clear();
     const nodes: DiagramFlowNode[] = [];
@@ -1128,6 +1153,7 @@ export class SyncDiagramStateService {
         loading: this.loadingNodes.get(this.schemasNodeId) ?? false,
         filter: this.filters.get(this.schemasNodeId) ?? '',
         selectedItemId: sel.esquema,
+        openedItemId: this.openedSchemaId(sel.base),
         context: { base: sel.base },
         itemCount: schemas.length,
       };
@@ -1144,34 +1170,35 @@ export class SyncDiagramStateService {
       );
     }
 
-    if (sel.base && sel.esquema && this.tablesNodeId) {
+    const tablesNodeId = this.tablesNodeId;
+    if (sel.base && sel.esquema && tablesNodeId && this.isTablesOpenFor(sel.base, sel.esquema)) {
       const key = `${sel.base}|${sel.esquema}`;
       const tables = this.tableCache.get(key) ?? [];
       const selectedTables = this.selectedTabelas(sel);
       const tablesMeta: SyncDiagramNodeData = {
-        nodeId: this.tablesNodeId,
+        nodeId: tablesNodeId,
         kind: 'tables',
         title: 'Tabelas',
         subtitle: `${sel.base}.${sel.esquema}`,
         items: tables,
-        loading: this.loadingNodes.get(this.tablesNodeId) ?? false,
-        filter: this.filters.get(this.tablesNodeId) ?? '',
+        loading: this.loadingNodes.get(tablesNodeId) ?? false,
+        filter: this.filters.get(tablesNodeId) ?? '',
         selectedItemIds: selectedTables,
         context: { base: sel.base, esquema: sel.esquema },
         itemCount: tables.length,
       };
-      this.nodeMeta.set(this.tablesNodeId, tablesMeta);
+      this.nodeMeta.set(tablesNodeId, tablesMeta);
       nodes.push(
         this.createSelectorNode(
-          this.tablesNodeId,
+          tablesNodeId,
           tablesMeta,
-          this.getPosition(this.tablesNodeId, this.nextPosition(this.schemasNodeId!))
+          this.getPosition(tablesNodeId, this.nextPosition(this.schemasNodeId!))
         )
       );
       connections.push(
         this.createSelectorConnection(
           this.schemasNodeId!,
-          this.tablesNodeId,
+          tablesNodeId,
           selectedTables.length > 0,
           'Tabelas'
         )

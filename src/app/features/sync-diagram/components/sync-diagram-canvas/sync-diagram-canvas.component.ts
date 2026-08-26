@@ -148,6 +148,10 @@ export class SyncDiagramCanvasComponent {
     this.state.selectItem(node.kind, itemId, node.context);
   }
 
+  onItemOpen(node: SyncDiagramNodeData, itemId: string): void {
+    this.state.drillToItem(node.kind, itemId, node.context);
+  }
+
   onToggleOperationDetail(operationId: string): void {
     this.operations.toggleDetail(operationId);
   }

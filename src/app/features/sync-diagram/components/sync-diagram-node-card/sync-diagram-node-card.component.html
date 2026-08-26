@@ -35,23 +35,41 @@
       </div>
 
       <div class="diagram-list" *ngIf="!node.loading">
-        <button
-          type="button"
-          class="diagram-item"
+        <div
+          class="diagram-item-row"
           *ngFor="let item of items"
-          [class.is-drill]="node.kind !== 'tables' && node.selectedItemId === item.id"
-          [class.is-selected]="node.kind === 'tables' && isTableSelected(item.id)"
-          (click)="itemClick.emit(item.id)"
+          [class.has-open-action]="node.kind === 'schemas'"
         >
-          <span class="diagram-item-check" *ngIf="node.kind === 'tables'">
-            <span class="check-box" [class.checked]="isTableSelected(item.id)"></span>
-          </span>
-          <span class="diagram-item-label">{{ item.label }}</span>
-          <span
-            class="drill-icon"
-            *ngIf="node.kind !== 'tables' && node.selectedItemId === item.id"
-          >›</span>
-        </button>
+          <button
+            type="button"
+            class="diagram-item"
+            [class.is-drill]="node.kind === 'bases' && node.selectedItemId === item.id"
+            [class.is-selected]="node.kind === 'tables' && isTableSelected(item.id)"
+            [class.is-schema-selected]="node.kind === 'schemas' && node.selectedItemId === item.id"
+            (click)="itemClick.emit(item.id)"
+          >
+            <span class="diagram-item-check" *ngIf="node.kind === 'tables'">
+              <span class="check-box" [class.checked]="isTableSelected(item.id)"></span>
+            </span>
+            <span class="diagram-item-label">{{ item.label }}</span>
+            <span
+              class="drill-icon"
+              *ngIf="node.kind === 'bases' && node.selectedItemId === item.id"
+            >›</span>
+          </button>
+
+          <button
+            *ngIf="node.kind === 'schemas'"
+            type="button"
+            class="diagram-open-icon"
+            [class.is-open]="node.openedItemId === item.id"
+            title="Abrir tabelas"
+            [attr.aria-label]="'Abrir tabelas do schema ' + item.label"
+            (click)="itemOpen.emit(item.id)"
+          >
+            <i class="pi pi-arrow-right" aria-hidden="true"></i>
+          </button>
+        </div>
       </div>
 
       <div class="diagram-empty" *ngIf="!node.loading && !items.length">

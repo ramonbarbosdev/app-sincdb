@@ -34,6 +34,7 @@ export class SyncDiagramNodeCardComponent implements OnChanges, OnDestroy {
 
   @Output() filterChange = new EventEmitter<string>();
   @Output() itemClick = new EventEmitter<string>();
+  @Output() itemOpen = new EventEmitter<string>();
   @Output() action = new EventEmitter<SyncDiagramAction>();
 
   filterText = '';
@@ -76,7 +77,11 @@ export class SyncDiagramNodeCardComponent implements OnChanges, OnDestroy {
   }
 
   canCloseChildren(): boolean {
-    return this.node.kind !== 'tables' && !!this.node.selectedItemId;
+    if (this.node.kind === 'tables') return false;
+    if (this.node.kind === 'schemas') {
+      return !!this.node.openedItemId;
+    }
+    return !!this.node.selectedItemId;
   }
 
   hasActivePath(): boolean {

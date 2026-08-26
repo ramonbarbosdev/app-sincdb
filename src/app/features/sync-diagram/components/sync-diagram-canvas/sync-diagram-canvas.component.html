@@ -81,6 +81,7 @@
             [items]="filteredItems(flowNode.id)"
             (filterChange)="onFilterChange(flowNode.id, $event)"
             (itemClick)="onItemClick(flowNode.selectorMeta, $event)"
+            (itemOpen)="onItemOpen(flowNode.selectorMeta, $event)"
             (action)="onNodeAction($event, flowNode.selectorMeta)"
           />
 

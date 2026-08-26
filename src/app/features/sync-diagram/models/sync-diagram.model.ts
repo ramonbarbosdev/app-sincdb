@@ -129,6 +129,8 @@ export interface SyncDiagramNodeData {
   loading: boolean;
   filter: string;
   selectedItemId?: string;
+  /** Schema (ou base) com caixa filha aberta no diagrama. */
+  openedItemId?: string;
   /** Seleção múltipla no card de tabelas. */
   selectedItemIds?: string[];
   context: SyncDiagramContext;
