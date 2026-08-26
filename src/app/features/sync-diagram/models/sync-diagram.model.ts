@@ -70,6 +70,23 @@ export function operationScopeKey(context: SyncDiagramContext, mode: SyncDiagram
   return `${base}|${esquema}|${mode}`;
 }
 
+/** Exibição na caixa de operação: `schema.tabela` (sem base). */
+export function formatOperationScopeSubtitle(context: SyncDiagramContext): string {
+  const esquema = context.esquema ?? '';
+  const tabela =
+    context.tabela ?? (context.tabelas?.length === 1 ? context.tabelas[0] : '');
+  if (!esquema) return '—';
+  if (!tabela || tabela === esquema) return esquema;
+
+  if (tabela.startsWith(`${esquema}.`)) return tabela;
+
+  const segments = tabela.split('.');
+  const tableName = segments.length > 1 ? segments[segments.length - 1] : tabela;
+  if (segments.length > 1 && segments[0] === esquema) return tabela;
+
+  return `${esquema}.${tableName}`;
+}
+
 export interface SyncDiagramNodeData {
   nodeId: string;
   kind: SyncDiagramKind;

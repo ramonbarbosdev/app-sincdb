@@ -19,7 +19,8 @@
       <header class="operation-header" fDragHandle>
         <span class="operation-icon">⚙</span>
         <div class="operation-titles">
-          <strong>{{ operation.label }}</strong>
+          <strong>{{ displayTitle(operation.phase) }}</strong>
+          <span class="operation-scope-subtitle">{{ scopeSubtitle(operation.context) }}</span>
           <span
             class="operation-phase-badge"
             [class.badge-running]="isRunning()"
@@ -29,7 +30,6 @@
             [class.badge-cancelado]="operation.phase === 'cancelado'"
           >{{ phaseLabel(operation.phase) }}</span>
         </div>
-        <span class="operation-mode-badge">{{ operation.mode }}</span>
         <button
           *ngIf="!isRunning()"
           type="button"

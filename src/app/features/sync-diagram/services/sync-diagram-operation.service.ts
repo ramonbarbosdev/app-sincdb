@@ -9,6 +9,7 @@ import {
   ColumnVisualState,
   ErdEdge,
   ErdTableNode,
+  formatOperationScopeSubtitle,
   OperationActionKind,
   SyncDiagramContext,
   SyncDiagramMode,
@@ -73,14 +74,7 @@ export class SyncDiagramOperationService implements OnDestroy {
     action: OperationActionKind,
     context: SyncDiagramContext
   ): Omit<SyncOperation, 'id'> {
-    const scope = this.formatScope(context);
-    const actionLabel =
-      action === 'verificar'
-        ? 'Verificar'
-        : action === 'sincronizar'
-          ? 'Sincronizar'
-          : 'Verificar + sync';
-    const modeLabel = mode === 'estrutura' ? 'estrutura' : 'dados';
+    const scope = formatOperationScopeSubtitle(context);
 
     return {
       mode,
@@ -88,7 +82,7 @@ export class SyncDiagramOperationService implements OnDestroy {
       context: { ...context },
       phase: action === 'sincronizar' ? 'sincronizando' : 'verificando',
       progress: 0,
-      label: `${actionLabel} ${modeLabel} · ${scope}`,
+      label: scope,
       detailOpen: true,
       errorsExpanded: false,
       estruturaResponse: undefined,
@@ -99,9 +93,12 @@ export class SyncDiagramOperationService implements OnDestroy {
   }
 
   beginSyncPhase(operationId: string): void {
+    const op = this.state.getOperation(operationId);
+    if (!op) return;
     this.state.patchOperation(operationId, {
       phase: 'sincronizando',
       progress: 0,
+      label: formatOperationScopeSubtitle(op.context),
     });
     this.trackOperation(operationId);
   }
@@ -361,16 +358,6 @@ export class SyncDiagramOperationService implements OnDestroy {
         this.state.patchOperation(opId, patch);
       });
     }
-  }
-
-  private formatScope(context: SyncDiagramContext): string {
-    const parts: string[] = [];
-    if (context.base) parts.push(context.base);
-    if (context.esquema) parts.push(context.esquema);
-    const tabela =
-      context.tabela ?? (context.tabelas?.length === 1 ? context.tabelas[0] : undefined);
-    if (tabela) parts.push(tabela);
-    return parts.join('.') || '—';
   }
 
   private isCancelled(operationId: string): boolean {

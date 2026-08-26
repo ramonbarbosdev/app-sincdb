@@ -9,7 +9,11 @@ import {
   Input,
   Output,
 } from '@angular/core';
-import { OperationPhase } from '../../models/sync-diagram.model';
+import {
+  formatOperationScopeSubtitle,
+  OperationPhase,
+  SyncDiagramContext,
+} from '../../models/sync-diagram.model';
 import { SyncDiagramStateService } from '../../services/sync-diagram-state.service';
 
 @Component({
@@ -35,6 +39,22 @@ export class SyncOperationNodeCardComponent {
     this.state.operations();
     return this.state.getOperation(this.operationId);
   });
+
+  displayTitle(phase: OperationPhase): string {
+    const map: Record<OperationPhase, string> = {
+      verificando: 'Verificando',
+      verificado: 'Sincronizando',
+      sincronizando: 'Sincronizando',
+      concluido: 'Concluído',
+      erro: 'Erro',
+      cancelado: 'Cancelado',
+    };
+    return map[phase];
+  }
+
+  scopeSubtitle(context: SyncDiagramContext): string {
+    return formatOperationScopeSubtitle(context);
+  }
 
   phaseLabel(phase: OperationPhase): string {
     const map: Record<OperationPhase, string> = {
