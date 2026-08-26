@@ -58,8 +58,10 @@
   right: auto !important;
   width: 100% !important;
   height: 112px !important;
+  min-height: 112px;
   border-radius: 8px;
   cursor: crosshair;
+  display: block;
 }
 
 :host ::ng-deep .canvas-breadcrumb {
