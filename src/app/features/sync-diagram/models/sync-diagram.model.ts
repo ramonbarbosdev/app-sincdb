@@ -150,8 +150,10 @@ export interface SyncDiagramNodeData {
   loading: boolean;
   filter: string;
   selectedItemId?: string;
-  /** Schema (ou base) com caixa filha aberta no diagrama. */
+  /** Legado — schema com tabelas abertas (card kind=schema). */
   openedItemId?: string;
+  /** Schemas com caixa de tabelas aberta neste card (kind=schemas). */
+  openedItemIds?: string[];
   /** Seleção múltipla no card de tabelas. */
   selectedItemIds?: string[];
   context: SyncDiagramContext;

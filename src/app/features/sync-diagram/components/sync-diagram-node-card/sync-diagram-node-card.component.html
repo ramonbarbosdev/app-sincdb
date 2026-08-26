@@ -114,7 +114,7 @@
               *ngIf="node.kind === 'schemas'"
               type="button"
               class="diagram-open-icon"
-              [class.is-open]="node.openedItemId === item.id"
+              [class.is-open]="isSchemaTablesOpen(item.id)"
               title="Abrir tabelas"
               [attr.aria-label]="'Abrir tabelas do schema ' + item.label"
               (click)="itemOpen.emit(item.id)"

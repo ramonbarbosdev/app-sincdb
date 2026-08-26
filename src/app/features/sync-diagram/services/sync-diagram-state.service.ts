@@ -712,7 +712,7 @@ export class SyncDiagramStateService {
       return;
     }
     if (kind === 'schemas') {
-      const base = context.base ?? this.selection().base;
+      const base = context.base;
       if (!base) return;
       this.selection.set({ base, esquema: itemId });
       this.rebuildGraph();
@@ -720,16 +720,21 @@ export class SyncDiagramStateService {
       return;
     }
     if (kind === 'tables') {
-      const current = this.selection();
-      const tabelas = new Set(this.selectedTabelas(current));
+      const base = context.base;
+      const esquema = context.esquema;
+      if (!base || !esquema) return;
+
+      const sel = this.selection();
+      const sameScope = sel.base === base && sel.esquema === esquema;
+      const tabelas = new Set(sameScope ? this.selectedTabelas(sel) : []);
       if (tabelas.has(itemId)) {
         tabelas.delete(itemId);
       } else {
         tabelas.add(itemId);
       }
       this.selection.set({
-        base: current.base,
-        esquema: current.esquema,
+        base,
+        esquema,
         tabelas: [...tabelas],
       });
       this.rebuildGraph();
@@ -739,7 +744,7 @@ export class SyncDiagramStateService {
 
   drillToItem(kind: SyncDiagramKind, itemId: string, context: SyncDiagramContext): void {
     if (kind === 'schemas') {
-      const base = context.base ?? this.selection().base;
+      const base = context.base;
       if (!base) return;
       this.selection.set({ base, esquema: itemId });
       this.spawnTables(base, itemId, { fromSchemaList: true });
@@ -770,7 +775,18 @@ export class SyncDiagramStateService {
     if (node.kind === 'schemas') {
       const base = node.context.base;
       if (!base) return;
-      if (node.openedItemId) {
+      const opened = node.openedItemIds ?? [];
+      if (opened.length === 1) {
+        this.closeTablesForSchema(base, opened[0]);
+      } else if (opened.length > 1) {
+        for (const esquema of opened) {
+          this.openTablesKeys.delete(schemaScopeKey(base, esquema));
+          this.positions.delete(this.tablesNodeIdFor(base, esquema));
+        }
+        this.layoutTreeBranches();
+        this.rebuildGraph();
+        this.persistSoon();
+      } else if (node.openedItemId) {
         this.closeTablesForSchema(base, node.openedItemId);
       } else {
         this.closeSchemaListForBase(base);
@@ -1726,16 +1742,13 @@ export class SyncDiagramStateService {
     return out;
   }
 
-  private openedSchemaIdForList(base: string): string | undefined {
+  private openedSchemaIdsForList(base: string): string[] {
+    const opened: string[] = [];
     for (const key of this.openTablesKeys) {
       const parsed = this.parseScopeKey(key);
-      if (parsed?.base === base) return parsed.esquema;
+      if (parsed?.base === base) opened.push(parsed.esquema);
     }
-    for (const key of this.openSchemaBoxes) {
-      const parsed = this.parseScopeKey(key);
-      if (parsed?.base === base) return parsed.esquema;
-    }
-    return undefined;
+    return opened.sort();
   }
 
   private rebuildGraph(): void {
@@ -1772,7 +1785,7 @@ export class SyncDiagramStateService {
         loading: this.loadingNodes.get(schemasNodeId) ?? false,
         filter: this.filters.get(schemasNodeId) ?? '',
         selectedItemId: sel.base === base ? sel.esquema : undefined,
-        openedItemId: this.openedSchemaIdForList(base),
+        openedItemIds: this.openedSchemaIdsForList(base),
         context: { base },
         itemCount: schemas.length,
       };

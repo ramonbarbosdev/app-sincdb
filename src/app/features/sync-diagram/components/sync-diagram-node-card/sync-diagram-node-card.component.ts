@@ -85,7 +85,7 @@ export class SyncDiagramNodeCardComponent implements OnChanges, OnDestroy {
   }
 
   closeButtonTitle(): string {
-    if (this.node.kind === 'schemas' && this.node.openedItemId) {
+    if (this.node.kind === 'schemas' && (this.node.openedItemIds?.length || this.node.openedItemId)) {
       return 'Fechar tabelas';
     }
     if (this.node.kind === 'schema' && this.node.openedItemId) {
@@ -111,6 +111,13 @@ export class SyncDiagramNodeCardComponent implements OnChanges, OnDestroy {
       return (this.node.selectedItemIds?.length ?? 0) > 0;
     }
     return !!this.node.selectedItemId;
+  }
+
+  isSchemaTablesOpen(itemId: string): boolean {
+    if (this.node.openedItemIds?.length) {
+      return this.node.openedItemIds.includes(itemId);
+    }
+    return this.node.openedItemId === itemId;
   }
 
   isTableSelected(itemId: string): boolean {
