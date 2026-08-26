@@ -46,7 +46,7 @@ export class SyncDiagramOperationService implements OnDestroy {
     action: OperationActionKind,
     context: SyncDiagramContext
   ): string {
-    const id = `op-${Date.now()}`;
+    const id = `op-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const scope = this.formatScope(context);
     const actionLabel =
       action === 'verificar'

@@ -4,7 +4,8 @@
       type="button"
       class="rail-btn rail-accent-violet"
       [class.is-active]="isEstrutura()"
-      title="Modo estrutura"
+      pTooltip="Modo estrutura — compara e sincroniza DDL (tabelas, colunas, índices e FKs)"
+      tooltipPosition="right"
       aria-label="Modo estrutura"
       (click)="selectMode('estrutura')"
     >
@@ -17,7 +18,8 @@
       type="button"
       class="rail-btn rail-accent-cyan"
       [class.is-active]="isDados()"
-      title="Modo dados"
+      pTooltip="Modo dados — compara e sincroniza linhas (inserções e atualizações)"
+      tooltipPosition="right"
       aria-label="Modo dados"
       (click)="selectMode('dados')"
     >
@@ -32,7 +34,8 @@
     <button
       type="button"
       class="rail-btn rail-accent-primary"
-      title="Verificar e sincronizar"
+      pTooltip="Verificar diferenças e sincronizar (schema inteiro ou tabelas marcadas)"
+      tooltipPosition="right"
       [attr.aria-label]="'Verificar e sincronizar · ' + scopeLabel"
       [disabled]="!hasSelection || running"
       (click)="sincronizarSelecao.emit()"
@@ -48,7 +51,8 @@
     <button
       type="button"
       class="rail-btn rail-accent-violet"
-      title="Recolher nível"
+      pTooltip="Recolher um nível (tabelas → schema → base)"
+      tooltipPosition="right"
       aria-label="Recolher nível"
       [disabled]="!canRecolher"
       (click)="recolher.emit()"
@@ -63,7 +67,8 @@
       *ngIf="running"
       type="button"
       class="rail-btn rail-accent-red"
-      title="Cancelar operação"
+      pTooltip="Cancelar a operação em andamento"
+      tooltipPosition="right"
       aria-label="Cancelar operação"
       (click)="cancelar.emit()"
     >
@@ -75,8 +80,25 @@
 
     <button
       type="button"
+      class="rail-btn rail-accent-green"
+      pTooltip="Organizar automaticamente os nós do diagrama"
+      tooltipPosition="right"
+      aria-label="Organizar automaticamente"
+      (click)="autoLayout.emit()"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+        <rect x="14" y="14" width="7" height="7" rx="1" />
+      </svg>
+    </button>
+
+    <button
+      type="button"
       class="rail-btn rail-accent-amber"
-      [title]="themeService.isDark() ? 'Tema claro' : 'Tema escuro'"
+      [pTooltip]="themeService.isDark() ? 'Alternar para tema claro' : 'Alternar para tema escuro'"
+      tooltipPosition="right"
       [attr.aria-label]="themeService.isDark() ? 'Alternar para tema claro' : 'Alternar para tema escuro'"
       (click)="themeService.toggle()"
     >

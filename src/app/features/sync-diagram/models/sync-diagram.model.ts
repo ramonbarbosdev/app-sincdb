@@ -53,7 +53,9 @@ export interface SyncDiagramItem {
 export interface SyncDiagramContext {
   base?: string;
   esquema?: string;
+  /** Legado — preferir `tabelas` para seleção múltipla. */
   tabela?: string;
+  tabelas?: string[];
 }
 
 export interface SyncDiagramNodeData {
@@ -65,6 +67,8 @@ export interface SyncDiagramNodeData {
   loading: boolean;
   filter: string;
   selectedItemId?: string;
+  /** Seleção múltipla no card de tabelas. */
+  selectedItemIds?: string[];
   context: SyncDiagramContext;
   itemCount?: number;
 }

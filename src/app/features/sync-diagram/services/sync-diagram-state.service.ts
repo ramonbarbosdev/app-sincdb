@@ -147,9 +147,73 @@ export class SyncDiagramStateService {
     this.closeAllOperationDetails(operation.id);
     const opNodeId = this.operationNodeId(operation.id);
     const anchor = this.lastSelectorNodeId();
-    const anchorPos = this.positions.get(anchor) ?? DEFAULT_POSITIONS[anchor] ?? { x: 80, y: 100 };
+    let anchorPos = this.positions.get(anchor) ?? DEFAULT_POSITIONS[anchor] ?? { x: 80, y: 100 };
+    const priorOps = this.operations().filter((o) => o.id !== operation.id);
+    if (priorOps.length > 0) {
+      const lastOpPos = this.positions.get(this.operationNodeId(priorOps[priorOps.length - 1].id));
+      if (lastOpPos) anchorPos = lastOpPos;
+    }
     this.positions.set(opNodeId, { x: anchorPos.x + OPERATION_GAP, y: anchorPos.y });
     this.rebuildGraph();
+  }
+
+  autoLayoutCanvas(): void {
+    const basesPos = { x: 80, y: 100 };
+    this.positions.set(this.basesNodeId, { ...basesPos });
+
+    if (this.schemasNodeId) {
+      this.positions.set(this.schemasNodeId, {
+        x: basesPos.x + HORIZONTAL_GAP,
+        y: basesPos.y,
+      });
+    }
+
+    if (this.tablesNodeId) {
+      const fromId = this.schemasNodeId ?? this.basesNodeId;
+      const from = this.positions.get(fromId) ?? basesPos;
+      this.positions.set(this.tablesNodeId, {
+        x: from.x + HORIZONTAL_GAP,
+        y: from.y,
+      });
+    }
+
+    let anchorPos = this.positions.get(this.lastSelectorNodeId()) ?? { ...basesPos };
+
+    for (const op of this.operations()) {
+      const opNodeId = this.operationNodeId(op.id);
+      anchorPos = { x: anchorPos.x + OPERATION_GAP, y: anchorPos.y };
+      this.positions.set(opNodeId, { ...anchorPos });
+
+      if (op.detailOpen) {
+        const erdTables = this.erdTablesForOperation(op.id);
+        const erdOrigin = { x: anchorPos.x + ERD_ORIGIN_OFFSET_X, y: anchorPos.y };
+        const layoutPositions = this.layout.layoutErd(
+          erdTables.map((t) => ({ id: t.id })),
+          erdOrigin
+        );
+        for (const [erdId, pos] of layoutPositions) {
+          this.positions.set(erdId, pos);
+          const table = this.erdTables.get(erdId);
+          if (table && op.context.base && op.context.esquema) {
+            const grafoId = erdId.replace(`erd-${table.operationId}-`, '');
+            this.positions.set(
+              this.erdStableKey(op.context.base, op.context.esquema, grafoId),
+              pos
+            );
+          }
+        }
+      }
+    }
+
+    this.rebuildGraph();
+    this.persistNow();
+  }
+
+  selectedTabelas(sel?: SyncDiagramContext): string[] {
+    const context = sel ?? this.selection();
+    if (context.tabelas?.length) return [...context.tabelas];
+    if (context.tabela) return [context.tabela];
+    return [];
   }
 
   patchOperation(operationId: string, patch: Partial<SyncOperation>): void {
@@ -365,8 +429,17 @@ export class SyncDiagramStateService {
     }
     if (kind === 'tables') {
       const current = this.selection();
-      const tabela = current.tabela === itemId ? undefined : itemId;
-      this.selection.set({ base: current.base, esquema: current.esquema, tabela });
+      const tabelas = new Set(this.selectedTabelas(current));
+      if (tabelas.has(itemId)) {
+        tabelas.delete(itemId);
+      } else {
+        tabelas.add(itemId);
+      }
+      this.selection.set({
+        base: current.base,
+        esquema: current.esquema,
+        tabelas: [...tabelas],
+      });
       this.rebuildGraph();
       this.persistSoon();
     }
@@ -388,7 +461,7 @@ export class SyncDiagramStateService {
 
   recolherNivel(): void {
     const sel = this.selection();
-    if (sel.tabela) {
+    if (this.selectedTabelas(sel).length > 0) {
       this.selection.set({ base: sel.base, esquema: sel.esquema });
       this.rebuildGraph();
       this.persistSoon();
@@ -562,7 +635,7 @@ export class SyncDiagramStateService {
     if (!stored) return;
 
     this.syncMode.set(stored.syncMode ?? 'estrutura');
-    this.selection.set({ ...stored.selection });
+    this.selection.set(this.normalizePersistedSelection(stored.selection));
 
     for (const [nodeId, filter] of Object.entries(stored.filters ?? {})) {
       this.filters.set(nodeId, filter);
@@ -571,6 +644,15 @@ export class SyncDiagramStateService {
     for (const [key, pos] of Object.entries(stored.positions ?? {})) {
       this.positions.set(key, { x: pos.x, y: pos.y });
     }
+  }
+
+  private normalizePersistedSelection(selection: SyncDiagramContext): SyncDiagramContext {
+    const sel = { ...selection };
+    if (sel.tabela && !sel.tabelas?.length) {
+      sel.tabelas = [sel.tabela];
+      delete sel.tabela;
+    }
+    return sel;
   }
 
   private restoreDrillDownFromSelection(): void {
@@ -795,7 +877,7 @@ export class SyncDiagramStateService {
     this.persistence.save({
       version: 1,
       syncMode: this.syncMode(),
-      selection: this.selection(),
+      selection: this.normalizePersistedSelection(this.selection()),
       filters: Object.fromEntries(this.filters.entries()),
       positions: this.toPersistablePositions(),
     });
@@ -805,8 +887,6 @@ export class SyncDiagramStateService {
     const out: Record<string, DiagramFlowPoint> = {};
 
     for (const [nodeId, pos] of this.positions.entries()) {
-      if (nodeId.startsWith('node-operation-')) continue;
-
       if (nodeId.startsWith('erd:')) {
         out[nodeId] = { ...pos };
         continue;
@@ -880,6 +960,7 @@ export class SyncDiagramStateService {
     if (sel.base && sel.esquema && this.tablesNodeId) {
       const key = `${sel.base}|${sel.esquema}`;
       const tables = this.tableCache.get(key) ?? [];
+      const selectedTables = this.selectedTabelas(sel);
       const tablesMeta: SyncDiagramNodeData = {
         nodeId: this.tablesNodeId,
         kind: 'tables',
@@ -888,7 +969,7 @@ export class SyncDiagramStateService {
         items: tables,
         loading: this.loadingNodes.get(this.tablesNodeId) ?? false,
         filter: this.filters.get(this.tablesNodeId) ?? '',
-        selectedItemId: sel.tabela,
+        selectedItemIds: selectedTables,
         context: { base: sel.base, esquema: sel.esquema },
         itemCount: tables.length,
       };
@@ -901,7 +982,12 @@ export class SyncDiagramStateService {
         )
       );
       connections.push(
-        this.createSelectorConnection(this.schemasNodeId!, this.tablesNodeId, !!sel.tabela, 'Tabelas')
+        this.createSelectorConnection(
+          this.schemasNodeId!,
+          this.tablesNodeId,
+          selectedTables.length > 0,
+          'Tabelas'
+        )
       );
     }
 

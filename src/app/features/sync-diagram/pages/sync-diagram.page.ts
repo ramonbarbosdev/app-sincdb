@@ -64,7 +64,12 @@ export class SyncDiagramPage implements OnInit, OnDestroy {
     const parts: string[] = [];
     if (sel.base) parts.push(sel.base);
     if (sel.esquema) parts.push(sel.esquema);
-    if (sel.tabela) parts.push(sel.tabela);
+    const tabelas = this.state.selectedTabelas(sel);
+    if (tabelas.length === 1) {
+      parts.push(tabelas[0]);
+    } else if (tabelas.length > 1) {
+      parts.push(`${tabelas.length} tabelas`);
+    }
     return parts;
   }
 
@@ -92,10 +97,14 @@ export class SyncDiagramPage implements OnInit, OnDestroy {
 
   canRecolher(): boolean {
     const sel = this.state.selection();
-    return !!(sel.base || sel.esquema || sel.tabela);
+    return !!(sel.base || sel.esquema || this.state.selectedTabelas(sel).length > 0);
   }
 
   recolherNivel(): void {
     this.state.recolherNivel();
+  }
+
+  organizarCanvas(): void {
+    this.state.autoLayoutCanvas();
   }
 }

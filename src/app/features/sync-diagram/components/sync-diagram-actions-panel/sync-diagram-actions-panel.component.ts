@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { TooltipModule } from 'primeng/tooltip';
 import { SyncDiagramMode } from '../../models/sync-diagram.model';
 import { SyncDiagramThemeService } from '../../services/sync-diagram-theme.service';
 
 @Component({
   selector: 'app-sync-diagram-actions-panel',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TooltipModule],
   templateUrl: './sync-diagram-actions-panel.component.html',
   styleUrls: ['../../sync-diagram.theme.scss', './sync-diagram-actions-panel.component.scss'],
 })
@@ -23,6 +24,7 @@ export class SyncDiagramActionsPanelComponent {
   @Output() sincronizarSelecao = new EventEmitter<void>();
   @Output() recolher = new EventEmitter<void>();
   @Output() cancelar = new EventEmitter<void>();
+  @Output() autoLayout = new EventEmitter<void>();
 
   isEstrutura(): boolean {
     return this.mode === 'estrutura';

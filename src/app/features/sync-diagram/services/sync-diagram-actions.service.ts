@@ -32,14 +32,46 @@ export class SyncDiagramActionsService {
       });
       return null;
     }
-    return context.tabela ? context.tabela : esquema;
+    if (context.tabela) return context.tabela;
+    if (context.tabelas?.length === 1) return context.tabelas[0];
+    return esquema;
+  }
+
+  private expandContexts(context: SyncDiagramContext): SyncDiagramContext[] {
+    const base = context.base;
+    const esquema = context.esquema;
+    if (!base || !esquema) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Seleção incompleta',
+        detail: 'Selecione base e schema no diagrama.',
+      });
+      return [];
+    }
+
+    const tabelas = context.tabelas?.length
+      ? context.tabelas
+      : context.tabela
+        ? [context.tabela]
+        : [];
+
+    if (!tabelas.length) {
+      return [{ base, esquema }];
+    }
+
+    return tabelas.map((tabela: string) => ({ base, esquema, tabela, tabelas: [tabela] }));
   }
 
   verificarESincronizar(context: SyncDiagramContext, mode: SyncDiagramMode): void {
-    if (mode === 'estrutura') {
-      this.verificarESincronizarEstrutura(context);
-    } else {
-      this.verificarESincronizarDados(context);
+    const contexts = this.expandContexts(context);
+    if (!contexts.length) return;
+
+    for (const ctx of contexts) {
+      if (mode === 'estrutura') {
+        this.verificarESincronizarEstrutura(ctx);
+      } else {
+        this.verificarESincronizarDados(ctx);
+      }
     }
   }
 

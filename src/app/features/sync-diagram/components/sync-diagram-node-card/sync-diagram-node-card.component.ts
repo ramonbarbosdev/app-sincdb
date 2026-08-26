@@ -36,4 +36,15 @@ export class SyncDiagramNodeCardComponent {
   canCloseChildren(): boolean {
     return this.node.kind !== 'tables' && !!this.node.selectedItemId;
   }
+
+  hasActivePath(): boolean {
+    if (this.node.kind === 'tables') {
+      return (this.node.selectedItemIds?.length ?? 0) > 0;
+    }
+    return !!this.node.selectedItemId;
+  }
+
+  isTableSelected(itemId: string): boolean {
+    return this.node.selectedItemIds?.includes(itemId) ?? false;
+  }
 }
