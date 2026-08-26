@@ -128,6 +128,6 @@ export class Login {
       return;
     }
 
-    this.router.navigate(['client/home']);
+    this.router.navigate(['client/sincronizacao-diagrama']);
   }
 }

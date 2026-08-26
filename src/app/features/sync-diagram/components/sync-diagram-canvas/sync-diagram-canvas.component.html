@@ -5,7 +5,7 @@
   <div class="canvas-workspace">
     <div class="canvas-loading" *ngIf="state.loadingInitial()">
       <span class="loading-spinner" aria-hidden="true"></span>
-      <span>Carregando bases...</span>
+      <!-- <span>Carregando bases...</span> -->
     </div>
 
     <f-flow
@@ -229,26 +229,49 @@
   </div>
 
   <div
-    class="sync-selection-float"
-    *ngIf="!state.loadingInitial() && showSyncFab"
+    class="sync-bottom-stack"
+    *ngIf="!state.loadingInitial() && (showSyncFab || queue.items().length > 0)"
   >
-    <button
-      type="button"
-      class="sync-selection-btn"
-      [class.mode-estrutura]="syncMode === 'estrutura'"
-      [class.mode-dados]="syncMode === 'dados'"
-      [disabled]="running || syncDisabled"
-      [attr.aria-label]="'Sincronizar seleção · ' + scopeLabel"
-      (click)="sincronizarSelecao.emit()"
-    >
-      <span class="sync-selection-icon" aria-hidden="true">
-        <i class="pi pi-sync"></i>
-      </span>
-      <span class="sync-selection-text">
-        <strong>Sincronizar seleção</strong>
-        <span class="sync-selection-scope">{{ scopeLabel }}</span>
-      </span>
-      <span class="sync-selection-mode">{{ syncMode }}</span>
-    </button>
+    <div class="sync-bottom-actions" *ngIf="showSyncFab">
+      <button
+        type="button"
+        class="sync-selection-btn"
+        [class.mode-estrutura]="syncMode === 'estrutura'"
+        [class.mode-dados]="syncMode === 'dados'"
+        [disabled]="running || syncDisabled"
+        [attr.aria-label]="'Sincronizar seleção · ' + scopeLabel"
+        (click)="sincronizarSelecao.emit()"
+      >
+        <span class="sync-selection-icon" aria-hidden="true">
+          <i class="pi pi-sync"></i>
+        </span>
+        <span class="sync-selection-text">
+          <strong>Sincronizar seleção</strong>
+          <span class="sync-selection-scope">{{ scopeLabel }}</span>
+        </span>
+        <span class="sync-selection-mode">{{ syncMode }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="sync-queue-add-btn"
+        [class.mode-estrutura]="syncMode === 'estrutura'"
+        [class.mode-dados]="syncMode === 'dados'"
+        [disabled]="enqueueDisabled"
+        aria-label="Adicionar seleção à fila"
+        (click)="adicionarFila.emit()"
+      >
+        <i class="pi pi-plus" aria-hidden="true"></i>
+        <span>Fila</span>
+      </button>
+    </div>
+
+    <app-sync-diagram-queue-list
+      [running]="running"
+      [canRunQueue]="canRunQueue"
+      (removeItem)="removeFromQueue.emit($event)"
+      (clearQueue)="clearQueue.emit()"
+      (runQueue)="runQueue.emit()"
+    />
   </div>
 </div>

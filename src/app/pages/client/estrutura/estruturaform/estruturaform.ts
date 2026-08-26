@@ -406,7 +406,7 @@ export class Estruturaform {
         this.router.navigate(['/client/dados'], {
           state,
         }),
-      reject: () => this.router.navigate(['/client/home']),
+      reject: () => this.router.navigate(['/client/sincronizacao-diagrama']),
     });
   }
 

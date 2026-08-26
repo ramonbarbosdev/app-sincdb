@@ -19,10 +19,12 @@ export class SyncDiagramActionsPanelComponent {
   @Input() hasSelection = false;
   @Input() running = false;
   @Input() syncDisabled = false;
+  @Input() enqueueDisabled = false;
   @Input() canRecolher = false;
 
   @Output() modeChange = new EventEmitter<SyncDiagramMode>();
   @Output() sincronizarSelecao = new EventEmitter<void>();
+  @Output() adicionarFila = new EventEmitter<void>();
   @Output() recolher = new EventEmitter<void>();
   @Output() autoLayout = new EventEmitter<void>();
 

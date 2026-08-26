@@ -14,7 +14,8 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app/app.routes';
 
 registerLocaleData(localePt, 'pt-BR');
-document.documentElement.classList.add('app-dark'); //Dark como padrão
+//Dark como padrão
+// document.documentElement.classList.add('app-dark'); 
 
 bootstrapApplication(App, {
   providers: [

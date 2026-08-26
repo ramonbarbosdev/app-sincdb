@@ -1,0 +1,36 @@
+<div class="queue-card" *ngIf="queue.items().length">
+  <div class="queue-header">
+    <span class="queue-title">Fila ({{ queue.items().length }})</span>
+    <button type="button" class="queue-clear" (click)="clearQueue.emit()">Limpar</button>
+  </div>
+
+  <ul class="queue-list" aria-label="Itens na fila de sincronização">
+    <li class="queue-item" *ngFor="let item of queue.items()">
+      <span class="queue-item-label">{{ item.label }}</span>
+      <span
+        class="queue-item-mode"
+        [class.mode-estrutura]="item.mode === 'estrutura'"
+        [class.mode-dados]="item.mode === 'dados'"
+      >
+        {{ modeLabel(item.mode) }}
+      </span>
+      <button
+        type="button"
+        class="queue-item-remove"
+        aria-label="Remover da fila"
+        (click)="removeItem.emit(item.id)"
+      >
+        <i class="pi pi-times" aria-hidden="true"></i>
+      </button>
+    </li>
+  </ul>
+
+  <button
+    type="button"
+    class="queue-run-btn"
+    *ngIf="canRunQueue"
+    (click)="runQueue.emit()"
+  >
+    Executar fila
+  </button>
+</div>

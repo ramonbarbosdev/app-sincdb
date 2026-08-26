@@ -73,6 +73,11 @@ export class AppMenu {
           label: 'Início',
           items: [
             {
+              label: 'Mapa de sincronização',
+              icon: 'pi pi-fw pi-map',
+              routerLink: ['/client/sincronizacao-diagrama'],
+            },
+            {
               label: 'Painel Principal',
               icon: 'pi pi-fw pi-home',
               routerLink: ['/client/home'],
@@ -101,11 +106,6 @@ export class AppMenu {
               label: 'Dados',
               icon: 'pi pi-database',
               routerLink: ['/client/dados'],
-            },
-            {
-              label: 'Mapa de sincronização',
-              icon: 'pi pi-map',
-              routerLink: ['/client/sincronizacao-diagrama'],
             },
             {
               label: 'SQL Editor',

@@ -10,6 +10,7 @@ import { SyncDiagramCameraService } from '../services/sync-diagram-camera.servic
 import { SyncDiagramLayoutPersistenceService } from '../services/sync-diagram-layout-persistence.service';
 import { SyncDiagramLayoutService } from '../services/sync-diagram-layout.service';
 import { SyncDiagramOperationService } from '../services/sync-diagram-operation.service';
+import { SyncDiagramQueueService } from '../services/sync-diagram-queue.service';
 import { SyncDiagramStateService } from '../services/sync-diagram-state.service';
 import { SyncDiagramThemeService } from '../services/sync-diagram-theme.service';
 
@@ -24,6 +25,7 @@ import { SyncDiagramThemeService } from '../services/sync-diagram-theme.service'
     SyncDiagramStateService,
     SyncDiagramOperationService,
     SyncDiagramActionsService,
+    SyncDiagramQueueService,
   ],
   imports: [CommonModule, SyncDiagramCanvasComponent, SyncDiagramActionsPanelComponent],
   templateUrl: './sync-diagram.page.html',
@@ -35,6 +37,7 @@ export class SyncDiagramPage implements OnInit, OnDestroy {
   private actions = inject(SyncDiagramActionsService);
   readonly state = inject(SyncDiagramStateService);
   readonly theme = inject(SyncDiagramThemeService);
+  readonly queue = inject(SyncDiagramQueueService);
   private operations = inject(SyncDiagramOperationService);
 
   private previousMenuInactive = false;
@@ -85,11 +88,40 @@ export class SyncDiagramPage implements OnInit, OnDestroy {
 
   sincronizarSelecao(): void {
     const context = this.state.selection();
-    this.actions.verificarESincronizar(context, this.state.syncMode());
+    this.actions.syncNow(context, this.state.syncMode());
+  }
+
+  adicionarFila(): void {
+    const context = this.state.selection();
+    this.actions.addToQueue(context, this.state.syncMode());
+  }
+
+  executarFila(): void {
+    this.actions.runQueue();
+  }
+
+  removerDaFila(id: string): void {
+    this.actions.removeFromQueue(id);
+  }
+
+  limparFila(): void {
+    this.actions.clearQueue();
   }
 
   hasRunningOperation(): boolean {
     return this.operations.hasRunningOperation();
+  }
+
+  isEnqueueDisabled(): boolean {
+    return !this.actions.canEnqueue(this.state.selection(), this.state.syncMode());
+  }
+
+  canRunQueue(): boolean {
+    return (
+      this.queue.count() > 0 &&
+      !this.hasRunningOperation() &&
+      !this.actions.isBatchActive()
+    );
   }
 
   isSyncDisabled(): boolean {

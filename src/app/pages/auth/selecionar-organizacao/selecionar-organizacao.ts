@@ -73,7 +73,7 @@ export class SelecionarOrganizacao {
       this.router.navigate(['dev/home']);
       return;
     }
-    this.router.navigate(['client/home']);
+    this.router.navigate(['client/sincronizacao-diagrama']);
   }
 
   validarItens(): any {

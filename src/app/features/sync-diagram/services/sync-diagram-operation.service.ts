@@ -30,6 +30,7 @@ export class SyncDiagramOperationService implements OnDestroy {
   private progressSub?: Subscription;
   private wsBridgeSub?: Subscription;
   private activeOperationId?: string;
+  private onOperationIdle?: () => void;
 
   constructor() {
     this.wsBridgeSub = this.ws.progresso$.subscribe((payload) => {
@@ -40,6 +41,15 @@ export class SyncDiagramOperationService implements OnDestroy {
   ngOnDestroy(): void {
     this.progressSub?.unsubscribe();
     this.wsBridgeSub?.unsubscribe();
+    this.onOperationIdle = undefined;
+  }
+
+  setOnOperationIdle(handler: () => void): void {
+    this.onOperationIdle = handler;
+  }
+
+  private notifyOperationIdle(): void {
+    this.onOperationIdle?.();
   }
 
   createOrReuseOperation(
@@ -161,6 +171,7 @@ export class SyncDiagramOperationService implements OnDestroy {
       this.state.closeOperationDetail(operationId);
     }
     this.activeOperationId = undefined;
+    this.notifyOperationIdle();
   }
 
   markCancelled(operationId: string): void {
@@ -173,6 +184,7 @@ export class SyncDiagramOperationService implements OnDestroy {
     if (this.activeOperationId === operationId) {
       this.activeOperationId = undefined;
     }
+    this.notifyOperationIdle();
   }
 
   failOperation(operationId: string, errors?: string[]): void {
@@ -185,6 +197,7 @@ export class SyncDiagramOperationService implements OnDestroy {
     if (this.activeOperationId === operationId) {
       this.activeOperationId = undefined;
     }
+    this.notifyOperationIdle();
   }
 
   toggleErrorsExpanded(operationId: string): void {

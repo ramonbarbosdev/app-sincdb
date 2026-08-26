@@ -7,11 +7,17 @@
     <app-sync-diagram-canvas
       [running]="hasRunningOperation()"
       [syncDisabled]="isSyncDisabled()"
+      [enqueueDisabled]="isEnqueueDisabled()"
+      [canRunQueue]="canRunQueue()"
       [showSyncFab]="hasSyncableSelection()"
       [scopeLabel]="scopeLabel()"
       [syncMode]="state.syncMode()"
       (cancelar)="cancelarOperacao()"
       (sincronizarSelecao)="sincronizarSelecao()"
+      (adicionarFila)="adicionarFila()"
+      (runQueue)="executarFila()"
+      (removeFromQueue)="removerDaFila($event)"
+      (clearQueue)="limparFila()"
     >
       <app-sync-diagram-actions-panel
         [mode]="state.syncMode()"
@@ -19,9 +25,11 @@
         [hasSelection]="hasSyncableSelection()"
         [running]="hasRunningOperation()"
         [syncDisabled]="isSyncDisabled()"
+        [enqueueDisabled]="isEnqueueDisabled()"
         [canRecolher]="canRecolher()"
         (modeChange)="setMode($event)"
         (sincronizarSelecao)="sincronizarSelecao()"
+        (adicionarFila)="adicionarFila()"
         (recolher)="recolherNivel()"
         (autoLayout)="organizarCanvas()"
       />

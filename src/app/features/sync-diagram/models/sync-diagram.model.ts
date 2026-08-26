@@ -63,6 +63,34 @@ export interface SyncDiagramBreadcrumbItem {
   context: SyncDiagramContext;
 }
 
+export interface SyncQueueItem {
+  id: string;
+  mode: SyncDiagramMode;
+  context: SyncDiagramContext;
+  label: string;
+  createdAt: number;
+}
+
+/** Label de exibição na fila: `base.esquema` ou `base.esquema.tabela`. */
+export function formatQueueItemLabel(context: SyncDiagramContext): string {
+  const parts: string[] = [];
+  if (context.base) parts.push(context.base);
+  if (context.esquema) parts.push(context.esquema);
+  const tabela =
+    context.tabela ?? (context.tabelas?.length === 1 ? context.tabelas[0] : undefined);
+  if (tabela) {
+    const tableName = tabela.includes('.') ? tabela.split('.').pop()! : tabela;
+    if (context.esquema && tableName !== context.esquema) {
+      parts.push(tableName);
+    }
+  }
+  return parts.length ? parts.join('.') : '—';
+}
+
+export function queueScopeKey(context: SyncDiagramContext, mode: SyncDiagramMode): string {
+  return operationScopeKey(context, mode);
+}
+
 /** Chave única de escopo para reuso de caixa de operação (base + schema + modo + tabela opcional). */
 export function operationScopeKey(context: SyncDiagramContext, mode: SyncDiagramMode): string {
   const base = context.base ?? '';

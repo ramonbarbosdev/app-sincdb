@@ -9,9 +9,11 @@ import {
   SyncDiagramContext,
   SyncDiagramMode,
   SyncOperation,
+  SyncQueueItem,
   TabelaAfetadaDTO,
 } from '../models/sync-diagram.model';
 import { SyncDiagramOperationService } from './sync-diagram-operation.service';
+import { SyncDiagramQueueService } from './sync-diagram-queue.service';
 import { SyncDiagramStateService } from './sync-diagram-state.service';
 
 @Injectable()
@@ -20,10 +22,15 @@ export class SyncDiagramActionsService {
   private progressoSync = inject(ProgressoSyncService);
   private messageService = inject(MessageService);
   private operations = inject(SyncDiagramOperationService);
+  private queue = inject(SyncDiagramQueueService);
   private state = inject(SyncDiagramStateService);
 
   private batchActive = false;
   private conexaoPadrao?: Conexao;
+
+  constructor() {
+    this.operations.setOnOperationIdle(() => this.handleOperationIdle());
+  }
 
   hasConexaoPadrao(): boolean {
     return !!this.conexaoPadrao;
@@ -90,15 +97,20 @@ export class SyncDiagramActionsService {
     return esquema;
   }
 
-  private expandContexts(context: SyncDiagramContext): SyncDiagramContext[] {
+  private expandContexts(
+    context: SyncDiagramContext,
+    options?: { silent?: boolean }
+  ): SyncDiagramContext[] {
     const base = context.base;
     const esquema = context.esquema;
     if (!base || !esquema) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Seleção incompleta',
-        detail: 'Selecione base e schema no diagrama.',
-      });
+      if (!options?.silent) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Seleção incompleta',
+          detail: 'Selecione base e schema no diagrama.',
+        });
+      }
       return [];
     }
 
@@ -116,6 +128,10 @@ export class SyncDiagramActionsService {
   }
 
   verificarESincronizar(context: SyncDiagramContext, mode: SyncDiagramMode): void {
+    this.syncNow(context, mode);
+  }
+
+  syncNow(context: SyncDiagramContext, mode: SyncDiagramMode): void {
     if (!this.guardCanStartSync()) return;
 
     const contexts = this.expandContexts(context);
@@ -129,7 +145,7 @@ export class SyncDiagramActionsService {
 
     this.baseService.findAll(`sincronizacao/verificaesquema/${base}/${esquema}`).subscribe({
       next: () => {
-        this.runSequentialVerifySync(contexts, mode, 0);
+        this.runSequentialVerifySync(contexts, mode, 0, () => this.finishBatchAndDrain());
       },
       error: () => {
         this.batchActive = false;
@@ -142,18 +158,103 @@ export class SyncDiagramActionsService {
     });
   }
 
+  addToQueue(context: SyncDiagramContext, mode: SyncDiagramMode): void {
+    if (!this.guardCanEnqueue(context, mode)) return;
+    this.queue.enqueue(context, mode);
+  }
+
+  canEnqueue(context: SyncDiagramContext, mode: SyncDiagramMode): boolean {
+    if (!this.hasConexaoPadrao()) return false;
+    const base = context.base;
+    const esquema = context.esquema;
+    if (!base || !esquema) return false;
+    if (this.isScopeRunning(context, mode)) return false;
+    if (this.queue.hasScope(context, mode)) return false;
+    return true;
+  }
+
+  runQueue(): void {
+    if (!this.guardCanStartSync()) return;
+    this.drainQueue();
+  }
+
+  drainQueue(): void {
+    if (this.batchActive || this.operations.hasRunningOperation()) return;
+
+    const items = this.queue.items();
+    if (!items.length) return;
+
+    const item = items[0];
+    this.queue.remove(item.id);
+    this.processQueueItem(item);
+  }
+
+  removeFromQueue(id: string): void {
+    this.queue.remove(id);
+  }
+
+  clearQueue(): void {
+    this.queue.clear();
+  }
+
+  private handleOperationIdle(): void {
+    if (this.batchActive && !this.operations.hasRunningOperation()) {
+      this.batchActive = false;
+    }
+    this.drainQueue();
+  }
+
+  private finishBatchAndDrain(): void {
+    this.batchActive = false;
+    this.drainQueue();
+  }
+
+  private processQueueItem(item: SyncQueueItem): void {
+    const contexts = this.expandContexts(item.context, { silent: true });
+    if (!contexts.length) {
+      this.drainQueue();
+      return;
+    }
+
+    const base = contexts[0].base;
+    const esquema = contexts[0].esquema;
+    if (!base || !esquema) {
+      this.drainQueue();
+      return;
+    }
+
+    this.batchActive = true;
+
+    this.baseService.findAll(`sincronizacao/verificaesquema/${base}/${esquema}`).subscribe({
+      next: () => {
+        this.runSequentialVerifySync(contexts, item.mode, 0, () => this.finishBatchAndDrain());
+      },
+      error: () => {
+        this.batchActive = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Fila · conexão indisponível',
+          detail: `Não foi possível validar ${item.label}. Próximo item da fila será processado.`,
+        });
+        this.drainQueue();
+      },
+    });
+  }
+
   private runSequentialVerifySync(
     contexts: SyncDiagramContext[],
     mode: SyncDiagramMode,
-    index: number
+    index: number,
+    onBatchFinished?: () => void
   ): void {
     if (index >= contexts.length) {
-      this.batchActive = false;
+      onBatchFinished?.();
       return;
     }
 
     const ctx = contexts[index];
-    const onFinished = () => this.runSequentialVerifySync(contexts, mode, index + 1);
+    const onFinished = () =>
+      this.runSequentialVerifySync(contexts, mode, index + 1, onBatchFinished);
 
     if (mode === 'estrutura') {
       this.verificarESincronizarEstrutura(ctx, onFinished);
@@ -180,7 +281,7 @@ export class SyncDiagramActionsService {
       } else if (action === 'sincronizar') {
         this.sincronizarEstrutura(context);
       } else {
-        this.verificarESincronizar(context, mode);
+        this.syncNow(context, mode);
       }
       return;
     }
@@ -190,7 +291,7 @@ export class SyncDiagramActionsService {
     } else if (action === 'sincronizar') {
       this.sincronizarDados(context);
     } else {
-      this.verificarESincronizar(context, mode);
+      this.syncNow(context, mode);
     }
   }
 
@@ -223,6 +324,48 @@ export class SyncDiagramActionsService {
     }
 
     return true;
+  }
+
+  private guardCanEnqueue(context: SyncDiagramContext, mode: SyncDiagramMode): boolean {
+    if (!this.hasConexaoPadrao()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Conexão não configurada',
+        detail: 'Configure uma conexão padrão em Conexões antes de enfileirar.',
+      });
+      return false;
+    }
+
+    const base = context.base;
+    const esquema = context.esquema;
+    if (!base || !esquema) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Seleção incompleta',
+        detail: 'Selecione base e schema no diagrama.',
+      });
+      return false;
+    }
+
+    if (this.isScopeRunning(context, mode)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Operação em andamento',
+        detail: 'Este escopo já está em execução. Aguarde ou cancele antes de enfileirar.',
+      });
+      return false;
+    }
+
+    if (this.queue.hasScope(context, mode)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private isScopeRunning(context: SyncDiagramContext, mode: SyncDiagramMode): boolean {
+    const existing = this.state.findOperationByScope(context, mode);
+    return existing ? this.state.isOperationRunning(existing) : false;
   }
 
   private failOp(opId: string, message: string, onFinished?: () => void): void {
@@ -411,6 +554,11 @@ export class SyncDiagramActionsService {
             tabelas_afetadas: res.tabelas_afetadas,
           });
           this.progressoSync.marcarErro('Sincronização de estrutura com erros');
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Estrutura com erros',
+            detail: `${base}.${esquema}`,
+          });
           onFinished?.();
           return;
         }
@@ -552,6 +700,11 @@ export class SyncDiagramActionsService {
             tabelas_afetadas: res.tabelas_afetadas,
           });
           this.progressoSync.marcarErro('Sincronização de dados com erros');
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Dados com erros',
+            detail: `${base}.${esquema}`,
+          });
           onFinished?.();
           return;
         }

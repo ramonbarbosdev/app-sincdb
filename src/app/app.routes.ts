@@ -42,6 +42,7 @@ export const routes: Routes = [
     canActivateChild: [authGuard],
     data: { roles: ['client', 'dev'] },
     children: [
+      { path: '', redirectTo: 'sincronizacao-diagrama', pathMatch: 'full' },
       { path: 'home', component: HomeClient },
       { path: 'perfil', component: Perfil },
       { path: 'explorador', component: ExploradorVisualPage },

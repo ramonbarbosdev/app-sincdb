@@ -46,6 +46,21 @@
     <i class="pi pi-sync" aria-hidden="true"></i>
   </button>
 
+  <button
+    type="button"
+    class="rail-btn rail-btn-queue"
+    pTooltip="Adicionar seleção à fila"
+    tooltipPosition="right"
+    [tooltipStyleClass]="tip.styleClass"
+    [showDelay]="tip.showDelay"
+    [hideDelay]="tip.hideDelay"
+    [attr.aria-label]="'Adicionar à fila · ' + scopeLabel"
+    [disabled]="!hasSelection || enqueueDisabled"
+    (click)="adicionarFila.emit()"
+  >
+    <i class="pi pi-plus" aria-hidden="true"></i>
+  </button>
+
   <span class="rail-divider" aria-hidden="true"></span>
 
   <button

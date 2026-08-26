@@ -361,7 +361,7 @@ export class Dadosform {
           detail: `${resumo} · ${secs}s`,
         });
 
-        setTimeout(() => this.router.navigate(['client/home']), 700);
+        setTimeout(() => this.router.navigate(['client/sincronizacao-diagrama']), 700);
       },
       error: () => {
         this.loadingSincronizacao = false;

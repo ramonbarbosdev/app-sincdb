@@ -19,3 +19,295 @@
     margin-top: 8px;
   }
 }
+
+/* FAB inferior + fila de sincronização */
+.sync-bottom-stack {
+  position: absolute;
+  left: 50%;
+  bottom: 0.85rem;
+  transform: translateX(-50%);
+  z-index: 5;
+  pointer-events: auto;
+  max-width: calc(100% - 10rem);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+  min-width: min(100%, 22rem);
+}
+
+.sync-bottom-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 0.35rem;
+}
+
+.sync-queue-add-btn {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  min-width: 3.25rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--sync-diagram-rail-border);
+  border-radius: var(--sync-diagram-chrome-radius, 12px);
+  background: var(--sync-diagram-rail-bg);
+  box-shadow: var(--sync-diagram-rail-shadow);
+  cursor: pointer;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--sync-diagram-text-muted);
+  transition: border-color 140ms ease, transform 140ms ease;
+
+  i {
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--sync-diagram-primary) 45%, var(--sync-diagram-rail-border));
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  &.mode-estrutura {
+    color: var(--sync-diagram-primary);
+  }
+
+  &.mode-dados {
+    color: var(--sync-diagram-data-accent);
+  }
+}
+
+.sync-selection-btn {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.85rem 0.55rem 0.65rem;
+  border: 1px solid var(--sync-diagram-rail-border);
+  border-radius: var(--sync-diagram-chrome-radius, 12px);
+  background: var(--sync-diagram-rail-bg);
+  box-shadow: var(--sync-diagram-rail-shadow);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--sync-diagram-primary) 45%, var(--sync-diagram-rail-border));
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  &.mode-estrutura {
+    .sync-selection-icon {
+      color: var(--sync-diagram-primary);
+      background: color-mix(in srgb, var(--sync-diagram-primary) 14%, transparent);
+    }
+
+    .sync-selection-mode {
+      color: var(--sync-diagram-primary);
+      background: color-mix(in srgb, var(--sync-diagram-primary) 12%, transparent);
+    }
+  }
+
+  &.mode-dados {
+    .sync-selection-icon {
+      color: var(--sync-diagram-data-accent);
+      background: color-mix(in srgb, var(--sync-diagram-data-accent) 14%, transparent);
+    }
+
+    .sync-selection-mode {
+      color: var(--sync-diagram-data-accent);
+      background: color-mix(in srgb, var(--sync-diagram-data-accent) 12%, transparent);
+    }
+  }
+}
+
+.sync-selection-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+
+  i {
+    font-size: 1.05rem;
+    line-height: 1;
+  }
+}
+
+.sync-selection-text {
+  flex: 1;
+  min-width: 0;
+
+  strong {
+    display: block;
+    font-size: 0.82rem;
+    color: var(--sync-diagram-text);
+    line-height: 1.25;
+  }
+}
+
+.sync-selection-scope {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--sync-diagram-text-muted);
+  line-height: 1.3;
+  margin-top: 0.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sync-selection-mode {
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+}
+
+.queue-card {
+  border: 1px solid var(--sync-diagram-rail-border);
+  border-radius: var(--sync-diagram-chrome-radius, 12px);
+  background: var(--sync-diagram-rail-bg);
+  box-shadow: var(--sync-diagram-rail-shadow);
+  padding: 0.5rem 0.55rem;
+  min-width: 0;
+}
+
+.queue-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.queue-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--sync-diagram-text);
+}
+
+.queue-clear {
+  border: none;
+  background: transparent;
+  color: var(--sync-diagram-text-muted);
+  font-size: 0.68rem;
+  cursor: pointer;
+  padding: 0.1rem 0.25rem;
+
+  &:hover {
+    color: var(--sync-diagram-primary);
+  }
+}
+
+.queue-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.queue-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.35rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--sync-diagram-text) 4%, transparent);
+}
+
+.queue-item-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.72rem;
+  color: var(--sync-diagram-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.queue-item-mode {
+  flex-shrink: 0;
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+
+  &.mode-estrutura {
+    color: var(--sync-diagram-primary);
+    background: color-mix(in srgb, var(--sync-diagram-primary) 12%, transparent);
+  }
+
+  &.mode-dados {
+    color: var(--sync-diagram-data-accent);
+    background: color-mix(in srgb, var(--sync-diagram-data-accent) 12%, transparent);
+  }
+}
+
+.queue-item-remove {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--sync-diagram-text-muted);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+
+  &:hover {
+    color: var(--sync-diagram-text);
+    background: color-mix(in srgb, var(--sync-diagram-text) 8%, transparent);
+  }
+
+  i {
+    font-size: 0.7rem;
+  }
+}
+
+.queue-run-btn {
+  margin-top: 0.45rem;
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--sync-diagram-primary) 35%, var(--sync-diagram-rail-border));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--sync-diagram-primary) 10%, transparent);
+  color: var(--sync-diagram-primary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.35rem 0.5rem;
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--sync-diagram-primary) 16%, transparent);
+  }
+}
+
+@media (max-width: 720px) {
+  .sync-bottom-stack {
+    bottom: 6.5rem;
+    max-width: calc(100% - 1.5rem);
+    min-width: 0;
+  }
+}
