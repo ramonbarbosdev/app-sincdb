@@ -91,7 +91,7 @@
             *ngIf="flowNode.type === 'operation' && flowNode.operationMeta"
             [operationId]="flowNode.operationMeta.id"
             (toggleDetail)="onToggleOperationDetail(flowNode.operationMeta.id)"
-            (closeDetail)="onCloseOperationDetail(flowNode.operationMeta.id)"
+            (close)="onDismissOperation(flowNode.operationMeta.id)"
             (cancel)="onCancelOperation(flowNode.operationMeta.id)"
             (retry)="onRetryOperation(flowNode.operationMeta.id)"
             (toggleErrors)="onToggleOperationErrors(flowNode.operationMeta.id)"
@@ -202,5 +202,32 @@
 
   <div class="canvas-actions-float" *ngIf="!state.loadingInitial()">
     <ng-content />
+  </div>
+
+  <div
+    class="sync-selection-float"
+    *ngIf="!state.loadingInitial() && showSyncFab"
+  >
+    <button
+      type="button"
+      class="sync-selection-btn"
+      [class.mode-estrutura]="syncMode === 'estrutura'"
+      [class.mode-dados]="syncMode === 'dados'"
+      [disabled]="running || syncDisabled"
+      [attr.aria-label]="'Sincronizar seleção · ' + scopeLabel"
+      (click)="sincronizarSelecao.emit()"
+    >
+      <span class="sync-selection-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M7 7h10v10H7z" stroke-linejoin="round" />
+          <path d="M4 12h3M17 12h3M12 4v3M12 17v3" stroke-linecap="round" />
+        </svg>
+      </span>
+      <span class="sync-selection-text">
+        <strong>Sincronizar seleção</strong>
+        <span class="sync-selection-scope">{{ scopeLabel }}</span>
+      </span>
+      <span class="sync-selection-mode">{{ syncMode }}</span>
+    </button>
   </div>
 </div>

@@ -226,8 +226,15 @@ export class SyncDiagramOperationService implements OnDestroy {
     }
   }
 
-  closeDetail(operationId: string): void {
-    this.state.closeOperationDetail(operationId);
+  dismissOperation(operationId: string): void {
+    const op = this.state.getOperation(operationId);
+    if (!op) return;
+    if (op.phase === 'verificando' || op.phase === 'sincronizando') return;
+
+    if (this.activeOperationId === operationId) {
+      this.activeOperationId = undefined;
+    }
+    this.state.removeOperation(operationId);
   }
 
   private loadErdGraph(operationId: string): void {

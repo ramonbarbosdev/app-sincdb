@@ -30,6 +30,16 @@
           >{{ phaseLabel(operation.phase) }}</span>
         </div>
         <span class="operation-mode-badge">{{ operation.mode }}</span>
+        <button
+          *ngIf="!isRunning()"
+          type="button"
+          class="operation-close-btn"
+          title="Fechar caixa de operação"
+          aria-label="Fechar caixa de operação"
+          (click)="onClose($event)"
+        >
+          ×
+        </button>
       </header>
 
       <div class="operation-body">
@@ -70,21 +80,13 @@
       </div>
     </button>
 
-    <div class="operation-fab-strip" *ngIf="isRunning() || operation.detailOpen">
+    <div class="operation-fab-strip" *ngIf="isRunning()">
       <button
-        *ngIf="isRunning()"
         type="button"
         class="fab-btn fab-cancel"
         title="Cancelar operação"
         (click)="onCancel($event)"
       >⊗</button>
-      <button
-        *ngIf="operation.detailOpen"
-        type="button"
-        class="fab-btn"
-        title="Fechar detalhe ERD"
-        (click)="onCloseDetail($event)"
-      >×</button>
     </div>
   </div>
 </ng-container>

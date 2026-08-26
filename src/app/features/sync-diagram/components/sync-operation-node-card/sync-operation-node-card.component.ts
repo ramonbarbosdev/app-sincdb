@@ -24,7 +24,7 @@ export class SyncOperationNodeCardComponent {
   @Input({ required: true }) operationId!: string;
 
   @Output() toggleDetail = new EventEmitter<void>();
-  @Output() closeDetail = new EventEmitter<void>();
+  @Output() close = new EventEmitter<void>();
   @Output() cancel = new EventEmitter<void>();
   @Output() retry = new EventEmitter<void>();
   @Output() toggleErrors = new EventEmitter<void>();
@@ -95,9 +95,9 @@ export class SyncOperationNodeCardComponent {
     this.toggleDetail.emit();
   }
 
-  onCloseDetail(event: Event): void {
+  onClose(event: Event): void {
     event.stopPropagation();
-    this.closeDetail.emit();
+    this.close.emit();
   }
 
   onCancel(event: Event): void {

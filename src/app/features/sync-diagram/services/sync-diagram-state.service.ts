@@ -317,6 +317,7 @@ export class SyncDiagramStateService {
       this.activeOperationId = undefined;
     }
     this.rebuildGraph();
+    this.persistSoon();
   }
 
   openOperationDetail(operationId: string): void {

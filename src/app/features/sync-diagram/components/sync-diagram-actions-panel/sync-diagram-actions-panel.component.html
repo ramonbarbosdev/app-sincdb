@@ -36,7 +36,7 @@
     pTooltip="Verificar diferenças e sincronizar (schema inteiro ou tabelas marcadas)"
     tooltipPosition="right"
     [attr.aria-label]="'Verificar e sincronizar · ' + scopeLabel"
-    [disabled]="!hasSelection || running"
+    [disabled]="!hasSelection || running || syncDisabled"
     (click)="sincronizarSelecao.emit()"
   >
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">

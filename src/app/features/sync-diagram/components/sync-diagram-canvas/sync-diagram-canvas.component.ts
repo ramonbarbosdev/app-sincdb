@@ -48,7 +48,12 @@ export class SyncDiagramCanvasComponent {
   private zoom = viewChild(FZoomDirective);
 
   @Input() running = false;
+  @Input() syncDisabled = false;
+  @Input() showSyncFab = false;
+  @Input() scopeLabel = '';
+  @Input() syncMode: 'estrutura' | 'dados' = 'estrutura';
   @Output() cancelar = new EventEmitter<void>();
+  @Output() sincronizarSelecao = new EventEmitter<void>();
 
   readonly connectionType = EFConnectionType.SEGMENT;
   readonly zoomLevel = signal(100);
@@ -115,8 +120,8 @@ export class SyncDiagramCanvasComponent {
     this.operations.toggleDetail(operationId);
   }
 
-  onCloseOperationDetail(operationId: string): void {
-    this.operations.closeDetail(operationId);
+  onDismissOperation(operationId: string): void {
+    this.operations.dismissOperation(operationId);
   }
 
   onCancelOperation(operationId: string): void {

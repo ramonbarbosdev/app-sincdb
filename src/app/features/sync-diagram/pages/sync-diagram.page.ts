@@ -47,6 +47,7 @@ export class SyncDiagramPage implements OnInit, OnDestroy {
     }));
 
     this.progressoSync.vazioProgressoLocal();
+    this.actions.loadConexaoPadrao();
     this.state.init();
   }
 
@@ -73,6 +74,11 @@ export class SyncDiagramPage implements OnInit, OnDestroy {
     return parts;
   }
 
+  hasSyncableSelection(): boolean {
+    const sel = this.state.selection();
+    return !!sel.esquema;
+  }
+
   setMode(mode: SyncDiagramMode): void {
     this.state.setSyncMode(mode);
   }
@@ -84,6 +90,14 @@ export class SyncDiagramPage implements OnInit, OnDestroy {
 
   hasRunningOperation(): boolean {
     return this.operations.hasRunningOperation();
+  }
+
+  isSyncDisabled(): boolean {
+    return (
+      !this.actions.hasConexaoPadrao() ||
+      this.hasRunningOperation() ||
+      this.actions.isBatchActive()
+    );
   }
 
   cancelarOperacao(): void {

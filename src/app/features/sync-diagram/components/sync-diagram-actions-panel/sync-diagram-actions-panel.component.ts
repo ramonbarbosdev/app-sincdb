@@ -15,6 +15,7 @@ export class SyncDiagramActionsPanelComponent {
   @Input() scopeLabel = '—';
   @Input() hasSelection = false;
   @Input() running = false;
+  @Input() syncDisabled = false;
   @Input() canRecolher = false;
 
   @Output() modeChange = new EventEmitter<SyncDiagramMode>();
