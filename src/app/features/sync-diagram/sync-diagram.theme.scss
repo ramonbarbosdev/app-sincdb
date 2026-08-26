@@ -17,13 +17,16 @@
 
   --sync-diagram-zone-border: color-mix(in srgb, var(--p-primary-color) 35%, var(--p-content-border-color));
   --sync-diagram-zone-bg: color-mix(in srgb, var(--p-primary-color) 5%, var(--p-content-background));
+
+  --sync-diagram-canvas-dot-size: 0.5px;
+  --sync-diagram-canvas-dot-gap: 22px;
+  --sync-diagram-canvas-dot-alpha: 0.38;
 }
 
 /* Dark — Foblex / IDE escuro */
 :host-context(.sync-diagram-canvas-theme-dark) {
-  --sync-diagram-canvas-bg: #0b0e14;
-  --sync-diagram-canvas-dot: rgba(255, 255, 255, 0.14);
-  --sync-diagram-dot-color: var(--sync-diagram-canvas-dot);
+  --sync-diagram-canvas-bg: #0c0e17;
+  --sync-diagram-canvas-dot-rgb: 138, 144, 172;
   --sync-diagram-rail-bg: #15172a;
   --sync-diagram-rail-border: rgba(255, 255, 255, 0.1);
   --sync-diagram-rail-divider: rgba(255, 255, 255, 0.12);
@@ -46,9 +49,8 @@
 
 /* Light — Foblex / IDE claro */
 :host-context(.sync-diagram-canvas-theme-light) {
-  --sync-diagram-canvas-bg: #eef1f6;
-  --sync-diagram-canvas-dot: rgba(15, 23, 42, 0.12);
-  --sync-diagram-dot-color: var(--sync-diagram-canvas-dot);
+  --sync-diagram-canvas-bg: #e4e7f0;
+  --sync-diagram-canvas-dot-rgb: 92, 88, 118;
   --sync-diagram-rail-bg: #ffffff;
   --sync-diagram-rail-border: rgba(15, 23, 42, 0.1);
   --sync-diagram-rail-divider: rgba(15, 23, 42, 0.1);

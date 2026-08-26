@@ -60,6 +60,7 @@ export class SyncDiagramCanvasComponent {
 
   readonly connectionType = EFConnectionType.SEGMENT;
   readonly zoomLevel = signal(100);
+  readonly canvasDotAlpha = signal(0.38);
   readonly blockFlowWheelZoom = (): boolean => false;
 
   onFlowReady(): void {
@@ -166,6 +167,21 @@ export class SyncDiagramCanvasComponent {
   }
 
   private updateZoomLabel(): void {
-    this.zoomLevel.set(Math.round(this.camera.getScale() * 100));
+    const scale = this.camera.getScale();
+    this.zoomLevel.set(Math.round(scale * 100));
+    this.canvasDotAlpha.set(this.computeDotAlpha(scale));
+  }
+
+  /** Pontos somem no zoom baixo; perceptíveis em ~100% durante pan/zoom. */
+  private computeDotAlpha(scale: number): number {
+    const minZoom = 0.4;
+    const refZoom = 1;
+    const minAlpha = 0.05;
+    const refAlpha = 0.4;
+
+    if (scale <= minZoom) return minAlpha;
+    if (scale >= refZoom) return refAlpha + Math.min((scale - refZoom) * 0.12, 0.08);
+    const t = (scale - minZoom) / (refZoom - minZoom);
+    return minAlpha + t * (refAlpha - minAlpha);
   }
 }

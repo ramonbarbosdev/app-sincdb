@@ -160,7 +160,7 @@ export class SyncDiagramStateService {
       phase: operation.phase,
       progress: operation.progress,
       label: operation.label,
-      detailOpen: true,
+      detailOpen: operation.detailOpen,
       errorsExpanded: false,
     };
     this.operations.update((list) =>

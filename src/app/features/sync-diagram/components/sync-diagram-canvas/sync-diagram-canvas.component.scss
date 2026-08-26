@@ -9,8 +9,8 @@
   flex: 1;
   min-height: 0;
   height: 100%;
-  background: var(--sync-diagram-canvas-bg);
   overflow: hidden;
+  background-color: var(--sync-diagram-canvas-bg);
 
   --ff-minimap-background-color: var(--sync-diagram-rail-bg);
   --ff-minimap-border-color: var(--sync-diagram-rail-border);
@@ -50,7 +50,7 @@
   place-items: center;
   gap: 0.75rem;
   color: var(--sync-diagram-loading-text);
-  background: var(--sync-diagram-canvas-bg);
+  background-color: var(--sync-diagram-canvas-bg);
 }
 
 .loading-spinner {
@@ -220,6 +220,21 @@
 
 :host ::ng-deep .f-background {
   background-color: var(--sync-diagram-canvas-bg);
+  background-image: radial-gradient(
+    circle,
+    rgba(
+      var(--sync-diagram-canvas-dot-rgb, 138, 144, 172),
+      var(--sync-diagram-canvas-dot-alpha, 0.38)
+    ) var(--sync-diagram-canvas-dot-size, 0.5px),
+    transparent calc(var(--sync-diagram-canvas-dot-size, 0.5px) + 0.5px)
+  );
+  background-size: var(--sync-diagram-canvas-dot-gap, 22px) var(--sync-diagram-canvas-dot-gap, 22px);
+  background-repeat: repeat;
+  background-position: 0 0;
+
+  svg {
+    display: none;
+  }
 }
 
 :host ::ng-deep f-flow {

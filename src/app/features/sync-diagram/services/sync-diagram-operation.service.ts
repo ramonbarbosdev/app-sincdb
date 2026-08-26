@@ -57,7 +57,9 @@ export class SyncDiagramOperationService implements OnDestroy {
     if (existing) {
       this.state.reuseOperation(existing.id, operationPayload);
       this.trackOperation(existing.id);
-      this.loadErdGraph(existing.id);
+      if (this.shouldLoadErdGraph(mode, action)) {
+        this.loadErdGraph(existing.id);
+      }
       return existing.id;
     }
 
@@ -65,8 +67,14 @@ export class SyncDiagramOperationService implements OnDestroy {
     const operation: SyncOperation = { ...operationPayload, id };
     this.state.spawnOperation(operation);
     this.trackOperation(id);
-    this.loadErdGraph(id);
+    if (this.shouldLoadErdGraph(mode, action)) {
+      this.loadErdGraph(id);
+    }
     return id;
+  }
+
+  private shouldLoadErdGraph(mode: SyncDiagramMode, action: OperationActionKind): boolean {
+    return !(mode === 'estrutura' && action === 'sincronizar');
   }
 
   private buildOperationPayload(
@@ -75,6 +83,7 @@ export class SyncDiagramOperationService implements OnDestroy {
     context: SyncDiagramContext
   ): Omit<SyncOperation, 'id'> {
     const scope = formatOperationScopeSubtitle(context);
+    const showErdDetail = !(mode === 'estrutura' && action === 'sincronizar');
 
     return {
       mode,
@@ -83,7 +92,7 @@ export class SyncDiagramOperationService implements OnDestroy {
       phase: action === 'sincronizar' ? 'sincronizando' : 'verificando',
       progress: 0,
       label: scope,
-      detailOpen: true,
+      detailOpen: showErdDetail,
       errorsExpanded: false,
       estruturaResponse: undefined,
       tabelasAfetadas: undefined,
@@ -100,6 +109,9 @@ export class SyncDiagramOperationService implements OnDestroy {
       progress: 0,
       label: formatOperationScopeSubtitle(op.context),
     });
+    if (op.mode === 'estrutura') {
+      this.state.closeOperationDetail(operationId);
+    }
     this.trackOperation(operationId);
   }
 
@@ -136,6 +148,7 @@ export class SyncDiagramOperationService implements OnDestroy {
   ): void {
     if (this.isCancelled(operationId)) return;
 
+    const op = this.state.getOperation(operationId);
     const hasErrors = (res.errors?.length ?? 0) > 0;
     this.state.patchOperation(operationId, {
       phase: hasErrors ? 'erro' : 'concluido',
@@ -143,8 +156,11 @@ export class SyncDiagramOperationService implements OnDestroy {
       tabelasAfetadas: res.tabelas_afetadas,
       errors: res.errors,
     });
-    if (res.tabelas_afetadas) {
+    if (res.tabelas_afetadas && op?.mode !== 'estrutura') {
       this.state.applySyncResultVisuals(operationId, res.tabelas_afetadas, res.errors);
+    }
+    if (op?.mode === 'estrutura') {
+      this.state.closeOperationDetail(operationId);
     }
     this.activeOperationId = undefined;
   }

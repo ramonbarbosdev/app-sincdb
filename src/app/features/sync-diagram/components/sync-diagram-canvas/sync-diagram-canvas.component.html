@@ -1,4 +1,7 @@
-<div class="sync-diagram-canvas">
+<div
+  class="sync-diagram-canvas"
+  [style.--sync-diagram-canvas-dot-alpha]="canvasDotAlpha()"
+>
   <div class="canvas-workspace">
     <div class="canvas-loading" *ngIf="state.loadingInitial()">
       <span class="loading-spinner" aria-hidden="true"></span>
@@ -12,13 +15,7 @@
       (fFullRendered)="onFlowReady()"
       (pointerdown)="onUserCanvasInteraction()"
     >
-      <f-background>
-        <f-circle-pattern
-          id="sync-diagram-dots"
-          [radius]="1.2"
-          [color]="'var(--sync-diagram-dot-color)'"
-        />
-      </f-background>
+      <f-background />
 
       <f-canvas
         fZoom
