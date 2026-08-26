@@ -1,89 +1,133 @@
-<div
-  class="diagram-node-wrap"
-  [class.kind-bases]="node.kind === 'bases'"
-  [class.kind-schemas]="node.kind === 'schemas'"
-  [class.kind-tables]="node.kind === 'tables'"
->
-  <div class="diagram-node" [class.is-active-path]="hasActivePath()">
-    <header class="diagram-node-header" fDragHandle>
-      <div class="diagram-node-title">
-        <span class="diagram-icon">{{ iconLabel(node.kind) }}</span>
-        <div>
-          <strong>{{ node.title }}</strong>
-          <small *ngIf="node.subtitle">{{ node.subtitle }}</small>
+<ng-container *ngIf="node.kind === 'schema'; else listNodeCard">
+  <div class="diagram-node-wrap kind-schema">
+    <div class="diagram-node schema-node" [class.is-active-path]="hasActivePath()">
+      <header class="diagram-node-header" fDragHandle>
+        <div class="diagram-node-title">
+          <span class="diagram-icon">{{ iconLabel(node.kind) }}</span>
+          <div>
+            <strong>{{ node.title }}</strong>
+            <small *ngIf="node.subtitle">{{ node.subtitle }}</small>
+          </div>
         </div>
-      </div>
-      <span class="diagram-node-badge" *ngIf="node.itemCount != null">{{ node.itemCount }}</span>
-    </header>
-
-    <div class="diagram-node-filter">
-      <input
-        type="search"
-        class="diagram-filter-input"
-        placeholder="Filtrar..."
-        [ngModel]="filterText"
-        (ngModelChange)="onFilterInput($event)"
-      />
-    </div>
-
-    <div class="diagram-node-body">
-      <div class="diagram-skeleton" *ngIf="node.loading">
-        <span class="skeleton-line"></span>
-        <span class="skeleton-line"></span>
-        <span class="skeleton-line"></span>
-        <span class="skeleton-line"></span>
-      </div>
-
-      <div class="diagram-list" *ngIf="!node.loading">
-        <div
-          class="diagram-item-row"
-          *ngFor="let item of items"
-          [class.has-open-action]="node.kind === 'schemas'"
+        <button
+          *ngIf="canShowClose()"
+          type="button"
+          class="diagram-close-btn"
+          [title]="closeButtonTitle()"
+          [attr.aria-label]="closeButtonTitle()"
+          (click)="action.emit('close-children')"
         >
-          <button
-            type="button"
-            class="diagram-item"
-            [class.is-drill]="node.kind === 'bases' && node.selectedItemId === item.id"
-            [class.is-selected]="node.kind === 'tables' && isTableSelected(item.id)"
-            [class.is-schema-selected]="node.kind === 'schemas' && node.selectedItemId === item.id"
-            (click)="itemClick.emit(item.id)"
-          >
-            <span class="diagram-item-check" *ngIf="node.kind === 'tables'">
-              <span class="check-box" [class.checked]="isTableSelected(item.id)"></span>
-            </span>
-            <span class="diagram-item-label">{{ item.label }}</span>
-            <span
-              class="drill-icon"
-              *ngIf="node.kind === 'bases' && node.selectedItemId === item.id"
-            >›</span>
-          </button>
-
-          <button
-            *ngIf="node.kind === 'schemas'"
-            type="button"
-            class="diagram-open-icon"
-            [class.is-open]="node.openedItemId === item.id"
-            title="Abrir tabelas"
-            [attr.aria-label]="'Abrir tabelas do schema ' + item.label"
-            (click)="itemOpen.emit(item.id)"
-          >
-            <i class="pi pi-arrow-right" aria-hidden="true"></i>
-          </button>
-        </div>
-      </div>
-
-      <div class="diagram-empty" *ngIf="!node.loading && !items.length">
-        Nenhum item encontrado.
+          <i class="pi pi-times" aria-hidden="true"></i>
+        </button>
+      </header>
+      <div class="schema-node-actions">
+        <button
+          type="button"
+          class="schema-open-tables-btn"
+          [class.is-open]="node.openedItemId"
+          title="Abrir tabelas"
+          aria-label="Abrir tabelas do schema"
+          (click)="itemOpen.emit(node.context.esquema!)"
+        >
+          <i class="pi pi-arrow-right" aria-hidden="true"></i>
+          <span>Tabelas</span>
+        </button>
       </div>
     </div>
   </div>
+</ng-container>
 
-  <div class="diagram-fab-strip" *ngIf="canCloseChildren()">
-    <button
-      type="button"
-      class="fab-btn"
-      title="Fechar filhos"
-      (click)="action.emit('close-children')"
-    >×</button>
+<ng-template #listNodeCard>
+  <div
+    class="diagram-node-wrap"
+    [class.kind-bases]="node.kind === 'bases'"
+    [class.kind-schemas]="node.kind === 'schemas'"
+    [class.kind-tables]="node.kind === 'tables'"
+  >
+    <div class="diagram-node" [class.is-active-path]="hasActivePath()">
+      <header class="diagram-node-header" fDragHandle>
+        <div class="diagram-node-title">
+          <span class="diagram-icon">{{ iconLabel(node.kind) }}</span>
+          <div>
+            <strong>{{ node.title }}</strong>
+            <small *ngIf="node.subtitle">{{ node.subtitle }}</small>
+          </div>
+        </div>
+        <div class="diagram-node-header-actions">
+          <span class="diagram-node-badge" *ngIf="node.itemCount != null">{{ node.itemCount }}</span>
+          <button
+            *ngIf="canShowClose()"
+            type="button"
+            class="diagram-close-btn"
+            [title]="closeButtonTitle()"
+            [attr.aria-label]="closeButtonTitle()"
+            (click)="action.emit('close-children')"
+          >
+            <i class="pi pi-times" aria-hidden="true"></i>
+          </button>
+        </div>
+      </header>
+
+      <div class="diagram-node-filter" *ngIf="node.kind !== 'schema'">
+        <input
+          type="search"
+          class="diagram-filter-input"
+          placeholder="Filtrar..."
+          [ngModel]="filterText"
+          (ngModelChange)="onFilterInput($event)"
+        />
+      </div>
+
+      <div class="diagram-node-body">
+        <div class="diagram-skeleton" *ngIf="node.loading">
+          <span class="skeleton-line"></span>
+          <span class="skeleton-line"></span>
+          <span class="skeleton-line"></span>
+          <span class="skeleton-line"></span>
+        </div>
+
+        <div class="diagram-list" *ngIf="!node.loading">
+          <div
+            class="diagram-item-row"
+            *ngFor="let item of items"
+            [class.has-open-action]="node.kind === 'schemas'"
+          >
+            <button
+              type="button"
+              class="diagram-item"
+              [class.is-drill]="node.kind === 'bases' && node.selectedItemId === item.id"
+              [class.is-selected]="node.kind === 'tables' && isTableSelected(item.id)"
+              [class.is-schema-selected]="node.kind === 'schemas' && node.selectedItemId === item.id"
+              (click)="itemClick.emit(item.id)"
+            >
+              <span class="diagram-item-check" *ngIf="node.kind === 'tables'">
+                <span class="check-box" [class.checked]="isTableSelected(item.id)"></span>
+              </span>
+              <span class="diagram-item-label">{{ item.label }}</span>
+              <span
+                class="drill-icon"
+                *ngIf="node.kind === 'bases' && node.selectedItemId === item.id"
+              >›</span>
+            </button>
+
+            <button
+              *ngIf="node.kind === 'schemas'"
+              type="button"
+              class="diagram-open-icon"
+              [class.is-open]="node.openedItemId === item.id"
+              title="Abrir tabelas"
+              [attr.aria-label]="'Abrir tabelas do schema ' + item.label"
+              (click)="itemOpen.emit(item.id)"
+            >
+              <i class="pi pi-arrow-right" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="diagram-empty" *ngIf="!node.loading && !items.length">
+          Nenhum item encontrado.
+        </div>
+      </div>
+    </div>
   </div>
-</div>
+</ng-template>

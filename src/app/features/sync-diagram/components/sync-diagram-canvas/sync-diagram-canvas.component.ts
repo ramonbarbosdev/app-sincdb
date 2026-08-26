@@ -157,6 +157,11 @@ export class SyncDiagramCanvasComponent {
   }
 
   onDismissOperation(operationId: string): void {
+    const op = this.state.getOperation(operationId);
+    if (op?.phase === 'aguardando' && op.queueItemId) {
+      this.actions.removeFromQueue(op.queueItemId);
+      return;
+    }
     this.operations.dismissOperation(operationId);
   }
 
@@ -177,7 +182,7 @@ export class SyncDiagramCanvasComponent {
 
   onNodeAction(action: SyncDiagramAction, node: SyncDiagramNodeData): void {
     if (action === 'close-children') {
-      this.state.closeChildren(node.kind);
+      this.state.closeNodeForCard(node);
     }
   }
 

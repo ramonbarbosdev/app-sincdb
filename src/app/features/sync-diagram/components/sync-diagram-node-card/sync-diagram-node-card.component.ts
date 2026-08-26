@@ -71,20 +71,42 @@ export class SyncDiagramNodeCardComponent implements OnChanges, OnDestroy {
     const map: Record<SyncDiagramKind, string> = {
       bases: 'B',
       schemas: 'S',
+      schema: 'S',
       tables: 'T',
     };
     return map[kind];
   }
 
-  canCloseChildren(): boolean {
-    if (this.node.kind === 'tables') return false;
-    if (this.node.kind === 'schemas') {
-      return !!this.node.openedItemId;
+  canShowClose(): boolean {
+    if (this.node.kind === 'bases') {
+      return !!this.node.selectedItemId;
     }
-    return !!this.node.selectedItemId;
+    return this.node.kind === 'schemas' || this.node.kind === 'tables' || this.node.kind === 'schema';
+  }
+
+  closeButtonTitle(): string {
+    if (this.node.kind === 'schemas' && this.node.openedItemId) {
+      return 'Fechar tabelas';
+    }
+    if (this.node.kind === 'schema' && this.node.openedItemId) {
+      return 'Fechar tabelas';
+    }
+    if (this.node.kind === 'tables') {
+      return 'Fechar tabelas';
+    }
+    if (this.node.kind === 'schemas') {
+      return 'Fechar lista de schemas';
+    }
+    if (this.node.kind === 'schema') {
+      return 'Fechar schema';
+    }
+    return 'Fechar filhos';
   }
 
   hasActivePath(): boolean {
+    if (this.node.kind === 'schema') {
+      return !!this.node.openedItemId || !!this.node.context.esquema;
+    }
     if (this.node.kind === 'tables') {
       return (this.node.selectedItemIds?.length ?? 0) > 0;
     }

@@ -27,7 +27,7 @@ export class SyncDiagramQueueService {
     context: SyncDiagramContext,
     mode: SyncDiagramMode,
     options?: { silent?: boolean }
-  ): boolean {
+  ): SyncQueueItem | null {
     const base = context.base;
     const esquema = context.esquema;
     if (!base || !esquema) {
@@ -36,7 +36,7 @@ export class SyncDiagramQueueService {
         summary: 'Seleção incompleta',
         detail: 'Selecione base e schema no diagrama.',
       });
-      return false;
+      return null;
     }
 
     const key = queueScopeKey(context, mode);
@@ -46,7 +46,7 @@ export class SyncDiagramQueueService {
         summary: 'Já na fila',
         detail: `${formatQueueItemLabel(context)} já está na fila de sincronização.`,
       });
-      return false;
+      return null;
     }
 
     const item: SyncQueueItem = {
@@ -67,7 +67,7 @@ export class SyncDiagramQueueService {
       });
     }
 
-    return true;
+    return item;
   }
 
   dequeue(): SyncQueueItem | undefined {

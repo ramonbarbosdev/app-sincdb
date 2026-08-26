@@ -26,6 +26,7 @@ export class SyncDiagramActionsService {
   private state = inject(SyncDiagramStateService);
 
   private batchActive = false;
+  private queueRunActive = false;
   private conexaoPadrao?: Conexao;
 
   constructor() {
@@ -145,7 +146,7 @@ export class SyncDiagramActionsService {
 
     this.baseService.findAll(`sincronizacao/verificaesquema/${base}/${esquema}`).subscribe({
       next: () => {
-        this.runSequentialVerifySync(contexts, mode, 0, () => this.finishBatchAndDrain());
+        this.runSequentialVerifySync(contexts, mode, 0, () => this.finishBatch());
       },
       error: () => {
         this.batchActive = false;
@@ -160,7 +161,10 @@ export class SyncDiagramActionsService {
 
   addToQueue(context: SyncDiagramContext, mode: SyncDiagramMode): void {
     if (!this.guardCanEnqueue(context, mode)) return;
-    this.queue.enqueue(context, mode);
+    const item = this.queue.enqueue(context, mode);
+    if (item) {
+      this.state.spawnQueuedOperation(item.id, mode, context);
+    }
   }
 
   canEnqueue(context: SyncDiagramContext, mode: SyncDiagramMode): boolean {
@@ -170,19 +174,26 @@ export class SyncDiagramActionsService {
     if (!base || !esquema) return false;
     if (this.isScopeRunning(context, mode)) return false;
     if (this.queue.hasScope(context, mode)) return false;
+    const pending = this.state.findOperationByScope(context, mode);
+    if (pending?.phase === 'aguardando') return false;
     return true;
   }
 
   runQueue(): void {
     if (!this.guardCanStartSync()) return;
+    this.queueRunActive = true;
     this.drainQueue();
   }
 
   drainQueue(): void {
+    if (!this.queueRunActive) return;
     if (this.batchActive || this.operations.hasRunningOperation()) return;
 
     const items = this.queue.items();
-    if (!items.length) return;
+    if (!items.length) {
+      this.queueRunActive = false;
+      return;
+    }
 
     const item = items[0];
     this.queue.remove(item.id);
@@ -190,21 +201,36 @@ export class SyncDiagramActionsService {
   }
 
   removeFromQueue(id: string): void {
+    this.state.removeOperationByQueueItemId(id);
     this.queue.remove(id);
   }
 
   clearQueue(): void {
+    for (const item of this.queue.items()) {
+      this.state.removeOperationByQueueItemId(item.id);
+    }
     this.queue.clear();
+    this.queueRunActive = false;
   }
 
   private handleOperationIdle(): void {
     if (this.batchActive && !this.operations.hasRunningOperation()) {
       this.batchActive = false;
     }
-    this.drainQueue();
+    if (this.queueRunActive && !this.operations.hasRunningOperation()) {
+      this.drainQueue();
+    }
+  }
+
+  private finishBatch(): void {
+    this.batchActive = false;
   }
 
   private finishBatchAndDrain(): void {
+    if (!this.queueRunActive) {
+      this.batchActive = false;
+      return;
+    }
     this.batchActive = false;
     this.drainQueue();
   }
@@ -376,8 +402,8 @@ export class SyncDiagramActionsService {
       onFinished?.();
       return;
     }
-    this.operations.failOperation(opId, [message]);
     this.progressoSync.marcarErro(message);
+    this.operations.failOperation(opId, [message]);
     onFinished?.();
   }
 
@@ -552,11 +578,11 @@ export class SyncDiagramActionsService {
       next: (res: { errors?: string[]; tabelas_afetadas?: TabelaAfetadaDTO[]; message?: string }) => {
         if (this.resolveCancelledFromResponse(opId!, res, onFinished)) return;
         if (res?.errors?.length) {
+          this.progressoSync.marcarErro('Sincronização de estrutura com erros');
           this.operations.completeSync(opId!, {
             errors: res.errors,
             tabelas_afetadas: res.tabelas_afetadas,
           });
-          this.progressoSync.marcarErro('Sincronização de estrutura com erros');
           this.messageService.add({
             severity: 'warn',
             summary: 'Estrutura com erros',
@@ -698,11 +724,11 @@ export class SyncDiagramActionsService {
       next: (res: { errors?: string[]; tabelas_afetadas?: TabelaAfetadaDTO[]; message?: string }) => {
         if (this.resolveCancelledFromResponse(opId!, res, onFinished)) return;
         if (res?.errors?.length) {
+          this.progressoSync.marcarErro('Sincronização de dados com erros');
           this.operations.completeSync(opId!, {
             errors: res.errors,
             tabelas_afetadas: res.tabelas_afetadas,
           });
-          this.progressoSync.marcarErro('Sincronização de dados com erros');
           this.messageService.add({
             severity: 'warn',
             summary: 'Dados com erros',

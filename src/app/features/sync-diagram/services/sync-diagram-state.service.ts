@@ -21,6 +21,9 @@ import {
   OperationActionKind,
   operationScopeKey,
   OperationLogEntry,
+  schemaScopeKey,
+  contextHasTableScope,
+  formatOperationScopeSubtitle,
   SyncOperation,
   TableVisualStatus,
   TabelaAfetadaDTO,
@@ -35,8 +38,13 @@ const DEFAULT_POSITIONS: Record<string, DiagramFlowPoint> = {
 const HORIZONTAL_GAP = 420;
 const OPERATION_GAP = 420;
 const OPERATION_VERTICAL_GAP = 300;
+const OPERATION_HORIZONTAL_GAP = 90;
+const OPERATION_CARD_WIDTH = 260;
+const SELECTOR_LIST_HEIGHT = 360;
+const TABLES_CARD_HEIGHT = 360;
+const SCHEMA_BOX_HEIGHT = 140;
+const NODE_COLLISION_PADDING = 32;
 const ERD_ORIGIN_OFFSET_X = 360;
-const FLOW_CARD_WIDTH = 260;
 const FLOW_CARD_CENTER_Y = 120;
 const GRAPH_REBUILD_DELAY_MS = 120;
 const CONNECTION_LABELS_DELAY_MS = 50;
@@ -67,8 +75,9 @@ export class SyncDiagramStateService {
   private positions = new Map<string, DiagramFlowPoint>();
 
   private basesNodeId = 'node-bases';
-  private schemasNodeId?: string;
-  private tablesNodeId?: string;
+  private readonly openSchemaListBases = new Set<string>();
+  private readonly openSchemaBoxes = new Set<string>();
+  private readonly openTablesKeys = new Set<string>();
 
   private erdTables = new Map<string, ErdTableNode>();
   private erdEdges = new Map<string, ErdEdge>();
@@ -149,6 +158,146 @@ export class SyncDiagramStateService {
     return op.phase === 'verificando' || op.phase === 'sincronizando';
   }
 
+  schemasListNodeId(base: string): string {
+    return `node-schemas-${base}`;
+  }
+
+  schemaBoxNodeId(base: string, esquema: string): string {
+    return `node-schema-${base}-${esquema}`;
+  }
+
+  tablesNodeIdFor(base: string, esquema: string): string {
+    return `node-tables-${base}-${esquema}`;
+  }
+
+  parseScopeKey(key: string): { base: string; esquema: string } | undefined {
+    const idx = key.indexOf('|');
+    if (idx < 0) return undefined;
+    return { base: key.slice(0, idx), esquema: key.slice(idx + 1) };
+  }
+
+  resolveOperationAnchorNodeId(context: SyncDiagramContext): string {
+    const base = context.base;
+    const esquema = context.esquema;
+    if (!base) return this.basesNodeId;
+
+    if (esquema) {
+      const scopeKey = schemaScopeKey(base, esquema);
+      if (contextHasTableScope(context) && this.openTablesKeys.has(scopeKey)) {
+        return this.tablesNodeIdFor(base, esquema);
+      }
+      if (this.openSchemaBoxes.has(scopeKey)) {
+        return this.schemaBoxNodeId(base, esquema);
+      }
+    }
+
+    if (this.openSchemaListBases.has(base)) {
+      return this.schemasListNodeId(base);
+    }
+
+    return this.basesNodeId;
+  }
+
+  ensureNodesForContext(context: SyncDiagramContext): void {
+    const base = context.base;
+    const esquema = context.esquema;
+    if (!base) return;
+
+    if (!this.openSchemaListBases.has(base)) {
+      this.spawnSchemaList(base, { silent: true });
+    }
+
+    if (esquema) {
+      const scopeKey = schemaScopeKey(base, esquema);
+      if (contextHasTableScope(context) && !this.openTablesKeys.has(scopeKey)) {
+        this.spawnTables(base, esquema, { silent: true, fromSchemaList: true });
+      }
+    }
+  }
+
+  findOperationByQueueItemId(queueItemId: string): SyncOperation | undefined {
+    return this.operations().find((o) => o.queueItemId === queueItemId);
+  }
+
+  spawnQueuedOperation(
+    queueItemId: string,
+    mode: SyncDiagramMode,
+    context: SyncDiagramContext
+  ): string {
+    this.ensureNodesForContext(context);
+    const anchorNodeId = this.resolveOperationAnchorNodeId(context);
+    const existing = this.findOperationByScope(context, mode);
+    if (existing?.phase === 'aguardando') {
+      this.patchOperation(existing.id, { queueItemId, anchorNodeId });
+      return existing.id;
+    }
+    if (existing && !this.isOperationRunning(existing)) {
+      this.reuseOperation(existing.id, {
+        mode,
+        action: 'verificar-sync',
+        context: { ...context },
+        anchorNodeId,
+        queueItemId,
+        phase: 'aguardando',
+        progress: 0,
+        label: formatOperationScopeSubtitle(context),
+        detailOpen: false,
+        errorsExpanded: false,
+        terminalLogs: [],
+        estruturaResponse: undefined,
+        tabelasAfetadas: undefined,
+        errors: undefined,
+        tabelaAtual: undefined,
+      });
+      return existing.id;
+    }
+
+    const id = `op-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const operation: SyncOperation = {
+      id,
+      mode,
+      action: 'verificar-sync',
+      context: { ...context },
+      anchorNodeId,
+      queueItemId,
+      phase: 'aguardando',
+      progress: 0,
+      label: formatOperationScopeSubtitle(context),
+      detailOpen: false,
+      errorsExpanded: false,
+      terminalLogs: [],
+    };
+    this.spawnOperation(operation);
+    return id;
+  }
+
+  removeOperationByQueueItemId(queueItemId: string): void {
+    const op = this.findOperationByQueueItemId(queueItemId);
+    if (op?.phase === 'aguardando') {
+      this.removeOperation(op.id);
+    }
+  }
+
+  promoteQueuedOperation(operationId: string, action: OperationActionKind): void {
+    const op = this.getOperation(operationId);
+    if (!op || op.phase !== 'aguardando') return;
+    this.clearErdForOperation(operationId);
+    this.patchOperation(operationId, {
+      phase: action === 'sincronizar' ? 'sincronizando' : 'verificando',
+      action,
+      progress: 0,
+      queueItemId: undefined,
+      terminalLogs: [],
+      detailOpen: false,
+      errorsExpanded: false,
+      estruturaResponse: undefined,
+      tabelasAfetadas: undefined,
+      errors: undefined,
+      tabelaAtual: undefined,
+    });
+    this.activeOperationId = operationId;
+  }
+
   reuseOperation(operationId: string, operation: Omit<SyncOperation, 'id'>): void {
     this.clearErdForOperation(operationId);
     this.closeAllOperationDetails();
@@ -170,82 +319,104 @@ export class SyncDiagramStateService {
       const without = list.filter((o) => o.id !== operation.id);
       return [...without, operation];
     });
-    this.activeOperationId = operation.id;
-    this.closeAllOperationDetails();
-    const opNodeId = this.operationNodeId(operation.id);
-    const anchor = this.lastSelectorNodeId();
-    const selectorPos =
-      this.positions.get(anchor) ?? DEFAULT_POSITIONS[anchor] ?? { x: 80, y: 100 };
-    const priorOps = this.operations().filter((o) => o.id !== operation.id);
-
-    let x = selectorPos.x + OPERATION_GAP;
-    let y = selectorPos.y;
-
-    if (priorOps.length > 0) {
-      const lastOpPos = this.positions.get(
-        this.operationNodeId(priorOps[priorOps.length - 1].id)
-      );
-      if (lastOpPos) {
-        x = lastOpPos.x;
-        y = lastOpPos.y + OPERATION_VERTICAL_GAP;
-      }
+    if (this.isOperationRunning(operation)) {
+      this.activeOperationId = operation.id;
     }
+    this.closeAllOperationDetails();
 
-    this.positions.set(opNodeId, { x, y });
+    const opNodeId = this.operationNodeId(operation.id);
+    const preferred = this.computeOperationPosition(operation.anchorNodeId, operation.id);
+    this.allocatePosition(opNodeId, preferred, OPERATION_CARD_WIDTH, 160);
     this.rebuildGraph();
+  }
+
+  private computeOperationPosition(anchorNodeId: string, operationId: string): DiagramFlowPoint {
+    const anchorPos =
+      this.positions.get(anchorNodeId) ?? DEFAULT_POSITIONS[anchorNodeId] ?? { x: 80, y: 100 };
+    const atAnchor = this.operations()
+      .filter((o) => o.anchorNodeId === anchorNodeId)
+      .sort((a, b) => a.id.localeCompare(b.id));
+    const index = atAnchor.findIndex((o) => o.id === operationId);
+    const safeIndex = index >= 0 ? index : atAnchor.length;
+    const stride = OPERATION_CARD_WIDTH + OPERATION_HORIZONTAL_GAP;
+    return {
+      x: anchorPos.x + OPERATION_GAP + safeIndex * stride,
+      y: anchorPos.y,
+    };
   }
 
   autoLayoutCanvas(): void {
     const basesPos = { x: 80, y: 100 };
     this.positions.set(this.basesNodeId, { ...basesPos });
 
-    if (this.schemasNodeId) {
-      this.positions.set(this.schemasNodeId, {
-        x: basesPos.x + HORIZONTAL_GAP,
-        y: basesPos.y,
-      });
+    let listY = basesPos.y;
+    for (const base of this.openSchemaListBases) {
+      const listId = this.schemasListNodeId(base);
+      this.positions.set(listId, { x: basesPos.x + HORIZONTAL_GAP, y: listY });
+      listY += OPERATION_VERTICAL_GAP;
+
+      const schemas = this.schemaCache.get(base) ?? [];
+      let schemaBoxY = this.positions.get(listId)!.y;
+      for (const scopeKey of this.openSchemaBoxes) {
+        const parsed = this.parseScopeKey(scopeKey);
+        if (!parsed || parsed.base !== base) continue;
+        const schemaNodeId = this.schemaBoxNodeId(parsed.base, parsed.esquema);
+        this.positions.set(schemaNodeId, {
+          x: basesPos.x + HORIZONTAL_GAP * 2,
+          y: schemaBoxY,
+        });
+        schemaBoxY += OPERATION_VERTICAL_GAP;
+
+        if (this.openTablesKeys.has(scopeKey)) {
+          const tablesId = this.tablesNodeIdFor(parsed.base, parsed.esquema);
+          this.positions.set(tablesId, {
+            x: basesPos.x + HORIZONTAL_GAP * 3,
+            y: this.positions.get(schemaNodeId)!.y,
+          });
+        }
+      }
     }
 
-    if (this.tablesNodeId) {
-      const fromId = this.schemasNodeId ?? this.basesNodeId;
-      const from = this.positions.get(fromId) ?? basesPos;
-      this.positions.set(this.tablesNodeId, {
-        x: from.x + HORIZONTAL_GAP,
-        y: from.y,
-      });
-    }
-
-    const selectorPos = this.positions.get(this.lastSelectorNodeId()) ?? { ...basesPos };
-    const opColumnX = selectorPos.x + OPERATION_GAP;
-    let opY = selectorPos.y;
-
+    const anchorGroups = new Map<string, SyncOperation[]>();
     for (const op of this.operations()) {
-      const opNodeId = this.operationNodeId(op.id);
-      const anchorPos = { x: opColumnX, y: opY };
-      this.positions.set(opNodeId, { ...anchorPos });
-      opY += OPERATION_VERTICAL_GAP;
+      const list = anchorGroups.get(op.anchorNodeId) ?? [];
+      list.push(op);
+      anchorGroups.set(op.anchorNodeId, list);
+    }
 
-      if (op.detailOpen) {
-        const erdTables = this.erdTablesForOperation(op.id);
-        if (erdTables.length > 0) {
-          const erdOrigin = { x: anchorPos.x + ERD_ORIGIN_OFFSET_X, y: anchorPos.y };
-          const layoutPositions = this.layout.layoutErd(
-            erdTables.map((t) => ({ id: t.id })),
-            erdOrigin
-          );
-          for (const [erdId, pos] of layoutPositions) {
-            this.positions.set(erdId, pos);
-            const table = this.erdTables.get(erdId);
-            if (table && op.context.base && op.context.esquema) {
-              const grafoId = erdId.replace(`erd-${table.operationId}-`, '');
-              this.positions.set(
-                this.erdStableKey(op.context.base, op.context.esquema, grafoId),
-                pos
-              );
+    for (const [anchorNodeId, ops] of anchorGroups) {
+      const anchorPos = this.positions.get(anchorNodeId) ?? basesPos;
+      const stride = OPERATION_CARD_WIDTH + OPERATION_HORIZONTAL_GAP;
+      ops.forEach((op, index) => {
+        const opNodeId = this.operationNodeId(op.id);
+        const opPos = {
+          x: anchorPos.x + OPERATION_GAP + index * stride,
+          y: anchorPos.y,
+        };
+        this.positions.set(opNodeId, opPos);
+
+        if (op.detailOpen) {
+          const erdTables = this.erdTablesForOperation(op.id);
+          if (erdTables.length > 0) {
+            const erdOrigin = { x: opPos.x + ERD_ORIGIN_OFFSET_X, y: opPos.y };
+            const layoutPositions = this.layout.layoutErd(
+              erdTables.map((t) => ({ id: t.id })),
+              erdOrigin
+            );
+            for (const [erdId, pos] of layoutPositions) {
+              this.positions.set(erdId, pos);
+              const table = this.erdTables.get(erdId);
+              if (table && op.context.base && op.context.esquema) {
+                const grafoId = erdId.replace(`erd-${table.operationId}-`, '');
+                this.positions.set(
+                  this.erdStableKey(op.context.base, op.context.esquema, grafoId),
+                  pos
+                );
+              }
             }
           }
         }
-      }
+      });
     }
 
     this.rebuildGraph();
@@ -292,26 +463,28 @@ export class SyncDiagramStateService {
   navigateToBreadcrumb(target: SyncDiagramContext): void {
     const base = target.base;
     if (!base) {
-      this.schemasNodeId = undefined;
-      this.tablesNodeId = undefined;
+      this.openSchemaListBases.clear();
+      this.openSchemaBoxes.clear();
+      this.openTablesKeys.clear();
       this.selection.set({});
       this.rebuildGraph();
       this.persistSoon();
       return;
     }
 
-    this.schemasNodeId = `node-schemas-${base}`;
-    this.ensurePosition(this.schemasNodeId, this.nextPosition(this.basesNodeId));
+    this.spawnSchemaList(base, { silent: true });
 
     if (!target.esquema) {
-      this.tablesNodeId = undefined;
       this.selection.set({ base });
       this.ensureSchemasLoaded(base);
       return;
     }
 
-    this.tablesNodeId = `node-tables-${base}-${target.esquema}`;
-    this.ensurePosition(this.tablesNodeId, this.nextPosition(this.schemasNodeId!));
+    if (this.selectedTabelas(target).length > 0) {
+      this.spawnTables(base, target.esquema, { silent: true, fromSchemaList: true });
+    } else {
+      this.spawnSchemaBox(base, target.esquema, { silent: true });
+    }
 
     const nextSelection: SyncDiagramContext = { base, esquema: target.esquema };
     const tabelas = target.tabelas?.length ? [...target.tabelas] : [];
@@ -323,10 +496,22 @@ export class SyncDiagramStateService {
   }
 
   patchOperation(operationId: string, patch: Partial<SyncOperation>): void {
+    const current = this.getOperation(operationId);
+    if (!current) return;
+
+    const changedPatch = Object.fromEntries(
+      Object.entries(patch).filter(
+        ([key, value]) =>
+          current[key as keyof SyncOperation] !== value
+      )
+    ) as Partial<SyncOperation>;
+
+    if (!Object.keys(changedPatch).length) return;
+
     this.operations.update((list) =>
-      list.map((o) => (o.id === operationId ? { ...o, ...patch } : o))
+      list.map((o) => (o.id === operationId ? { ...o, ...changedPatch } : o))
     );
-    if (this.operationPatchRequiresGraphRebuild(patch)) {
+    if (this.operationPatchRequiresGraphRebuild(changedPatch)) {
       this.scheduleGraphRebuild();
     }
   }
@@ -532,7 +717,7 @@ export class SyncDiagramStateService {
   selectItem(kind: SyncDiagramKind, itemId: string, context: SyncDiagramContext): void {
     if (kind === 'bases') {
       this.selection.set({ base: itemId });
-      this.spawnSchemas(itemId);
+      this.spawnSchemaList(itemId);
       this.persistSoon();
       return;
     }
@@ -567,24 +752,99 @@ export class SyncDiagramStateService {
       const base = context.base ?? this.selection().base;
       if (!base) return;
       this.selection.set({ base, esquema: itemId });
-      this.spawnTables(base, itemId);
+      this.spawnTables(base, itemId, { fromSchemaList: true });
+      this.persistSoon();
+      return;
+    }
+    if (kind === 'schema') {
+      const base = context.base ?? this.selection().base;
+      const esquema = context.esquema ?? itemId;
+      if (!base || !esquema) return;
+      this.selection.set({ base, esquema });
+      this.spawnTables(base, esquema);
       this.persistSoon();
       return;
     }
     if (kind === 'bases') {
       this.selection.set({ base: itemId });
-      this.spawnSchemas(itemId);
+      this.spawnSchemaList(itemId);
       this.persistSoon();
     }
   }
 
-  closeChildren(kind: SyncDiagramKind): void {
-    if (kind === 'bases') {
-      this.schemasNodeId = undefined;
-      this.tablesNodeId = undefined;
-    } else if (kind === 'schemas') {
-      this.tablesNodeId = undefined;
+  closeNodeForCard(node: SyncDiagramNodeData): void {
+    if (node.kind === 'bases' && node.selectedItemId) {
+      this.closeSchemaListForBase(node.selectedItemId);
+      return;
     }
+    if (node.kind === 'schemas') {
+      const base = node.context.base;
+      if (!base) return;
+      if (node.openedItemId) {
+        this.closeTablesForSchema(base, node.openedItemId);
+      } else {
+        this.closeSchemaListForBase(base);
+      }
+      return;
+    }
+    if (node.kind === 'tables') {
+      const base = node.context.base;
+      const esquema = node.context.esquema;
+      if (base && esquema) {
+        this.closeTablesForSchema(base, esquema);
+      }
+      return;
+    }
+    if (node.kind === 'schema') {
+      const base = node.context.base;
+      const esquema = node.context.esquema;
+      if (!base || !esquema) return;
+      if (node.openedItemId) {
+        this.closeTablesForSchema(base, esquema);
+      } else {
+        this.closeSchemaBox(base, esquema);
+      }
+    }
+  }
+
+  private closeSchemaListForBase(base: string): void {
+    this.openSchemaListBases.delete(base);
+    for (const key of [...this.openSchemaBoxes]) {
+      const parsed = this.parseScopeKey(key);
+      if (parsed?.base === base) {
+        this.openSchemaBoxes.delete(key);
+        this.openTablesKeys.delete(key);
+        this.positions.delete(this.schemaBoxNodeId(parsed.base, parsed.esquema));
+        this.positions.delete(this.tablesNodeIdFor(parsed.base, parsed.esquema));
+      }
+    }
+    this.positions.delete(this.schemasListNodeId(base));
+    const sel = this.selection();
+    if (sel.base === base && !sel.esquema) {
+      this.selection.set({});
+    }
+    this.rebuildGraph();
+    this.persistSoon();
+  }
+
+  private closeTablesForSchema(base: string, esquema: string): void {
+    const key = schemaScopeKey(base, esquema);
+    this.openTablesKeys.delete(key);
+    this.positions.delete(this.tablesNodeIdFor(base, esquema));
+    const sel = this.selection();
+    if (sel.base === base && sel.esquema === esquema) {
+      this.selection.set({ base, esquema });
+    }
+    this.rebuildGraph();
+    this.persistSoon();
+  }
+
+  closeSchemaBox(base: string, esquema: string): void {
+    const key = schemaScopeKey(base, esquema);
+    this.openSchemaBoxes.delete(key);
+    this.openTablesKeys.delete(key);
+    this.positions.delete(this.schemaBoxNodeId(base, esquema));
+    this.positions.delete(this.tablesNodeIdFor(base, esquema));
     this.rebuildGraph();
     this.persistSoon();
   }
@@ -598,11 +858,11 @@ export class SyncDiagramStateService {
       return;
     }
     if (sel.esquema) {
-      this.closeChildren('schemas');
+      this.closeTablesForSchema(sel.base!, sel.esquema);
       return;
     }
     if (sel.base) {
-      this.closeChildren('bases');
+      this.closeSchemaListForBase(sel.base);
     }
   }
 
@@ -614,63 +874,252 @@ export class SyncDiagramStateService {
     return meta.items.filter((i) => i.label.toLowerCase().includes(q));
   }
 
-  private spawnSchemas(base: string): void {
-    this.schemasNodeId = `node-schemas-${base}`;
-    this.tablesNodeId = undefined;
-    this.selection.set({ base });
-    this.ensurePosition(this.schemasNodeId, this.nextPosition(this.basesNodeId));
+  private spawnSchemaList(base: string, options?: { silent?: boolean }): void {
+    this.openSchemaListBases.add(base);
+    const listId = this.schemasListNodeId(base);
+    if (!options?.silent) {
+      this.selection.set({ base });
+    }
+    this.allocatePosition(listId, this.computeSchemaListPosition(base), 260, SELECTOR_LIST_HEIGHT);
 
     const cached = this.schemaCache.get(base);
     if (cached) {
       this.rebuildGraph();
+      if (!options?.silent) this.persistSoon();
       return;
     }
 
-    this.loadingNodes.set(this.schemasNodeId, true);
+    this.loadingNodes.set(listId, true);
     this.rebuildGraph();
 
     this.baseService.findAll(`sincronizacao/base/esquema/${base}`).subscribe({
       next: (res) => {
         const items = (res as string[]).map((name) => ({ id: name, label: name }));
         this.schemaCache.set(base, items);
-        this.loadingNodes.set(this.schemasNodeId!, false);
+        this.loadingNodes.set(listId, false);
         this.rebuildGraph();
+        if (!options?.silent) this.persistSoon();
       },
       error: () => {
         this.schemaCache.set(base, []);
-        this.loadingNodes.set(this.schemasNodeId!, false);
+        this.loadingNodes.set(listId, false);
         this.rebuildGraph();
+        if (!options?.silent) this.persistSoon();
       },
     });
   }
 
-  private spawnTables(base: string, esquema: string): void {
-    this.tablesNodeId = `node-tables-${base}-${esquema}`;
-    this.ensurePosition(this.tablesNodeId, this.nextPosition(this.schemasNodeId!));
-    const key = `${base}|${esquema}`;
-    const cached = this.tableCache.get(key);
+  private spawnSchemaBox(
+    base: string,
+    esquema: string,
+    options?: { silent?: boolean }
+  ): void {
+    const key = schemaScopeKey(base, esquema);
+    this.openSchemaBoxes.add(key);
+    if (!this.openSchemaListBases.has(base)) {
+      this.spawnSchemaList(base, { silent: true });
+    }
+    if (!options?.silent) {
+      this.selection.set({ base, esquema });
+    }
+    const nodeId = this.schemaBoxNodeId(base, esquema);
+    this.allocatePosition(
+      nodeId,
+      this.computeSchemaBoxPosition(base, esquema),
+      220,
+      SCHEMA_BOX_HEIGHT
+    );
+    this.rebuildGraph();
+    if (!options?.silent) this.persistSoon();
+  }
+
+  private tablesLinkFromId(base: string, esquema: string): string {
+    const key = schemaScopeKey(base, esquema);
+    if (this.openSchemaBoxes.has(key)) {
+      return this.schemaBoxNodeId(base, esquema);
+    }
+    return this.schemasListNodeId(base);
+  }
+
+  private spawnTables(
+    base: string,
+    esquema: string,
+    options?: { silent?: boolean; fromSchemaList?: boolean }
+  ): void {
+    const key = schemaScopeKey(base, esquema);
+    this.openTablesKeys.add(key);
+    if (!options?.fromSchemaList && !this.openSchemaBoxes.has(key)) {
+      this.spawnSchemaBox(base, esquema, { silent: true });
+    }
+    if (!this.openSchemaListBases.has(base)) {
+      this.spawnSchemaList(base, { silent: true });
+    }
+    const nodeId = this.tablesNodeIdFor(base, esquema);
+    this.allocatePosition(
+      nodeId,
+      this.computeTablesPosition(base, esquema),
+      280,
+      TABLES_CARD_HEIGHT
+    );
+    const cacheKey = key;
+    const cached = this.tableCache.get(cacheKey);
 
     if (cached) {
       this.rebuildGraph();
+      if (!options?.silent) this.persistSoon();
       return;
     }
 
-    this.loadingNodes.set(this.tablesNodeId, true);
+    this.loadingNodes.set(nodeId, true);
     this.rebuildGraph();
 
     this.baseService.findAll(`sincronizacao/base/tabela/${base}/${esquema}`).subscribe({
       next: (res) => {
         const items = (res as string[]).map((name) => ({ id: name, label: name }));
-        this.tableCache.set(key, items);
-        this.loadingNodes.set(this.tablesNodeId!, false);
+        this.tableCache.set(cacheKey, items);
+        this.loadingNodes.set(nodeId, false);
         this.rebuildGraph();
+        if (!options?.silent) this.persistSoon();
       },
       error: () => {
-        this.tableCache.set(key, []);
-        this.loadingNodes.set(this.tablesNodeId!, false);
+        this.tableCache.set(cacheKey, []);
+        this.loadingNodes.set(nodeId, false);
         this.rebuildGraph();
+        if (!options?.silent) this.persistSoon();
       },
     });
+  }
+
+  private computeSchemaListPosition(base: string): DiagramFlowPoint {
+    const basesPos = this.positions.get(this.basesNodeId) ?? DEFAULT_POSITIONS['node-bases'];
+    const sortedBases = [...this.openSchemaListBases].sort();
+    const index = sortedBases.indexOf(base);
+    const safeIndex = index >= 0 ? index : sortedBases.length;
+    return {
+      x: basesPos.x + HORIZONTAL_GAP,
+      y: basesPos.y + safeIndex * (SELECTOR_LIST_HEIGHT + NODE_COLLISION_PADDING),
+    };
+  }
+
+  private computeSchemaBoxPosition(base: string, esquema: string): DiagramFlowPoint {
+    const listId = this.schemasListNodeId(base);
+    const listPos = this.positions.get(listId) ?? this.computeSchemaListPosition(base);
+    const columnX = listPos.x + HORIZONTAL_GAP;
+    const keysForBase = [...this.openSchemaBoxes]
+      .filter((k) => this.parseScopeKey(k)?.base === base)
+      .sort();
+    const index = keysForBase.indexOf(schemaScopeKey(base, esquema));
+    const safeIndex = index >= 0 ? index : keysForBase.length;
+    return {
+      x: columnX,
+      y: listPos.y + safeIndex * (SCHEMA_BOX_HEIGHT + NODE_COLLISION_PADDING),
+    };
+  }
+
+  private computeTablesPosition(base: string, esquema: string): DiagramFlowPoint {
+    const listId = this.schemasListNodeId(base);
+    const listPos = this.positions.get(listId) ?? this.computeSchemaListPosition(base);
+    const columnX = listPos.x + HORIZONTAL_GAP;
+    const keysForBase = [...this.openTablesKeys]
+      .filter((k) => this.parseScopeKey(k)?.base === base)
+      .sort();
+    const index = keysForBase.indexOf(schemaScopeKey(base, esquema));
+    const safeIndex = index >= 0 ? index : keysForBase.length;
+    return {
+      x: columnX,
+      y: listPos.y + safeIndex * (TABLES_CARD_HEIGHT + NODE_COLLISION_PADDING),
+    };
+  }
+
+  private allocatePosition(
+    nodeId: string,
+    preferred: DiagramFlowPoint,
+    width: number,
+    height: number
+  ): DiagramFlowPoint {
+    const stored = this.positions.get(nodeId);
+    if (stored) return { ...stored };
+
+    let candidate = { ...preferred };
+    for (let attempt = 0; attempt < 48; attempt++) {
+      if (!this.intersectsAnyNode(nodeId, candidate, width, height)) {
+        this.positions.set(nodeId, candidate);
+        return candidate;
+      }
+      candidate = {
+        x: candidate.x,
+        y: candidate.y + height + NODE_COLLISION_PADDING,
+      };
+    }
+
+    this.positions.set(nodeId, candidate);
+    return candidate;
+  }
+
+  private intersectsAnyNode(
+    nodeId: string,
+    pos: DiagramFlowPoint,
+    width: number,
+    height: number
+  ): boolean {
+    const padding = 16;
+    for (const [id, otherPos] of this.positions.entries()) {
+      if (id === nodeId) continue;
+      if (id.startsWith('erd:')) continue;
+      const size = this.nodeSizeFor(id);
+      if (
+        this.rectsOverlap(
+          pos.x,
+          pos.y,
+          width,
+          height,
+          otherPos.x,
+          otherPos.y,
+          size.width,
+          size.height,
+          padding
+        )
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private nodeSizeFor(nodeId: string): { width: number; height: number } {
+    if (nodeId === this.basesNodeId) return { width: 240, height: 280 };
+    if (nodeId.startsWith('node-schemas-')) {
+      return { width: 260, height: SELECTOR_LIST_HEIGHT };
+    }
+    if (nodeId.startsWith('node-schema-')) {
+      return { width: 220, height: SCHEMA_BOX_HEIGHT };
+    }
+    if (nodeId.startsWith('node-tables-')) {
+      return { width: 280, height: TABLES_CARD_HEIGHT };
+    }
+    if (nodeId.startsWith('node-operation-')) {
+      return { width: OPERATION_CARD_WIDTH, height: 160 };
+    }
+    return { width: 260, height: 200 };
+  }
+
+  private rectsOverlap(
+    ax: number,
+    ay: number,
+    aw: number,
+    ah: number,
+    bx: number,
+    by: number,
+    bw: number,
+    bh: number,
+    padding: number
+  ): boolean {
+    return (
+      ax < bx + bw + padding &&
+      ax + aw + padding > bx &&
+      ay < by + bh + padding &&
+      ay + ah + padding > by
+    );
   }
 
   private closeAllOperationDetails(exceptId?: string): void {
@@ -731,29 +1180,37 @@ export class SyncDiagramStateService {
     return `node-operation-${operationId}`;
   }
 
-  private lastSelectorNodeId(): string {
-    if (this.tablesNodeId) return this.tablesNodeId;
-    if (this.schemasNodeId) return this.schemasNodeId;
-    return this.basesNodeId;
-  }
-
   private nextPosition(fromNodeId: string): DiagramFlowPoint {
     const from = this.positions.get(fromNodeId) ?? DEFAULT_POSITIONS[fromNodeId] ?? { x: 80, y: 100 };
     return { x: from.x + HORIZONTAL_GAP, y: from.y };
   }
 
-  private ensurePosition(nodeId: string, fallback: DiagramFlowPoint): void {
+  private ensureStoredPosition(
+    nodeId: string,
+    preferred: DiagramFlowPoint,
+    width: number,
+    height: number
+  ): void {
     if (!this.positions.has(nodeId)) {
-      this.positions.set(nodeId, { ...fallback });
+      this.allocatePosition(nodeId, preferred, width, height);
     }
   }
 
-  private getPosition(nodeId: string, fallback: DiagramFlowPoint): DiagramFlowPoint {
+  private resolveNodePosition(
+    nodeId: string,
+    preferred: DiagramFlowPoint,
+    width: number,
+    height: number
+  ): DiagramFlowPoint {
+    if (this.positions.has(nodeId)) {
+      return { ...this.positions.get(nodeId)! };
+    }
+    return this.allocatePosition(nodeId, preferred, width, height);
+  }
+
+  private readPosition(nodeId: string, fallback: DiagramFlowPoint): DiagramFlowPoint {
     const stored = this.positions.get(nodeId);
-    if (stored) return { ...stored };
-    const point = { ...fallback };
-    this.positions.set(nodeId, point);
-    return point;
+    return stored ? { ...stored } : { ...fallback };
   }
 
   private connectorIds(nodeId: string): { source: string; target: string } {
@@ -774,6 +1231,16 @@ export class SyncDiagramStateService {
     for (const [key, pos] of Object.entries(stored.positions ?? {})) {
       this.positions.set(key, { x: pos.x, y: pos.y });
     }
+
+    for (const base of stored.openSchemaListBases ?? []) {
+      this.openSchemaListBases.add(base);
+    }
+    for (const key of stored.openSchemaBoxes ?? []) {
+      this.openSchemaBoxes.add(key);
+    }
+    for (const key of stored.openTablesKeys ?? []) {
+      this.openTablesKeys.add(key);
+    }
   }
 
   private normalizePersistedSelection(selection: SyncDiagramContext): SyncDiagramContext {
@@ -787,39 +1254,78 @@ export class SyncDiagramStateService {
 
   private restoreDrillDownFromSelection(): void {
     const sel = this.selection();
+
+    if (sel.base && !this.openSchemaListBases.has(sel.base)) {
+      this.openSchemaListBases.add(sel.base);
+    }
+    if (sel.base && sel.esquema) {
+      const key = schemaScopeKey(sel.base, sel.esquema);
+      if (this.selectedTabelas(sel).length > 0 && !this.openTablesKeys.has(key)) {
+        this.openTablesKeys.add(key);
+      }
+    }
+
+    for (const base of this.openSchemaListBases) {
+      this.ensureStoredPosition(
+        this.schemasListNodeId(base),
+        this.computeSchemaListPosition(base),
+        260,
+        SELECTOR_LIST_HEIGHT
+      );
+    }
+    for (const key of this.openSchemaBoxes) {
+      const parsed = this.parseScopeKey(key);
+      if (!parsed) continue;
+      this.ensureStoredPosition(
+        this.schemaBoxNodeId(parsed.base, parsed.esquema),
+        this.computeSchemaBoxPosition(parsed.base, parsed.esquema),
+        220,
+        SCHEMA_BOX_HEIGHT
+      );
+    }
+    for (const key of this.openTablesKeys) {
+      const parsed = this.parseScopeKey(key);
+      if (!parsed) continue;
+      this.ensureStoredPosition(
+        this.tablesNodeIdFor(parsed.base, parsed.esquema),
+        this.computeTablesPosition(parsed.base, parsed.esquema),
+        280,
+        TABLES_CARD_HEIGHT
+      );
+    }
+
     if (!sel.base) {
       this.rebuildGraph();
       this.loadingInitial.set(false);
       return;
     }
 
-    this.schemasNodeId = `node-schemas-${sel.base}`;
-    this.ensurePosition(this.schemasNodeId, this.nextPosition(this.basesNodeId));
-
+    const listId = this.schemasListNodeId(sel.base);
     if (this.schemaCache.has(sel.base)) {
       this.finishDrillDownRestore(sel);
       return;
     }
 
-    this.loadingNodes.set(this.schemasNodeId, true);
+    this.loadingNodes.set(listId, true);
     this.rebuildGraph();
 
     this.baseService.findAll(`sincronizacao/base/esquema/${sel.base}`).subscribe({
       next: (res) => {
         const items = (res as string[]).map((name) => ({ id: name, label: name }));
         this.schemaCache.set(sel.base!, items);
-        this.loadingNodes.set(this.schemasNodeId!, false);
+        this.loadingNodes.set(listId, false);
         this.finishDrillDownRestore(sel);
       },
       error: () => {
         this.schemaCache.set(sel.base!, []);
-        this.loadingNodes.set(this.schemasNodeId!, false);
+        this.loadingNodes.set(listId, false);
         this.finishDrillDownRestore(sel);
       },
     });
   }
 
   private ensureSchemasLoaded(base: string): void {
+    const listId = this.schemasListNodeId(base);
     const cached = this.schemaCache.get(base);
     if (cached) {
       this.rebuildGraph();
@@ -827,20 +1333,20 @@ export class SyncDiagramStateService {
       return;
     }
 
-    this.loadingNodes.set(this.schemasNodeId!, true);
+    this.loadingNodes.set(listId, true);
     this.rebuildGraph();
 
     this.baseService.findAll(`sincronizacao/base/esquema/${base}`).subscribe({
       next: (res) => {
         const items = (res as string[]).map((name) => ({ id: name, label: name }));
         this.schemaCache.set(base, items);
-        this.loadingNodes.set(this.schemasNodeId!, false);
+        this.loadingNodes.set(listId, false);
         this.rebuildGraph();
         this.persistSoon();
       },
       error: () => {
         this.schemaCache.set(base, []);
-        this.loadingNodes.set(this.schemasNodeId!, false);
+        this.loadingNodes.set(listId, false);
         this.rebuildGraph();
         this.persistSoon();
       },
@@ -848,19 +1354,20 @@ export class SyncDiagramStateService {
   }
 
   private ensureSchemasAndTablesLoaded(base: string, esquema: string): void {
+    const listId = this.schemasListNodeId(base);
     if (!this.schemaCache.has(base)) {
-      this.loadingNodes.set(this.schemasNodeId!, true);
+      this.loadingNodes.set(listId, true);
       this.rebuildGraph();
       this.baseService.findAll(`sincronizacao/base/esquema/${base}`).subscribe({
         next: (res) => {
           const items = (res as string[]).map((name) => ({ id: name, label: name }));
           this.schemaCache.set(base, items);
-          this.loadingNodes.set(this.schemasNodeId!, false);
+          this.loadingNodes.set(listId, false);
           this.ensureTablesLoaded(base, esquema);
         },
         error: () => {
           this.schemaCache.set(base, []);
-          this.loadingNodes.set(this.schemasNodeId!, false);
+          this.loadingNodes.set(listId, false);
           this.ensureTablesLoaded(base, esquema);
         },
       });
@@ -871,14 +1378,15 @@ export class SyncDiagramStateService {
   }
 
   private ensureTablesLoaded(base: string, esquema: string): void {
-    const key = `${base}|${esquema}`;
+    const key = schemaScopeKey(base, esquema);
+    const nodeId = this.tablesNodeIdFor(base, esquema);
     if (this.tableCache.has(key)) {
       this.rebuildGraph();
       this.persistSoon();
       return;
     }
 
-    this.loadingNodes.set(this.tablesNodeId!, true);
+    this.loadingNodes.set(nodeId, true);
     this.rebuildGraph();
 
     this.baseService
@@ -887,13 +1395,13 @@ export class SyncDiagramStateService {
         next: (res) => {
           const items = (res as string[]).map((name) => ({ id: name, label: name }));
           this.tableCache.set(key, items);
-          this.loadingNodes.set(this.tablesNodeId!, false);
+          this.loadingNodes.set(nodeId, false);
           this.rebuildGraph();
           this.persistSoon();
         },
         error: () => {
           this.tableCache.set(key, []);
-          this.loadingNodes.set(this.tablesNodeId!, false);
+          this.loadingNodes.set(nodeId, false);
           this.rebuildGraph();
           this.persistSoon();
         },
@@ -901,42 +1409,35 @@ export class SyncDiagramStateService {
   }
 
   private finishDrillDownRestore(sel: SyncDiagramContext): void {
-    if (!sel.base || !sel.esquema) {
-      this.rebuildGraph();
-      this.loadingInitial.set(false);
-      return;
+    if (sel.base && sel.esquema && this.openTablesKeys.has(schemaScopeKey(sel.base, sel.esquema))) {
+      const key = schemaScopeKey(sel.base, sel.esquema);
+      const nodeId = this.tablesNodeIdFor(sel.base, sel.esquema);
+      if (!this.tableCache.has(key)) {
+        this.loadingNodes.set(nodeId, true);
+        this.rebuildGraph();
+        this.baseService
+          .findAll(`sincronizacao/base/tabela/${sel.base}/${sel.esquema}`)
+          .subscribe({
+            next: (res) => {
+              const items = (res as string[]).map((name) => ({ id: name, label: name }));
+              this.tableCache.set(key, items);
+              this.loadingNodes.set(nodeId, false);
+              this.rebuildGraph();
+              this.loadingInitial.set(false);
+            },
+            error: () => {
+              this.tableCache.set(key, []);
+              this.loadingNodes.set(nodeId, false);
+              this.rebuildGraph();
+              this.loadingInitial.set(false);
+            },
+          });
+        return;
+      }
     }
 
-    this.tablesNodeId = `node-tables-${sel.base}-${sel.esquema}`;
-    this.ensurePosition(this.tablesNodeId, this.nextPosition(this.schemasNodeId!));
-    const key = `${sel.base}|${sel.esquema}`;
-
-    if (this.tableCache.has(key)) {
-      this.rebuildGraph();
-      this.loadingInitial.set(false);
-      return;
-    }
-
-    this.loadingNodes.set(this.tablesNodeId, true);
     this.rebuildGraph();
-
-    this.baseService
-      .findAll(`sincronizacao/base/tabela/${sel.base}/${sel.esquema}`)
-      .subscribe({
-        next: (res) => {
-          const items = (res as string[]).map((name) => ({ id: name, label: name }));
-          this.tableCache.set(key, items);
-          this.loadingNodes.set(this.tablesNodeId!, false);
-          this.rebuildGraph();
-          this.loadingInitial.set(false);
-        },
-        error: () => {
-          this.tableCache.set(key, []);
-          this.loadingNodes.set(this.tablesNodeId!, false);
-          this.rebuildGraph();
-          this.loadingInitial.set(false);
-        },
-      });
+    this.loadingInitial.set(false);
   }
 
   private erdStableKey(base: string, esquema: string, grafoNodeId: string): string {
@@ -961,7 +1462,7 @@ export class SyncDiagramStateService {
     const chips = this.buildImpactChips(op, erdTables);
 
     const boundsInputs = targetTables.map((table) => {
-      const pos = this.getPosition(table.id, { x: opPos.x + ERD_ORIGIN_OFFSET_X, y: opPos.y });
+      const pos = this.readPosition(table.id, { x: opPos.x + ERD_ORIGIN_OFFSET_X, y: opPos.y });
       return {
         id: table.id,
         position: pos,
@@ -1091,6 +1592,9 @@ export class SyncDiagramStateService {
       selection: this.normalizePersistedSelection(this.selection()),
       filters: Object.fromEntries(this.filters.entries()),
       positions: this.toPersistablePositions(),
+      openSchemaListBases: [...this.openSchemaListBases],
+      openSchemaBoxes: [...this.openSchemaBoxes],
+      openTablesKeys: [...this.openTablesKeys],
     });
   }
 
@@ -1121,13 +1625,16 @@ export class SyncDiagramStateService {
     return out;
   }
 
-  private isTablesOpenFor(base: string, esquema: string): boolean {
-    return this.tablesNodeId === `node-tables-${base}-${esquema}`;
-  }
-
-  private openedSchemaId(base: string): string | undefined {
-    if (!this.tablesNodeId?.startsWith(`node-tables-${base}-`)) return undefined;
-    return this.tablesNodeId.slice(`node-tables-${base}-`.length);
+  private openedSchemaIdForList(base: string): string | undefined {
+    for (const key of this.openTablesKeys) {
+      const parsed = this.parseScopeKey(key);
+      if (parsed?.base === base) return parsed.esquema;
+    }
+    for (const key of this.openSchemaBoxes) {
+      const parsed = this.parseScopeKey(key);
+      if (parsed?.base === base) return parsed.esquema;
+    }
+    return undefined;
   }
 
   private rebuildGraph(): void {
@@ -1148,64 +1655,128 @@ export class SyncDiagramStateService {
       itemCount: this.bases.length,
     };
     this.nodeMeta.set(this.basesNodeId, basesMeta);
-    nodes.push(this.createSelectorNode(this.basesNodeId, basesMeta, DEFAULT_POSITIONS['node-bases']));
+    nodes.push(
+      this.createSelectorNode(this.basesNodeId, basesMeta, DEFAULT_POSITIONS['node-bases'])
+    );
 
-    if (sel.base && this.schemasNodeId) {
-      const schemas = this.schemaCache.get(sel.base) ?? [];
+    for (const base of this.openSchemaListBases) {
+      const schemasNodeId = this.schemasListNodeId(base);
+      const schemas = this.schemaCache.get(base) ?? [];
       const schemasMeta: SyncDiagramNodeData = {
-        nodeId: this.schemasNodeId,
+        nodeId: schemasNodeId,
         kind: 'schemas',
         title: 'Schemas',
-        subtitle: sel.base,
+        subtitle: base,
         items: schemas,
-        loading: this.loadingNodes.get(this.schemasNodeId) ?? false,
-        filter: this.filters.get(this.schemasNodeId) ?? '',
-        selectedItemId: sel.esquema,
-        openedItemId: this.openedSchemaId(sel.base),
-        context: { base: sel.base },
+        loading: this.loadingNodes.get(schemasNodeId) ?? false,
+        filter: this.filters.get(schemasNodeId) ?? '',
+        selectedItemId: sel.base === base ? sel.esquema : undefined,
+        openedItemId: this.openedSchemaIdForList(base),
+        context: { base },
         itemCount: schemas.length,
       };
-      this.nodeMeta.set(this.schemasNodeId, schemasMeta);
+      this.nodeMeta.set(schemasNodeId, schemasMeta);
       nodes.push(
         this.createSelectorNode(
-          this.schemasNodeId,
+          schemasNodeId,
           schemasMeta,
-          this.getPosition(this.schemasNodeId, this.nextPosition(this.basesNodeId))
-        )
-      );
-      connections.push(
-        this.createSelectorConnection(this.basesNodeId, this.schemasNodeId, !!sel.esquema, 'Schemas')
-      );
-    }
-
-    const tablesNodeId = this.tablesNodeId;
-    if (sel.base && sel.esquema && tablesNodeId && this.isTablesOpenFor(sel.base, sel.esquema)) {
-      const key = `${sel.base}|${sel.esquema}`;
-      const tables = this.tableCache.get(key) ?? [];
-      const selectedTables = this.selectedTabelas(sel);
-      const tablesMeta: SyncDiagramNodeData = {
-        nodeId: tablesNodeId,
-        kind: 'tables',
-        title: 'Tabelas',
-        subtitle: `${sel.base}.${sel.esquema}`,
-        items: tables,
-        loading: this.loadingNodes.get(tablesNodeId) ?? false,
-        filter: this.filters.get(tablesNodeId) ?? '',
-        selectedItemIds: selectedTables,
-        context: { base: sel.base, esquema: sel.esquema },
-        itemCount: tables.length,
-      };
-      this.nodeMeta.set(tablesNodeId, tablesMeta);
-      nodes.push(
-        this.createSelectorNode(
-          tablesNodeId,
-          tablesMeta,
-          this.getPosition(tablesNodeId, this.nextPosition(this.schemasNodeId!))
+          this.resolveNodePosition(
+            schemasNodeId,
+            this.computeSchemaListPosition(base),
+            260,
+            SELECTOR_LIST_HEIGHT
+          )
         )
       );
       connections.push(
         this.createSelectorConnection(
-          this.schemasNodeId!,
+          this.basesNodeId,
+          schemasNodeId,
+          sel.base === base && !!sel.esquema,
+          'Schemas'
+        )
+      );
+    }
+
+    for (const key of this.openSchemaBoxes) {
+      const parsed = this.parseScopeKey(key);
+      if (!parsed) continue;
+      const { base, esquema } = parsed;
+      const schemaNodeId = this.schemaBoxNodeId(base, esquema);
+      const listId = this.schemasListNodeId(base);
+      const schemaMeta: SyncDiagramNodeData = {
+        nodeId: schemaNodeId,
+        kind: 'schema',
+        title: esquema,
+        subtitle: base,
+        items: [],
+        loading: false,
+        filter: '',
+        openedItemId: this.openTablesKeys.has(key) ? esquema : undefined,
+        context: { base, esquema },
+        itemCount: 1,
+      };
+      this.nodeMeta.set(schemaNodeId, schemaMeta);
+      nodes.push(
+        this.createSelectorNode(
+          schemaNodeId,
+          schemaMeta,
+          this.resolveNodePosition(
+            schemaNodeId,
+            this.computeSchemaBoxPosition(base, esquema),
+            220,
+            SCHEMA_BOX_HEIGHT
+          )
+        )
+      );
+      if (this.openSchemaListBases.has(base)) {
+        connections.push(
+          this.createSelectorConnection(listId, schemaNodeId, true, esquema)
+        );
+      } else {
+        connections.push(
+          this.createSelectorConnection(this.basesNodeId, schemaNodeId, true, esquema)
+        );
+      }
+    }
+
+    for (const key of this.openTablesKeys) {
+      const parsed = this.parseScopeKey(key);
+      if (!parsed) continue;
+      const { base, esquema } = parsed;
+      const tablesNodeId = this.tablesNodeIdFor(base, esquema);
+      const tables = this.tableCache.get(key) ?? [];
+      const selectedTables =
+        sel.base === base && sel.esquema === esquema ? this.selectedTabelas(sel) : [];
+      const tablesMeta: SyncDiagramNodeData = {
+        nodeId: tablesNodeId,
+        kind: 'tables',
+        title: 'Tabelas',
+        subtitle: `${base}.${esquema}`,
+        items: tables,
+        loading: this.loadingNodes.get(tablesNodeId) ?? false,
+        filter: this.filters.get(tablesNodeId) ?? '',
+        selectedItemIds: selectedTables,
+        context: { base, esquema },
+        itemCount: tables.length,
+      };
+      this.nodeMeta.set(tablesNodeId, tablesMeta);
+      const fromId = this.tablesLinkFromId(base, esquema);
+      nodes.push(
+        this.createSelectorNode(
+          tablesNodeId,
+          tablesMeta,
+          this.resolveNodePosition(
+            tablesNodeId,
+            this.computeTablesPosition(base, esquema),
+            280,
+            TABLES_CARD_HEIGHT
+          )
+        )
+      );
+      connections.push(
+        this.createSelectorConnection(
+          fromId,
           tablesNodeId,
           selectedTables.length > 0,
           'Tabelas'
@@ -1213,12 +1784,15 @@ export class SyncDiagramStateService {
       );
     }
 
-    const ops = this.operations();
-    let lastLinkId = this.lastSelectorNodeId();
-    for (const op of ops) {
+    for (const op of this.operations()) {
       const opNodeId = this.operationNodeId(op.id);
-      const fallback = this.nextPosition(lastLinkId);
-      const opPos = this.getPosition(opNodeId, fallback);
+      const fallback = this.computeOperationPosition(op.anchorNodeId, op.id);
+      const opPos = this.resolveNodePosition(
+        opNodeId,
+        fallback,
+        OPERATION_CARD_WIDTH,
+        160
+      );
       const connectors = this.connectorIds(opNodeId);
       nodes.push({
         id: opNodeId,
@@ -1228,21 +1802,24 @@ export class SyncDiagramStateService {
         targetConnectorId: connectors.target,
         operationMeta: op,
       });
+      const anchorId = op.anchorNodeId;
       connections.push({
-        id: `edge-op-link-${lastLinkId}-${opNodeId}`,
-        sourceId: this.connectorIds(lastLinkId).source,
+        id: `edge-op-link-${anchorId}-${opNodeId}`,
+        sourceId: this.connectorIds(anchorId).source,
         targetId: connectors.target,
-        active: op.phase !== 'erro' && op.phase !== 'cancelado',
+        active:
+          op.phase !== 'erro' &&
+          op.phase !== 'cancelado' &&
+          op.phase !== 'aguardando',
         kind: 'operation-link',
         label: this.operationEdgeLabel(op.action),
       });
-      lastLinkId = opNodeId;
 
       const erdTables = this.erdTablesForOperation(op.id);
       if (erdTables.length > 0) {
         for (const erd of erdTables) {
           const erdConnectors = this.connectorIds(erd.id);
-          const erdPos = this.getPosition(erd.id, { x: opPos.x + ERD_ORIGIN_OFFSET_X, y: opPos.y });
+          const erdPos = this.readPosition(erd.id, { x: opPos.x + ERD_ORIGIN_OFFSET_X, y: opPos.y });
           const erdMeta: ErdTableNode = { ...erd };
           nodes.push({
             id: erd.id,
@@ -1345,7 +1922,7 @@ export class SyncDiagramStateService {
       labels.push({
         id: `edge-label-${edge.id}`,
         position: {
-          x: (sourcePos.x + FLOW_CARD_WIDTH + targetPos.x) / 2 - 36,
+          x: (sourcePos.x + OPERATION_CARD_WIDTH + targetPos.x) / 2 - 36,
           y: (sourcePos.y + FLOW_CARD_CENTER_Y + targetPos.y + FLOW_CARD_CENTER_Y) / 2 - 10,
         },
         text: edge.label,
@@ -1368,7 +1945,7 @@ export class SyncDiagramStateService {
     return {
       id,
       type: 'selector',
-      position: this.getPosition(id, defaultPosition),
+      position: { ...(this.positions.get(id) ?? defaultPosition) },
       sourceConnectorId: connectors.source,
       targetConnectorId: connectors.target,
       selectorMeta: meta,

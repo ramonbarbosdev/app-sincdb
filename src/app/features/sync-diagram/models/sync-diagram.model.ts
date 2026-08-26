@@ -1,9 +1,10 @@
 import { EstruturaResponse } from '../../../components/estrutura-preview/estrutura-preview';
 
-export type SyncDiagramKind = 'bases' | 'schemas' | 'tables';
+export type SyncDiagramKind = 'bases' | 'schemas' | 'schema' | 'tables';
 export type SyncDiagramMode = 'estrutura' | 'dados';
 
 export type OperationPhase =
+  | 'aguardando'
   | 'verificando'
   | 'verificado'
   | 'sincronizando'
@@ -92,6 +93,20 @@ export function queueScopeKey(context: SyncDiagramContext, mode: SyncDiagramMode
 }
 
 /** Chave única de escopo para reuso de caixa de operação (base + schema + modo + tabela opcional). */
+export function schemaScopeKey(base: string, esquema: string): string {
+  return `${base}|${esquema}`;
+}
+
+export function contextHasTableScope(context: SyncDiagramContext): boolean {
+  const esquema = context.esquema ?? '';
+  const tabela =
+    context.tabela ?? (context.tabelas?.length === 1 ? context.tabelas[0] : '');
+  if (!tabela) return false;
+  if (tabela === esquema) return false;
+  const tableName = tabela.includes('.') ? tabela.split('.').pop()! : tabela;
+  return tableName !== esquema;
+}
+
 export function operationScopeKey(context: SyncDiagramContext, mode: SyncDiagramMode): string {
   const base = context.base ?? '';
   const esquema = context.esquema ?? '';
@@ -257,6 +272,8 @@ export interface SyncOperation {
   mode: SyncDiagramMode;
   action: OperationActionKind;
   context: SyncDiagramContext;
+  anchorNodeId: string;
+  queueItemId?: string;
   phase: OperationPhase;
   progress: number;
   tabelaAtual?: string;

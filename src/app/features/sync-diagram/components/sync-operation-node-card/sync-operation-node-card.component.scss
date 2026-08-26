@@ -52,6 +52,13 @@
   background: color-mix(in srgb, var(--sync-diagram-text-muted) 8%, var(--sync-diagram-surface-card));
 }
 
+.phase-aguardando .operation-node {
+  border-color: color-mix(in srgb, var(--sync-diagram-text-muted) 35%, var(--sync-diagram-border));
+  background: color-mix(in srgb, var(--sync-diagram-text-muted) 14%, var(--sync-diagram-surface-card));
+  opacity: 0.82;
+  filter: grayscale(0.35);
+}
+
 .detail-open .operation-node {
   box-shadow: var(--sync-diagram-shadow), var(--sync-diagram-glow);
 }

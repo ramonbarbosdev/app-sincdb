@@ -90,6 +90,8 @@ export class ProgressoSyncService {
       mensagem,
       status: 'ERRO',
     });
+
+    setTimeout(() => this.resetar(), 2200);
   }
 
   marcarCancelado(mensagem = 'Operação cancelada pelo usuário') {

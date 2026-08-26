@@ -13,6 +13,9 @@ export interface SyncDiagramPersistedLayout {
   selection: SyncDiagramContext;
   filters: Record<string, string>;
   positions: Record<string, DiagramFlowPoint>;
+  openSchemaListBases?: string[];
+  openSchemaBoxes?: string[];
+  openTablesKeys?: string[];
 }
 
 @Injectable()

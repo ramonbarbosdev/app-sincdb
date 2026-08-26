@@ -50,6 +50,7 @@ export class SyncOperationNodeCardComponent {
 
   displayTitle(phase: OperationPhase): string {
     const map: Record<OperationPhase, string> = {
+      aguardando: 'Na fila',
       verificando: 'Verificando',
       verificado: 'Sincronizando',
       sincronizando: 'Sincronizando',
@@ -70,6 +71,7 @@ export class SyncOperationNodeCardComponent {
 
   phaseLabel(phase: OperationPhase): string {
     const map: Record<OperationPhase, string> = {
+      aguardando: 'Na fila',
       verificando: 'Verificando',
       verificado: 'Verificado',
       sincronizando: 'Sincronizando',
@@ -165,6 +167,7 @@ export class SyncOperationNodeCardComponent {
 
   phaseIcon(phase: OperationPhase): string {
     const map: Record<OperationPhase, string> = {
+      aguardando: 'pi-clock',
       verificando: 'pi-search',
       verificado: 'pi-check',
       sincronizando: 'pi-sync',

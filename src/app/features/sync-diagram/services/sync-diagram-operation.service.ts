@@ -65,9 +65,15 @@ export class SyncDiagramOperationService implements OnDestroy {
       return null;
     }
 
+    this.state.ensureNodesForContext(context);
     const operationPayload = this.buildOperationPayload(mode, action, context);
 
     if (existing) {
+      if (existing.phase === 'aguardando') {
+        this.state.promoteQueuedOperation(existing.id, action);
+        this.trackOperation(existing.id);
+        return existing.id;
+      }
       this.state.reuseOperation(existing.id, operationPayload);
       this.trackOperation(existing.id);
       return existing.id;
@@ -91,6 +97,7 @@ export class SyncDiagramOperationService implements OnDestroy {
       mode,
       action,
       context: { ...context },
+      anchorNodeId: this.state.resolveOperationAnchorNodeId(context),
       phase: action === 'sincronizar' ? 'sincronizando' : 'verificando',
       progress: 0,
       label: scope,
@@ -263,6 +270,12 @@ export class SyncDiagramOperationService implements OnDestroy {
     this.state.removeOperation(operationId);
   }
 
+  dismissQueuedOperation(operationId: string): void {
+    const op = this.state.getOperation(operationId);
+    if (!op || op.phase !== 'aguardando') return;
+    this.dismissOperation(operationId);
+  }
+
   private loadErdGraph(operationId: string): void {
     const op = this.state.getOperation(operationId);
     if (!op?.detailOpen) return;
@@ -335,6 +348,8 @@ export class SyncDiagramOperationService implements OnDestroy {
   }
 
   private trackOperation(operationId: string): void {
+    this.progressoSync.iniciarGenericoProgressoLocal();
+    this.ws.emitClearTerminal();
     this.activeOperationId = operationId;
     this.operationLogsSub?.unsubscribe();
     this.operationLogsSub = this.ws.logs$.subscribe((msg) => {
@@ -366,15 +381,12 @@ export class SyncDiagramOperationService implements OnDestroy {
           tabelaAtual: estado.tabelaAtual ?? undefined,
         };
 
-        if (status === 'RUNNING') {
-          if (op.phase === 'verificado' || op.action === 'verificar-sync') {
-            patch.phase = 'sincronizando';
-          } else if (op.phase === 'verificando') {
-            patch.phase = 'verificando';
-          }
+        if (status === 'RUNNING' && op.phase === 'verificado') {
+          patch.phase = 'sincronizando';
         }
 
         if (status === 'CANCELADO') {
+          if (op.phase !== 'verificando' && op.phase !== 'sincronizando') return;
           patch.phase = 'cancelado';
           patch.progress = 0;
           patch.errors = [];
@@ -383,6 +395,7 @@ export class SyncDiagramOperationService implements OnDestroy {
         }
 
         if (status === 'ERRO') {
+          if (op.phase !== 'verificando' && op.phase !== 'sincronizando') return;
           patch.phase = 'erro';
           patch.progress = 0;
           patch.errors = op.errors?.length ? op.errors : ['Falha durante a operação'];

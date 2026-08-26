@@ -3,6 +3,7 @@
     [class.mode-dados]="operation.mode === 'dados'" [class.phase-running]="isRunning()"
     [class.phase-verificado]="operation.phase === 'verificado'" [class.phase-erro]="operation.phase === 'erro'"
     [class.phase-concluido]="operation.phase === 'concluido'" [class.phase-cancelado]="operation.phase === 'cancelado'"
+    [class.phase-aguardando]="operation.phase === 'aguardando'"
     [class.detail-open]="operation.detailOpen">
     <div class="operation-node" [class.is-running]="isRunning()" [class.is-expanded]="operation.detailOpen">
       <header class="operation-header" fDragHandle>
