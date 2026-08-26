@@ -92,6 +92,19 @@ export class ProgressoSyncService {
     });
   }
 
+  marcarCancelado(mensagem = 'Operação cancelada pelo usuário') {
+    this.progressoState.next({
+      progresso: 0,
+      mensagem,
+      tabelaAtual: null,
+      status: 'CANCELADO',
+      resumo: null,
+      duracaoMs: null,
+    });
+
+    setTimeout(() => this.resetar(), 2200);
+  }
+
   resetar() {
     this.progressoState.next({
       progresso: 0,

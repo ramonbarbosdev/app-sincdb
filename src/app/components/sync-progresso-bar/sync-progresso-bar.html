@@ -13,8 +13,17 @@
     </div>
   </div>
 
+  <div *ngIf="cancelado" class="sync-cancelled" role="status">
+    <div class="sync-cancelled-icon">
+      <i class="pi pi-ban"></i>
+    </div>
+    <div class="sync-cancelled-copy">
+      <div class="sync-cancelled-title">{{ mensagem || 'Operação cancelada' }}</div>
+    </div>
+  </div>
+
   <p-progressbar
-    *ngIf="!concluido"
+    *ngIf="mostrarBarra"
     [value]="progresso"
     [showValue]="false"
     styleClass="sync-progress-bar"

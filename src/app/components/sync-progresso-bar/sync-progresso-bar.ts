@@ -30,6 +30,14 @@ export class SyncProgressoBar {
     return this.status === 'CONCLUIDO';
   }
 
+  get cancelado(): boolean {
+    return this.status === 'CANCELADO';
+  }
+
+  get mostrarBarra(): boolean {
+    return !this.concluido && !this.cancelado;
+  }
+
   get duracaoLabel(): string {
     if (this.duracaoMs == null || this.duracaoMs <= 0) {
       return '';

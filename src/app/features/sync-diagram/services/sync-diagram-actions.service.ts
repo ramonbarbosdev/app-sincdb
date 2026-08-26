@@ -107,8 +107,29 @@ export class SyncDiagramActionsService {
   }
 
   private failOp(opId: string, message: string): void {
+    if (this.isOperationCancelled(opId)) return;
     this.operations.failOperation(opId, [message]);
     this.progressoSync.marcarErro(message);
+  }
+
+  private isCancelResponse(res: unknown): boolean {
+    if (!res || typeof res !== 'object') return false;
+    const message = String((res as { message?: string }).message ?? '').toLowerCase();
+    return message.includes('cancel');
+  }
+
+  private isOperationCancelled(opId: string): boolean {
+    return this.state.getOperation(opId)?.phase === 'cancelado';
+  }
+
+  private resolveCancelledFromResponse(opId: string, res: unknown): boolean {
+    if (this.isOperationCancelled(opId)) return true;
+    if (this.isCancelResponse(res)) {
+      this.operations.markCancelled(opId);
+      this.progressoSync.marcarCancelado();
+      return true;
+    }
+    return false;
   }
 
   verificarEstrutura(context: SyncDiagramContext): void {
@@ -126,6 +147,7 @@ export class SyncDiagramActionsService {
           .findAll(`estrutura/verificar/${base}/${esquema}/${tabelaParam}`)
           .subscribe({
             next: (res) => {
+              if (this.resolveCancelledFromResponse(opId, res)) return;
               this.operations.completeVerificar(opId, 'estrutura', res as EstruturaResponse);
               this.messageService.add({
                 severity: 'success',
@@ -159,7 +181,9 @@ export class SyncDiagramActionsService {
 
     this.baseService.findAll(`estrutura/verificar/${base}/${esquema}/${tabelaParam}`).subscribe({
       next: (res) => {
+        if (this.resolveCancelledFromResponse(opId, res)) return;
         this.operations.completeVerificar(opId, 'estrutura', res as EstruturaResponse);
+        if (this.isOperationCancelled(opId)) return;
         this.operations.beginSyncPhase(opId);
         this.sincronizarEstruturaInterno(context, true, opId);
       },
@@ -195,7 +219,8 @@ export class SyncDiagramActionsService {
     }
 
     this.baseService.findAll(`estrutura/${base}/${esquema}`).subscribe({
-      next: (res: { errors?: string[]; tabelas_afetadas?: TabelaAfetadaDTO[] }) => {
+      next: (res: { errors?: string[]; tabelas_afetadas?: TabelaAfetadaDTO[]; message?: string }) => {
+        if (this.resolveCancelledFromResponse(opId, res)) return;
         if (res?.errors?.length) {
           this.operations.completeSync(opId, { errors: res.errors, tabelas_afetadas: res.tabelas_afetadas });
           this.progressoSync.marcarErro('Sincronização de estrutura com erros');
@@ -232,6 +257,7 @@ export class SyncDiagramActionsService {
           .findAll(`dados/verificar/${base}/${esquema}/${tabelaParam}`)
           .subscribe({
             next: (res) => {
+              if (this.resolveCancelledFromResponse(opId, res)) return;
               this.operations.completeVerificar(opId, 'dados', res as { tabelas_afetadas?: TabelaAfetadaDTO[] });
               this.messageService.add({
                 severity: 'success',
@@ -265,7 +291,9 @@ export class SyncDiagramActionsService {
 
     this.baseService.findAll(`dados/verificar/${base}/${esquema}/${tabelaParam}`).subscribe({
       next: (res) => {
+        if (this.resolveCancelledFromResponse(opId, res)) return;
         this.operations.completeVerificar(opId, 'dados', res as { tabelas_afetadas?: TabelaAfetadaDTO[] });
+        if (this.isOperationCancelled(opId)) return;
         this.operations.beginSyncPhase(opId);
         this.sincronizarDadosInterno(context, true, opId);
       },
@@ -301,7 +329,8 @@ export class SyncDiagramActionsService {
     }
 
     this.baseService.findAll(`dados/${base}/${esquema}`).subscribe({
-      next: (res: { errors?: string[]; tabelas_afetadas?: TabelaAfetadaDTO[] }) => {
+      next: (res: { errors?: string[]; tabelas_afetadas?: TabelaAfetadaDTO[]; message?: string }) => {
+        if (this.resolveCancelledFromResponse(opId, res)) return;
         if (res?.errors?.length) {
           this.operations.completeSync(opId, { errors: res.errors, tabelas_afetadas: res.tabelas_afetadas });
           this.progressoSync.marcarErro('Sincronização de dados com erros');
