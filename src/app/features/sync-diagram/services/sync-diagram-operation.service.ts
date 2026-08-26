@@ -57,7 +57,7 @@ export class SyncDiagramOperationService implements OnDestroy {
     if (existing) {
       this.state.reuseOperation(existing.id, operationPayload);
       this.trackOperation(existing.id);
-      if (this.shouldLoadErdGraph(mode, action)) {
+      if (this.shouldLoadErdGraph(mode)) {
         this.loadErdGraph(existing.id);
       }
       return existing.id;
@@ -67,14 +67,14 @@ export class SyncDiagramOperationService implements OnDestroy {
     const operation: SyncOperation = { ...operationPayload, id };
     this.state.spawnOperation(operation);
     this.trackOperation(id);
-    if (this.shouldLoadErdGraph(mode, action)) {
+    if (this.shouldLoadErdGraph(mode)) {
       this.loadErdGraph(id);
     }
     return id;
   }
 
-  private shouldLoadErdGraph(mode: SyncDiagramMode, action: OperationActionKind): boolean {
-    return !(mode === 'estrutura' && action === 'sincronizar');
+  private shouldLoadErdGraph(mode: SyncDiagramMode): boolean {
+    return mode !== 'estrutura';
   }
 
   private buildOperationPayload(
@@ -83,7 +83,6 @@ export class SyncDiagramOperationService implements OnDestroy {
     context: SyncDiagramContext
   ): Omit<SyncOperation, 'id'> {
     const scope = formatOperationScopeSubtitle(context);
-    const showErdDetail = !(mode === 'estrutura' && action === 'sincronizar');
 
     return {
       mode,
@@ -92,7 +91,7 @@ export class SyncDiagramOperationService implements OnDestroy {
       phase: action === 'sincronizar' ? 'sincronizando' : 'verificando',
       progress: 0,
       label: scope,
-      detailOpen: showErdDetail,
+      detailOpen: mode !== 'estrutura',
       errorsExpanded: false,
       estruturaResponse: undefined,
       tabelasAfetadas: undefined,
@@ -129,7 +128,6 @@ export class SyncDiagramOperationService implements OnDestroy {
         progress: 100,
         estruturaResponse: estrutura,
       });
-      this.state.applyEstruturaVisuals(operationId, estrutura);
     } else {
       const tabelas = (response as { tabelas_afetadas?: TabelaAfetadaDTO[] }).tabelas_afetadas ?? [];
       this.state.patchOperation(operationId, {
@@ -138,8 +136,8 @@ export class SyncDiagramOperationService implements OnDestroy {
         tabelasAfetadas: tabelas,
       });
       this.state.applyDadosVisuals(operationId, tabelas);
+      this.reloadColumnsAfterVerify(operationId);
     }
-    this.reloadColumnsAfterVerify(operationId);
   }
 
   completeSync(
@@ -231,7 +229,7 @@ export class SyncDiagramOperationService implements OnDestroy {
 
   toggleDetail(operationId: string): void {
     const op = this.state.getOperation(operationId);
-    if (!op) return;
+    if (!op || op.mode === 'estrutura') return;
     const opening = !op.detailOpen;
     this.state.toggleOperationDetail(operationId);
     if (opening) {
