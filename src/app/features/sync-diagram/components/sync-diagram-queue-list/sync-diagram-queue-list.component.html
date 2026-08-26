@@ -1,11 +1,11 @@
-<div class="queue-card" *ngIf="queue.items().length">
+<div class="queue-card" *ngIf="queue.pendingItems().length || queue.runnerActive()">
   <div class="queue-header">
-    <span class="queue-title">Fila ({{ queue.items().length }})</span>
+    <span class="queue-title">Fila ({{ queue.pendingItems().length }})</span>
     <button type="button" class="queue-clear" (click)="clearQueue.emit()">Limpar</button>
   </div>
 
   <ul class="queue-list" aria-label="Itens na fila de sincronização">
-    <li class="queue-item" *ngFor="let item of queue.items()">
+    <li class="queue-item" *ngFor="let item of queue.pendingItems()">
       <span class="queue-item-label">{{ item.label }}</span>
       <span
         class="queue-item-mode"

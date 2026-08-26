@@ -51,6 +51,7 @@ export class SyncDiagramPage implements OnInit, OnDestroy {
 
     this.progressoSync.vazioProgressoLocal();
     this.actions.loadConexaoPadrao();
+    this.actions.loadQueueState();
     this.state.init();
   }
 
@@ -120,6 +121,7 @@ export class SyncDiagramPage implements OnInit, OnDestroy {
     return (
       this.queue.count() > 0 &&
       !this.hasRunningOperation() &&
+      !this.queue.runnerActive() &&
       !this.actions.isBatchActive()
     );
   }

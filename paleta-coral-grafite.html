@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Paleta coral/grafite — SyncDB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#131315; --dot:#232326;
+    --text-primary:#eceae7; --text-secondary:#9c9a97; --text-muted:#6d6b69;
+    --card:#1d1c1e; --card-header:#19181a; --border:#302f30; --border-strong:#403f40;
+    --accent:#ff6a4d; --accent-dim:#7a3a2c; --accent-bg:rgba(255,106,77,0.10); --accent-ring:rgba(255,106,77,0.22);
+    --font:"Inter",sans-serif; --mono:"JetBrains Mono",monospace;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:var(--font); background:#0c0c0d; color:var(--text-primary); padding:0; }
+
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 20px; border-bottom:1px solid var(--border); background:#161516;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand .mark{ width:24px; height:24px; border-radius:6px; background:var(--accent); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; color:#1a1210; }
+  .brand .crumbs{ font-size:13px; color:var(--text-muted); display:flex; align-items:center; gap:6px; }
+  .brand .crumbs b{ color:var(--text-secondary); font-weight:500; }
+  .confirm-btn{
+    display:flex; align-items:center; gap:6px; background:var(--accent); color:#1a1210; border:none; border-radius:8px;
+    padding:8px 14px; font-size:13px; font-weight:700; cursor:pointer; font-family:var(--font);
+  }
+
+  .canvas-area{
+    position:relative; height: 520px; overflow:hidden;
+    background-color:var(--bg);
+    background-image: radial-gradient(var(--dot) 1.1px, transparent 1.1px);
+    background-size:22px 22px;
+  }
+
+  svg.connectors{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  @keyframes dashmove{ to{ stroke-dashoffset:-24; } }
+
+  .node-box{
+    position:absolute; width:220px; background:var(--card); border:1px solid var(--border);
+    border-radius:9px; box-shadow:0 8px 22px rgba(0,0,0,0.45); overflow:hidden;
+  }
+  .node-box.selected{ border-color:var(--accent); box-shadow:0 0 0 1px var(--accent), 0 8px 22px rgba(255,106,77,0.16); }
+  .node-box .head{ display:flex; align-items:center; gap:7px; background:var(--card-header); padding:9px 11px; border-bottom:1px solid var(--border); }
+  .node-box .head svg{ color:var(--accent); flex-shrink:0; }
+  .node-box .head .t{ font-size:12.5px; font-weight:600; color:var(--text-primary); }
+  .node-box .head .c{ margin-left:auto; font-size:10.5px; color:var(--text-muted); font-family:var(--mono); }
+  .row{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 11px; font-size:12px; font-family:var(--mono); color:var(--text-secondary); border-bottom:1px solid rgba(255,255,255,0.03); }
+  .row:last-child{ border-bottom:none; }
+  .row.sel{ background:var(--accent-bg); color:var(--text-primary); }
+  .row.sel::before{ content:"●"; color:var(--accent); margin-right:6px; font-size:8px; }
+
+  .side-actions{ position:absolute; left:100%; top:9px; margin-left:8px; display:flex; flex-direction:column; gap:6px; }
+  .side-actions button{
+    width:26px; height:26px; border-radius:50%; background:var(--card); border:1px solid var(--border);
+    color:var(--text-muted); display:flex; align-items:center; justify-content:center; cursor:pointer;
+    box-shadow:0 2px 6px rgba(0,0,0,0.35);
+  }
+  .side-actions button.active{ color:var(--accent); border-color:var(--accent); }
+
+  .pulse-label{
+    position:absolute; z-index:5; font-size:9.5px; font-family:var(--mono); padding:3px 9px; border-radius:20px;
+    background:rgba(255,106,77,0.14); color:#ff8a6f; border:1px solid rgba(255,106,77,0.35);
+  }
+
+  .status-pipeline{
+    position:absolute; width:210px; background:var(--card); border:1px solid var(--border); border-radius:9px;
+    box-shadow:0 8px 22px rgba(0,0,0,0.45); overflow:hidden; font-size:12px;
+  }
+  .status-pipeline .h{ padding:9px 11px; border-bottom:1px solid var(--border); background:var(--card-header); }
+  .status-pipeline .h .tt{ font-size:12px; font-weight:600; }
+  .status-pipeline .h .st{ font-size:10.5px; color:var(--accent); margin-top:2px; }
+  .status-pipeline .bar{ height:5px; background:#2a2829; margin:0; }
+  .status-pipeline .bar .fill{ height:100%; background:var(--accent); }
+  .status-pipeline .pct{ padding:6px 11px; font-size:10.5px; color:var(--text-muted); font-family:var(--mono); text-align:right; }
+
+  .legend{
+    position:absolute; bottom:14px; left:14px; z-index:5; background:var(--card); border:1px solid var(--border);
+    border-radius:8px; padding:8px 12px; font-size:11px; color:var(--text-muted); display:flex; gap:14px;
+  }
+  .legend .li{ display:flex; align-items:center; gap:5px; }
+  .legend .sw{ width:8px; height:8px; border-radius:2px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="mark">S</div>
+    <div class="crumbs">SyncDB <span>/</span> <b>Paleta coral · grafite</b></div>
+  </div>
+  <button class="confirm-btn">Sincronizar 2 tabelas</button>
+</div>
+
+<div class="canvas-area">
+  <div class="legend">
+    <div class="li"><span class="sw" style="background:var(--accent)"></span>marca / seleção / sync ativa</div>
+    <div class="li"><span class="sw" style="background:#3ddc7a"></span>concluído</div>
+    <div class="li"><span class="sw" style="background:#e5484d"></span>erro</div>
+  </div>
+
+  <svg class="connectors" viewBox="0 0 1200 520" preserveAspectRatio="none">
+    <path d="M280,150 C400,150 400,90 500,90" fill="none" stroke="#403f40" stroke-width="1.5"/>
+    <circle cx="280" cy="150" r="3" fill="#403f40"/>
+    <circle cx="500" cy="90" r="3" fill="#403f40"/>
+
+    <path d="M280,150 C400,150 400,320 500,320" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 6" style="animation: dashmove 0.8s linear infinite;"/>
+    <circle cx="280" cy="150" r="3.5" fill="var(--accent)"/>
+    <circle cx="500" cy="320" r="3.5" fill="var(--accent)"/>
+
+    <path d="M40,150 C160,150 160,150 280,150" fill="none" stroke="#403f40" stroke-width="1.5"/>
+    <circle cx="40" cy="150" r="3" fill="#403f40"/>
+
+    <path d="M720,90 C820,90 820,90 900,90" fill="none" stroke="#403f40" stroke-width="1.5"/>
+    <path d="M720,320 C820,320 820,320 900,320" fill="none" stroke="#403f40" stroke-width="1.5"/>
+  </svg>
+
+  <div class="node-box" style="left:40px; top:100px; width:190px;">
+    <div class="head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5"/><path d="M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3"/></svg><span class="t">Bancos</span><span class="c">28</span></div>
+    <div class="row sel">agrotec_prod</div>
+    <div class="row">agrotec_stg</div>
+    <div class="row">agrotec_bi</div>
+    <div class="side-actions">
+      <button class="active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button>
+    </div>
+  </div>
+
+  <div class="node-box selected" style="left:280px; top:150px;">
+    <div class="head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="t">agrotec_prod</span><span class="c">8 sch</span></div>
+    <div class="row">processos</div>
+    <div class="row sel">public</div>
+    <div class="row">importacao</div>
+    <div class="side-actions">
+      <button><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button>
+      <button><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+  </div>
+
+  <div class="node-box" style="left:500px; top:50px; width:200px;">
+    <div class="head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg><span class="t">processos</span><span class="c">6 tab</span></div>
+    <div class="row">abertura_orcamento</div>
+    <div class="row">acao_orcamentaria</div>
+  </div>
+
+  <div class="node-box selected" style="left:500px; top:290px;">
+    <div class="head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg><span class="t">public</span><span class="c">547 tab</span></div>
+    <div class="row sel">acao_ppa</div>
+    <div class="row sel">acao_programa</div>
+    <div class="row">acao_plano_orcamentario</div>
+    <div class="side-actions">
+      <button><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button>
+      <button class="active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></button>
+      <button><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+  </div>
+
+  <span class="pulse-label" style="left:390px; top:225px;">● sincronizando</span>
+
+  <div class="status-pipeline" style="left:900px; top:56px;">
+    <div class="h"><div class="tt">Verificar dados</div><div class="st">verificado</div></div>
+    <div class="bar"><div class="fill" style="width:100%; background:#3ddc7a"></div></div>
+    <div class="pct">100%</div>
+  </div>
+
+  <div class="status-pipeline" style="left:900px; top:180px;">
+    <div class="h"><div class="tt">Verificar + sync dados</div><div class="st" style="color:#e5484d">erro</div></div>
+    <div class="bar"><div class="fill" style="width:0%; background:#e5484d"></div></div>
+    <div class="pct">0%</div>
+  </div>
+
+  <div class="status-pipeline" style="left:900px; top:290px;">
+    <div class="h"><div class="tt">Verificar + sync dados</div><div class="st" style="color:var(--accent)">sincronizando</div></div>
+    <div class="bar"><div class="fill" style="width:62%"></div></div>
+    <div class="pct">62%</div>
+  </div>
+</div>
+
+</body>
+</html>

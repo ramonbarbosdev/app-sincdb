@@ -230,7 +230,7 @@
 
   <div
     class="sync-bottom-stack"
-    *ngIf="!state.loadingInitial() && (showSyncFab || queue.items().length > 0)"
+    *ngIf="!state.loadingInitial() && (showSyncFab || queue.count() > 0 || queue.runnerActive())"
   >
     <div class="sync-bottom-actions" *ngIf="showSyncFab">
       <button

@@ -64,12 +64,16 @@ export interface SyncDiagramBreadcrumbItem {
   context: SyncDiagramContext;
 }
 
+export type SyncQueueItemStatus = 'PENDING' | 'RUNNING' | 'DONE' | 'ERROR';
+
 export interface SyncQueueItem {
   id: string;
   mode: SyncDiagramMode;
   context: SyncDiagramContext;
   label: string;
   createdAt: number;
+  status?: SyncQueueItemStatus;
+  errorMessage?: string;
 }
 
 /** Label de exibição na fila: `base.esquema` ou `base.esquema.tabela`. */

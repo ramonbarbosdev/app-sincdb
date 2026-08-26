@@ -98,6 +98,39 @@ export class SyncDiagramActionsService {
     return esquema;
   }
 
+  private syncEstruturaEndpoint(base: string, esquema: string, context: SyncDiagramContext): string {
+    const tabelaParam = this.resolveTabelaParam(context);
+    if (!tabelaParam || tabelaParam === esquema) {
+      return `estrutura/${base}/${esquema}`;
+    }
+    return `estrutura/${base}/${esquema}/${tabelaParam}`;
+  }
+
+  private syncDadosEndpoint(base: string, esquema: string, context: SyncDiagramContext): string {
+    const tabelaParam = this.resolveTabelaParam(context);
+    if (!tabelaParam || tabelaParam === esquema) {
+      return `dados/${base}/${esquema}`;
+    }
+    return `dados/${base}/${esquema}/${tabelaParam}`;
+  }
+
+  private estruturaTemPendencias(res: EstruturaResponse): boolean {
+    const totalQueries = res?.resumo?.totalQueries ?? 0;
+    if (totalQueries > 0) return true;
+    return (res?.categorias ?? []).some(
+      (categoria) => (categoria.total ?? 0) > 0 || (categoria.items?.length ?? 0) > 0
+    );
+  }
+
+  private dadosTemPendencias(res: { tabelas_afetadas?: TabelaAfetadaDTO[] }): boolean {
+    return (res?.tabelas_afetadas?.length ?? 0) > 0;
+  }
+
+  private finalizarSemSincronizar(opId: string, onFinished?: () => void): void {
+    this.operations.completeSync(opId, { tabelas_afetadas: [], errors: [] });
+    onFinished?.();
+  }
+
   private expandContexts(
     context: SyncDiagramContext,
     options?: { silent?: boolean }
@@ -161,10 +194,15 @@ export class SyncDiagramActionsService {
 
   addToQueue(context: SyncDiagramContext, mode: SyncDiagramMode): void {
     if (!this.guardCanEnqueue(context, mode)) return;
-    const item = this.queue.enqueue(context, mode);
-    if (item) {
-      this.state.spawnQueuedOperation(item.id, mode, context);
-    }
+    this.queue.enqueue(context, mode).subscribe((item) => {
+      if (item) {
+        this.state.spawnQueuedOperation(item.id, mode, context);
+      }
+    });
+  }
+
+  loadQueueState(): void {
+    this.queue.refresh().subscribe((items) => this.applyQueueItemsToDiagram(items));
   }
 
   canEnqueue(context: SyncDiagramContext, mode: SyncDiagramMode): boolean {
@@ -181,90 +219,128 @@ export class SyncDiagramActionsService {
 
   runQueue(): void {
     if (!this.guardCanStartSync()) return;
+    if (this.queue.runnerActive()) return;
     this.queueRunActive = true;
-    this.drainQueue();
-  }
-
-  drainQueue(): void {
-    if (!this.queueRunActive) return;
-    if (this.batchActive || this.operations.hasRunningOperation()) return;
-
-    const items = this.queue.items();
-    if (!items.length) {
-      this.queueRunActive = false;
-      return;
-    }
-
-    const item = items[0];
-    this.queue.remove(item.id);
-    this.processQueueItem(item);
+    this.queue.startRunner().subscribe({
+      next: () => {
+        this.queue.pollUntilIdle().subscribe({
+          next: ({ items, currentItemId }) =>
+            this.applyQueueItemsToDiagram(items, currentItemId),
+          error: () => {
+            this.queueRunActive = false;
+          },
+          complete: () => {
+            this.queueRunActive = false;
+            this.queue.refresh().subscribe((items) => this.applyQueueItemsToDiagram(items));
+          },
+        });
+      },
+      error: () => {
+        this.queueRunActive = false;
+      },
+    });
   }
 
   removeFromQueue(id: string): void {
-    this.state.removeOperationByQueueItemId(id);
-    this.queue.remove(id);
+    this.queue.remove(id).subscribe(() => {
+      this.state.removeOperationByQueueItemId(id);
+    });
   }
 
   clearQueue(): void {
-    for (const item of this.queue.items()) {
+    for (const item of this.queue.pendingItems()) {
       this.state.removeOperationByQueueItemId(item.id);
     }
-    this.queue.clear();
+    this.queue.clear().subscribe();
     this.queueRunActive = false;
+  }
+
+  private applyQueueItemsToDiagram(
+    items: SyncQueueItem[],
+    currentItemId?: string | null
+  ): void {
+    for (const item of items) {
+      if (item.status === 'PENDING') {
+        const existing = this.state.findOperationByQueueItemId(item.id);
+        if (!existing) {
+          this.state.spawnQueuedOperation(item.id, item.mode, item.context);
+        }
+      }
+      this.syncOperationCardFromQueueItem(item);
+    }
+    if (currentItemId) {
+      this.trackRunningQueueItem(currentItemId, items);
+    }
+  }
+
+  private trackRunningQueueItem(currentItemId: string, items: SyncQueueItem[]): void {
+    const item = items.find((entry) => entry.id === currentItemId);
+    if (!item) return;
+
+    const op =
+      this.state.findOperationByQueueItemId(item.id) ??
+      this.state.findOperationByScope(item.context, item.mode);
+    if (!op) return;
+
+    this.state.patchOperation(op.id, {
+      phase: 'sincronizando',
+      queueItemId: item.id,
+      progress: op.phase === 'sincronizando' ? op.progress : 0,
+    });
+    this.operations.trackQueueProgress(op.id);
+  }
+
+  private syncOperationCardFromQueueItem(item: SyncQueueItem): void {
+    const op =
+      this.state.findOperationByQueueItemId(item.id) ??
+      this.state.findOperationByScope(item.context, item.mode);
+    if (!op || !item.status) return;
+
+    switch (item.status) {
+      case 'PENDING':
+        this.state.patchOperation(op.id, {
+          phase: 'aguardando',
+          queueItemId: item.id,
+          progress: 0,
+        });
+        break;
+      case 'RUNNING':
+        this.state.patchOperation(op.id, {
+          phase: 'sincronizando',
+          queueItemId: item.id,
+          progress: op.phase === 'sincronizando' ? op.progress : 0,
+        });
+        this.operations.trackQueueProgress(op.id);
+        break;
+      case 'DONE':
+        this.operations.releaseQueueProgress(op.id);
+        this.state.patchOperation(op.id, {
+          phase: 'concluido',
+          progress: 100,
+          queueItemId: undefined,
+          errors: undefined,
+        });
+        break;
+      case 'ERROR':
+        this.operations.releaseQueueProgress(op.id);
+        this.state.patchOperation(op.id, {
+          phase: 'erro',
+          progress: 0,
+          queueItemId: undefined,
+          errors: [item.errorMessage ?? 'Falha ao processar item da fila'],
+        });
+        break;
+    }
   }
 
   private handleOperationIdle(): void {
     if (this.batchActive && !this.operations.hasRunningOperation()) {
       this.batchActive = false;
     }
-    if (this.queueRunActive && !this.operations.hasRunningOperation()) {
-      this.drainQueue();
-    }
   }
 
   private finishBatch(): void {
     this.batchActive = false;
-  }
-
-  private finishBatchAndDrain(): void {
-    if (!this.queueRunActive) {
-      this.batchActive = false;
-      return;
-    }
-    this.batchActive = false;
-    this.drainQueue();
-  }
-
-  private processQueueItem(item: SyncQueueItem): void {
-    const contexts = this.expandContexts(item.context, { silent: true });
-    if (!contexts.length) {
-      this.drainQueue();
-      return;
-    }
-
-    const base = contexts[0].base;
-    const esquema = contexts[0].esquema;
-    if (!base || !esquema) {
-      this.drainQueue();
-      return;
-    }
-
-    this.batchActive = true;
-
-    this.baseService.findAll(`sincronizacao/verificaesquema/${base}/${esquema}`).subscribe({
-      next: () => {
-        this.runSequentialVerifySync(contexts, item.mode, 0, () => this.finishBatchAndDrain());
-      },
-      error: () => {
-        this.batchActive = false;
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Fila · conexão indisponível',
-          detail: `Não foi possível validar ${item.label}. Próximo item da fila será processado.`,
-        });
-        this.drainQueue();
-      },
-    });
   }
 
   private runSequentialVerifySync(
@@ -330,6 +406,15 @@ export class SyncDiagramActionsService {
         severity: 'warn',
         summary: 'Conexão não configurada',
         detail: 'Configure uma conexão padrão em Conexões antes de sincronizar.',
+      });
+      return false;
+    }
+
+    if (this.queue.runnerActive()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Fila em execução',
+        detail: 'Aguarde o processamento da fila no servidor.',
       });
       return false;
     }
@@ -526,9 +611,14 @@ export class SyncDiagramActionsService {
     this.baseService.findAll(`estrutura/verificar/${base}/${esquema}/${tabelaParam}`).subscribe({
       next: (res) => {
         if (this.resolveCancelledFromResponse(opId, res, onFinished)) return;
-        this.operations.completeVerificar(opId, 'estrutura', res as EstruturaResponse);
+        const estrutura = res as EstruturaResponse;
+        this.operations.completeVerificar(opId, 'estrutura', estrutura);
         if (this.isOperationCancelled(opId)) {
           onFinished?.();
+          return;
+        }
+        if (!this.estruturaTemPendencias(estrutura)) {
+          this.finalizarSemSincronizar(opId, onFinished);
           return;
         }
         this.operations.beginSyncPhase(opId);
@@ -574,7 +664,7 @@ export class SyncDiagramActionsService {
       this.operations.beginSyncPhase(opId);
     }
 
-    this.baseService.findAll(`estrutura/${base}/${esquema}`).subscribe({
+    this.baseService.findAll(this.syncEstruturaEndpoint(base, esquema, context)).subscribe({
       next: (res: { errors?: string[]; tabelas_afetadas?: TabelaAfetadaDTO[]; message?: string }) => {
         if (this.resolveCancelledFromResponse(opId!, res, onFinished)) return;
         if (res?.errors?.length) {
@@ -672,9 +762,14 @@ export class SyncDiagramActionsService {
     this.baseService.findAll(`dados/verificar/${base}/${esquema}/${tabelaParam}`).subscribe({
       next: (res) => {
         if (this.resolveCancelledFromResponse(opId, res, onFinished)) return;
-        this.operations.completeVerificar(opId, 'dados', res as { tabelas_afetadas?: TabelaAfetadaDTO[] });
+        const dados = res as { tabelas_afetadas?: TabelaAfetadaDTO[] };
+        this.operations.completeVerificar(opId, 'dados', dados);
         if (this.isOperationCancelled(opId)) {
           onFinished?.();
+          return;
+        }
+        if (!this.dadosTemPendencias(dados)) {
+          this.finalizarSemSincronizar(opId, onFinished);
           return;
         }
         this.operations.beginSyncPhase(opId);
@@ -720,7 +815,7 @@ export class SyncDiagramActionsService {
       this.operations.beginSyncPhase(opId);
     }
 
-    this.baseService.findAll(`dados/${base}/${esquema}`).subscribe({
+    this.baseService.findAll(this.syncDadosEndpoint(base, esquema, context)).subscribe({
       next: (res: { errors?: string[]; tabelas_afetadas?: TabelaAfetadaDTO[]; message?: string }) => {
         if (this.resolveCancelledFromResponse(opId!, res, onFinished)) return;
         if (res?.errors?.length) {

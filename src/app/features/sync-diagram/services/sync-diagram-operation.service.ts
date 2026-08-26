@@ -36,6 +36,19 @@ export class SyncDiagramOperationService implements OnDestroy {
 
   constructor() {
     this.wsBridgeSub = this.ws.progresso$.subscribe((payload) => {
+      const mensagem = String(payload?.mensagem ?? '').toLowerCase();
+      const status = String(payload?.status ?? '');
+      if (
+        status.localeCompare('Concluído', undefined, { sensitivity: 'accent' }) === 0 &&
+        mensagem.includes('verificação')
+      ) {
+        this.progressoSync.updateProgresso({
+          ...payload,
+          status: 'Processando',
+          progresso: payload?.progresso ?? 0,
+        });
+        return;
+      }
       this.progressoSync.updateProgresso(payload);
     });
   }
@@ -276,6 +289,19 @@ export class SyncDiagramOperationService implements OnDestroy {
     this.dismissOperation(operationId);
   }
 
+  trackQueueProgress(operationId: string): void {
+    if (this.activeOperationId === operationId) {
+      return;
+    }
+    this.trackOperation(operationId);
+  }
+
+  releaseQueueProgress(operationId: string): void {
+    if (this.activeOperationId === operationId) {
+      this.releaseOperationTracking();
+    }
+  }
+
   private loadErdGraph(operationId: string): void {
     const op = this.state.getOperation(operationId);
     if (!op?.detailOpen) return;
@@ -403,6 +429,9 @@ export class SyncDiagramOperationService implements OnDestroy {
         }
 
         if (status === 'CONCLUIDO') {
+          if (op.phase === 'sincronizando') {
+            return;
+          }
           patch.progress = 100;
         }
 
