@@ -1,123 +1,80 @@
-<nav class="actions-rail" aria-label="Ações de sincronização">
-  <div class="actions-rail-pill" aria-label="Modo">
-    <button
-      type="button"
-      class="rail-btn rail-accent-violet"
-      [class.is-active]="isEstrutura()"
-      pTooltip="Modo estrutura — compara e sincroniza DDL (tabelas, colunas, índices e FKs)"
-      tooltipPosition="right"
-      aria-label="Modo estrutura"
-      (click)="selectMode('estrutura')"
-    >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <path d="M4 7h16M4 12h10M4 17h6" stroke-linecap="round" />
-      </svg>
-    </button>
+<nav class="actions-palette" aria-label="Ações de sincronização">
+  <button
+    type="button"
+    class="rail-btn rail-accent-violet"
+    [class.is-active]="isEstrutura()"
+    pTooltip="Modo estrutura — compara e sincroniza DDL (tabelas, colunas, índices e FKs)"
+    tooltipPosition="right"
+    aria-label="Modo estrutura"
+    (click)="selectMode('estrutura')"
+  >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path d="M4 7h16M4 12h10M4 17h6" stroke-linecap="round" />
+    </svg>
+  </button>
 
-    <button
-      type="button"
-      class="rail-btn rail-accent-cyan"
-      [class.is-active]="isDados()"
-      pTooltip="Modo dados — compara e sincroniza linhas (inserções e atualizações)"
-      tooltipPosition="right"
-      aria-label="Modo dados"
-      (click)="selectMode('dados')"
-    >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <rect x="5" y="5" width="14" height="14" rx="2" />
-        <path d="M5 10h14M10 5v14" stroke-linecap="round" />
-      </svg>
-    </button>
-  </div>
+  <button
+    type="button"
+    class="rail-btn rail-accent-cyan"
+    [class.is-active]="isDados()"
+    pTooltip="Modo dados — compara e sincroniza linhas (inserções e atualizações)"
+    tooltipPosition="right"
+    aria-label="Modo dados"
+    (click)="selectMode('dados')"
+  >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <rect x="5" y="5" width="14" height="14" rx="2" />
+      <path d="M5 10h14M10 5v14" stroke-linecap="round" />
+    </svg>
+  </button>
 
-  <div class="actions-rail-pill actions-rail-pill-sync" aria-label="Verificar e sincronizar">
-    <button
-      type="button"
-      class="rail-btn rail-accent-primary"
-      pTooltip="Verificar diferenças e sincronizar (schema inteiro ou tabelas marcadas)"
-      tooltipPosition="right"
-      [attr.aria-label]="'Verificar e sincronizar · ' + scopeLabel"
-      [disabled]="!hasSelection || running"
-      (click)="sincronizarSelecao.emit()"
-    >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <path d="M7 7h10v10H7z" stroke-linejoin="round" />
-        <path d="M4 12h3M17 12h3M12 4v3M12 17v3" stroke-linecap="round" />
-      </svg>
-    </button>
-  </div>
+  <span class="rail-divider" aria-hidden="true"></span>
 
-  <div class="actions-rail-pill" aria-label="Utilitários">
-    <button
-      type="button"
-      class="rail-btn rail-accent-violet"
-      pTooltip="Recolher um nível (tabelas → schema → base)"
-      tooltipPosition="right"
-      aria-label="Recolher nível"
-      [disabled]="!canRecolher"
-      (click)="recolher.emit()"
-    >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <path d="M8 6l-4 4 4 4" stroke-linecap="round" stroke-linejoin="round" />
-        <path d="M4 10h12a4 4 0 0 1 0 8H8" stroke-linecap="round" />
-      </svg>
-    </button>
+  <button
+    type="button"
+    class="rail-btn rail-accent-primary"
+    pTooltip="Verificar diferenças e sincronizar (schema inteiro ou tabelas marcadas)"
+    tooltipPosition="right"
+    [attr.aria-label]="'Verificar e sincronizar · ' + scopeLabel"
+    [disabled]="!hasSelection || running"
+    (click)="sincronizarSelecao.emit()"
+  >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path d="M7 7h10v10H7z" stroke-linejoin="round" />
+      <path d="M4 12h3M17 12h3M12 4v3M12 17v3" stroke-linecap="round" />
+    </svg>
+  </button>
 
-    <button
-      *ngIf="running"
-      type="button"
-      class="rail-btn rail-accent-red"
-      pTooltip="Cancelar a operação em andamento"
-      tooltipPosition="right"
-      aria-label="Cancelar operação"
-      (click)="cancelar.emit()"
-    >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <circle cx="12" cy="12" r="8" />
-        <path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round" />
-      </svg>
-    </button>
+  <span class="rail-divider" aria-hidden="true"></span>
 
-    <button
-      type="button"
-      class="rail-btn rail-accent-green"
-      pTooltip="Organizar automaticamente os nós do diagrama"
-      tooltipPosition="right"
-      aria-label="Organizar automaticamente"
-      (click)="autoLayout.emit()"
-    >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <rect x="3" y="3" width="7" height="7" rx="1" />
-        <rect x="14" y="3" width="7" height="7" rx="1" />
-        <rect x="3" y="14" width="7" height="7" rx="1" />
-        <rect x="14" y="14" width="7" height="7" rx="1" />
-      </svg>
-    </button>
+  <button
+    type="button"
+    class="rail-btn rail-accent-violet"
+    pTooltip="Recolher um nível (tabelas → schema → base)"
+    tooltipPosition="right"
+    aria-label="Recolher nível"
+    [disabled]="!canRecolher"
+    (click)="recolher.emit()"
+  >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path d="M8 6l-4 4 4 4" stroke-linecap="round" stroke-linejoin="round" />
+      <path d="M4 10h12a4 4 0 0 1 0 8H8" stroke-linecap="round" />
+    </svg>
+  </button>
 
-    <button
-      type="button"
-      class="rail-btn rail-accent-amber"
-      [pTooltip]="themeService.isDark() ? 'Alternar para tema claro' : 'Alternar para tema escuro'"
-      tooltipPosition="right"
-      [attr.aria-label]="themeService.isDark() ? 'Alternar para tema claro' : 'Alternar para tema escuro'"
-      (click)="themeService.toggle()"
-    >
-      <svg
-        *ngIf="themeService.isDark(); else moonIcon"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        aria-hidden="true"
-      >
-        <circle cx="12" cy="12" r="4" />
-        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke-linecap="round" />
-      </svg>
-      <ng-template #moonIcon>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M21 14.5A7.5 7.5 0 0 1 9.5 3a6 6 0 1 0 11.8 11.5z" stroke-linejoin="round" />
-        </svg>
-      </ng-template>
-    </button>
-  </div>
+  <button
+    type="button"
+    class="rail-btn rail-accent-green"
+    pTooltip="Organizar automaticamente os nós do diagrama"
+    tooltipPosition="right"
+    aria-label="Organizar automaticamente"
+    (click)="autoLayout.emit()"
+  >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
+    </svg>
+  </button>
 </nav>

@@ -18,6 +18,7 @@ import {
   SyncDiagramMode,
   SyncDiagramNodeData,
   OperationActionKind,
+  operationScopeKey,
   SyncOperation,
   TableVisualStatus,
   TabelaAfetadaDTO,
@@ -31,6 +32,7 @@ const DEFAULT_POSITIONS: Record<string, DiagramFlowPoint> = {
 
 const HORIZONTAL_GAP = 420;
 const OPERATION_GAP = 420;
+const OPERATION_VERTICAL_GAP = 300;
 const ERD_ORIGIN_OFFSET_X = 360;
 const FLOW_CARD_WIDTH = 260;
 const FLOW_CARD_CENTER_Y = 120;
@@ -138,6 +140,38 @@ export class SyncDiagramStateService {
     this.persistSoon();
   }
 
+  findOperationByScope(context: SyncDiagramContext, mode: SyncDiagramMode): SyncOperation | undefined {
+    const key = operationScopeKey(context, mode);
+    return this.operations().find(
+      (op) => operationScopeKey(op.context, op.mode) === key
+    );
+  }
+
+  isOperationRunning(op: SyncOperation): boolean {
+    return op.phase === 'verificando' || op.phase === 'sincronizando';
+  }
+
+  reuseOperation(operationId: string, operation: Omit<SyncOperation, 'id'>): void {
+    this.clearErdForOperation(operationId);
+    this.activeOperationId = operationId;
+    this.closeAllOperationDetails(operationId);
+    const fresh: SyncOperation = {
+      id: operationId,
+      mode: operation.mode,
+      action: operation.action,
+      context: { ...operation.context },
+      phase: operation.phase,
+      progress: operation.progress,
+      label: operation.label,
+      detailOpen: true,
+      errorsExpanded: false,
+    };
+    this.operations.update((list) =>
+      list.map((o) => (o.id === operationId ? fresh : o))
+    );
+    this.rebuildGraph();
+  }
+
   spawnOperation(operation: SyncOperation): void {
     this.operations.update((list) => {
       const without = list.filter((o) => o.id !== operation.id);
@@ -147,13 +181,24 @@ export class SyncDiagramStateService {
     this.closeAllOperationDetails(operation.id);
     const opNodeId = this.operationNodeId(operation.id);
     const anchor = this.lastSelectorNodeId();
-    let anchorPos = this.positions.get(anchor) ?? DEFAULT_POSITIONS[anchor] ?? { x: 80, y: 100 };
+    const selectorPos =
+      this.positions.get(anchor) ?? DEFAULT_POSITIONS[anchor] ?? { x: 80, y: 100 };
     const priorOps = this.operations().filter((o) => o.id !== operation.id);
+
+    let x = selectorPos.x + OPERATION_GAP;
+    let y = selectorPos.y;
+
     if (priorOps.length > 0) {
-      const lastOpPos = this.positions.get(this.operationNodeId(priorOps[priorOps.length - 1].id));
-      if (lastOpPos) anchorPos = lastOpPos;
+      const lastOpPos = this.positions.get(
+        this.operationNodeId(priorOps[priorOps.length - 1].id)
+      );
+      if (lastOpPos) {
+        x = lastOpPos.x;
+        y = lastOpPos.y + OPERATION_VERTICAL_GAP;
+      }
     }
-    this.positions.set(opNodeId, { x: anchorPos.x + OPERATION_GAP, y: anchorPos.y });
+
+    this.positions.set(opNodeId, { x, y });
     this.rebuildGraph();
   }
 
@@ -177,12 +222,15 @@ export class SyncDiagramStateService {
       });
     }
 
-    let anchorPos = this.positions.get(this.lastSelectorNodeId()) ?? { ...basesPos };
+    const selectorPos = this.positions.get(this.lastSelectorNodeId()) ?? { ...basesPos };
+    const opColumnX = selectorPos.x + OPERATION_GAP;
+    let opY = selectorPos.y;
 
     for (const op of this.operations()) {
       const opNodeId = this.operationNodeId(op.id);
-      anchorPos = { x: anchorPos.x + OPERATION_GAP, y: anchorPos.y };
+      const anchorPos = { x: opColumnX, y: opY };
       this.positions.set(opNodeId, { ...anchorPos });
+      opY += OPERATION_VERTICAL_GAP;
 
       if (op.detailOpen) {
         const erdTables = this.erdTablesForOperation(op.id);

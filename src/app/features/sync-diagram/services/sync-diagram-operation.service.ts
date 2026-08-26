@@ -41,12 +41,38 @@ export class SyncDiagramOperationService implements OnDestroy {
     this.wsBridgeSub?.unsubscribe();
   }
 
-  createOperation(
+  createOrReuseOperation(
     mode: SyncDiagramMode,
     action: OperationActionKind,
     context: SyncDiagramContext
-  ): string {
+  ): string | null {
+    const existing = this.state.findOperationByScope(context, mode);
+    if (existing && this.state.isOperationRunning(existing)) {
+      return null;
+    }
+
+    const operationPayload = this.buildOperationPayload(mode, action, context);
+
+    if (existing) {
+      this.state.reuseOperation(existing.id, operationPayload);
+      this.trackOperation(existing.id);
+      this.loadErdGraph(existing.id);
+      return existing.id;
+    }
+
     const id = `op-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const operation: SyncOperation = { ...operationPayload, id };
+    this.state.spawnOperation(operation);
+    this.trackOperation(id);
+    this.loadErdGraph(id);
+    return id;
+  }
+
+  private buildOperationPayload(
+    mode: SyncDiagramMode,
+    action: OperationActionKind,
+    context: SyncDiagramContext
+  ): Omit<SyncOperation, 'id'> {
     const scope = this.formatScope(context);
     const actionLabel =
       action === 'verificar'
@@ -56,8 +82,7 @@ export class SyncDiagramOperationService implements OnDestroy {
           : 'Verificar + sync';
     const modeLabel = mode === 'estrutura' ? 'estrutura' : 'dados';
 
-    const operation: SyncOperation = {
-      id,
+    return {
       mode,
       action,
       context: { ...context },
@@ -65,12 +90,12 @@ export class SyncDiagramOperationService implements OnDestroy {
       progress: 0,
       label: `${actionLabel} ${modeLabel} · ${scope}`,
       detailOpen: true,
+      errorsExpanded: false,
+      estruturaResponse: undefined,
+      tabelasAfetadas: undefined,
+      errors: undefined,
+      tabelaAtual: undefined,
     };
-
-    this.state.spawnOperation(operation);
-    this.trackOperation(id);
-    this.loadErdGraph(id);
-    return id;
   }
 
   beginSyncPhase(operationId: string): void {
@@ -335,7 +360,9 @@ export class SyncDiagramOperationService implements OnDestroy {
     const parts: string[] = [];
     if (context.base) parts.push(context.base);
     if (context.esquema) parts.push(context.esquema);
-    if (context.tabela) parts.push(context.tabela);
+    const tabela =
+      context.tabela ?? (context.tabelas?.length === 1 ? context.tabelas[0] : undefined);
+    if (tabela) parts.push(tabela);
     return parts.join('.') || '—';
   }
 

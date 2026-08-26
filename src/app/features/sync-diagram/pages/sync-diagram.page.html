@@ -1,22 +1,24 @@
-<div
-  class="sync-diagram-page"
-  [class.sync-diagram-canvas-theme-dark]="theme.isDark()"
-  [class.sync-diagram-canvas-theme-light]="theme.isLight()"
->
-  <div class="sync-diagram-main">
-    <app-sync-diagram-canvas>
-      <app-sync-diagram-actions-panel
-        [mode]="state.syncMode()"
-        [scopeLabel]="scopeLabel()"
-        [hasSelection]="breadcrumbParts().length > 0"
-        [running]="hasRunningOperation()"
-        [canRecolher]="canRecolher()"
-        (modeChange)="setMode($event)"
-        (sincronizarSelecao)="sincronizarSelecao()"
-        (recolher)="recolherNivel()"
-        (cancelar)="cancelarOperacao()"
-        (autoLayout)="organizarCanvas()"
-      />
-    </app-sync-diagram-canvas>
-  </div>
-</div>
+<div
+  class="sync-diagram-page"
+  [class.sync-diagram-canvas-theme-dark]="theme.isDark()"
+  [class.sync-diagram-canvas-theme-light]="theme.isLight()"
+>
+  <div class="sync-diagram-main">
+    <app-sync-diagram-canvas
+      [running]="hasRunningOperation()"
+      (cancelar)="cancelarOperacao()"
+    >
+      <app-sync-diagram-actions-panel
+        [mode]="state.syncMode()"
+        [scopeLabel]="scopeLabel()"
+        [hasSelection]="breadcrumbParts().length > 0"
+        [running]="hasRunningOperation()"
+        [canRecolher]="canRecolher()"
+        (modeChange)="setMode($event)"
+        (sincronizarSelecao)="sincronizarSelecao()"
+        (recolher)="recolherNivel()"
+        (autoLayout)="organizarCanvas()"
+      />
+    </app-sync-diagram-canvas>
+  </div>
+</div>

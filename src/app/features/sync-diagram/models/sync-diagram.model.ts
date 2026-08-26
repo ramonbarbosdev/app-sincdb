@@ -58,6 +58,18 @@ export interface SyncDiagramContext {
   tabelas?: string[];
 }
 
+/** Chave única de escopo para reuso de caixa de operação (base + schema + modo + tabela opcional). */
+export function operationScopeKey(context: SyncDiagramContext, mode: SyncDiagramMode): string {
+  const base = context.base ?? '';
+  const esquema = context.esquema ?? '';
+  const tabela =
+    context.tabela ?? (context.tabelas?.length === 1 ? context.tabelas[0] : '');
+  if (tabela) {
+    return `${base}|${esquema}|${tabela}|${mode}`;
+  }
+  return `${base}|${esquema}|${mode}`;
+}
+
 export interface SyncDiagramNodeData {
   nodeId: string;
   kind: SyncDiagramKind;

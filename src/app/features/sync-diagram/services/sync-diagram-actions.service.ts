@@ -122,6 +122,33 @@ export class SyncDiagramActionsService {
     return this.state.getOperation(opId)?.phase === 'cancelado';
   }
 
+  private warnOperationInProgress(context: SyncDiagramContext, mode: SyncDiagramMode): void {
+    const parts: string[] = [];
+    if (context.base) parts.push(context.base);
+    if (context.esquema) parts.push(context.esquema);
+    const tabela =
+      context.tabela ?? (context.tabelas?.length === 1 ? context.tabelas[0] : undefined);
+    if (tabela) parts.push(tabela);
+    const scope = parts.join('.') || 'seleção atual';
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'Operação em andamento',
+      detail: `Já existe uma operação de ${mode} em execução para ${scope}. Aguarde ou cancele antes de iniciar outra.`,
+    });
+  }
+
+  private startOperation(
+    mode: SyncDiagramMode,
+    action: OperationActionKind,
+    context: SyncDiagramContext
+  ): string | null {
+    const opId = this.operations.createOrReuseOperation(mode, action, context);
+    if (!opId) {
+      this.warnOperationInProgress(context, mode);
+    }
+    return opId;
+  }
+
   private resolveCancelledFromResponse(opId: string, res: unknown): boolean {
     if (this.isOperationCancelled(opId)) return true;
     if (this.isCancelResponse(res)) {
@@ -138,7 +165,8 @@ export class SyncDiagramActionsService {
     const tabelaParam = this.resolveTabelaParam(context);
     if (!base || !esquema || !tabelaParam) return;
 
-    const opId = this.operations.createOperation('estrutura', 'verificar', context);
+    const opId = this.startOperation('estrutura', 'verificar', context);
+    if (!opId) return;
     this.progressoSync.iniciarGenericoProgressoLocal();
 
     this.baseService.findAll(`sincronizacao/verificaesquema/${base}/${esquema}`).subscribe({
@@ -176,7 +204,8 @@ export class SyncDiagramActionsService {
     const tabelaParam = this.resolveTabelaParam(context);
     if (!base || !esquema || !tabelaParam) return;
 
-    const opId = this.operations.createOperation('estrutura', 'verificar-sync', context);
+    const opId = this.startOperation('estrutura', 'verificar-sync', context);
+    if (!opId) return;
     this.progressoSync.iniciarGenericoProgressoLocal();
 
     this.baseService.findAll(`estrutura/verificar/${base}/${esquema}/${tabelaParam}`).subscribe({
@@ -209,8 +238,12 @@ export class SyncDiagramActionsService {
       return;
     }
 
-    const opId =
-      existingOpId ?? this.operations.createOperation('estrutura', 'sincronizar', context);
+    let opId: string | undefined = existingOpId;
+    if (!opId) {
+      const created = this.startOperation('estrutura', 'sincronizar', context);
+      if (!created) return;
+      opId = created;
+    }
 
     if (!jaIniciado) {
       this.progressoSync.iniciarGenericoProgressoLocal();
@@ -248,7 +281,8 @@ export class SyncDiagramActionsService {
     const tabelaParam = this.resolveTabelaParam(context);
     if (!base || !esquema || !tabelaParam) return;
 
-    const opId = this.operations.createOperation('dados', 'verificar', context);
+    const opId = this.startOperation('dados', 'verificar', context);
+    if (!opId) return;
     this.progressoSync.iniciarGenericoProgressoLocal();
 
     this.baseService.findAll(`sincronizacao/verificaesquema/${base}/${esquema}`).subscribe({
@@ -286,7 +320,8 @@ export class SyncDiagramActionsService {
     const tabelaParam = this.resolveTabelaParam(context);
     if (!base || !esquema || !tabelaParam) return;
 
-    const opId = this.operations.createOperation('dados', 'verificar-sync', context);
+    const opId = this.startOperation('dados', 'verificar-sync', context);
+    if (!opId) return;
     this.progressoSync.iniciarGenericoProgressoLocal();
 
     this.baseService.findAll(`dados/verificar/${base}/${esquema}/${tabelaParam}`).subscribe({
@@ -319,8 +354,12 @@ export class SyncDiagramActionsService {
       return;
     }
 
-    const opId =
-      existingOpId ?? this.operations.createOperation('dados', 'sincronizar', context);
+    let opId: string | undefined = existingOpId;
+    if (!opId) {
+      const created = this.startOperation('dados', 'sincronizar', context);
+      if (!created) return;
+      opId = created;
+    }
 
     if (!jaIniciado) {
       this.progressoSync.iniciarGenericoProgressoLocal();

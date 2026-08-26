@@ -7,7 +7,8 @@ import {
   provideFFlow,
 } from '@foblex/flow';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject, signal, viewChild } from '@angular/core';
+import { TooltipModule } from 'primeng/tooltip';
 import {
   SyncDiagramAction,
   SyncDiagramNodeData,
@@ -16,6 +17,7 @@ import { SyncDiagramActionsService } from '../../services/sync-diagram-actions.s
 import { SyncDiagramCameraService } from '../../services/sync-diagram-camera.service';
 import { SyncDiagramOperationService } from '../../services/sync-diagram-operation.service';
 import { SyncDiagramStateService } from '../../services/sync-diagram-state.service';
+import { SyncDiagramThemeService } from '../../services/sync-diagram-theme.service';
 import { SyncDiagramNodeCardComponent } from '../sync-diagram-node-card/sync-diagram-node-card.component';
 import { SyncErdTableNodeComponent } from '../sync-erd-table-node/sync-erd-table-node.component';
 import { SyncOperationNodeCardComponent } from '../sync-operation-node-card/sync-operation-node-card.component';
@@ -27,6 +29,7 @@ import { SyncOperationNodeCardComponent } from '../sync-operation-node-card/sync
   imports: [
     CommonModule,
     FFlowModule,
+    TooltipModule,
     SyncDiagramNodeCardComponent,
     SyncOperationNodeCardComponent,
     SyncErdTableNodeComponent,
@@ -37,11 +40,15 @@ import { SyncOperationNodeCardComponent } from '../sync-operation-node-card/sync
 })
 export class SyncDiagramCanvasComponent {
   readonly state = inject(SyncDiagramStateService);
+  readonly themeService = inject(SyncDiagramThemeService);
   private operations = inject(SyncDiagramOperationService);
   private actions = inject(SyncDiagramActionsService);
   private camera = inject(SyncDiagramCameraService);
   private canvas = viewChild(FCanvasComponent);
   private zoom = viewChild(FZoomDirective);
+
+  @Input() running = false;
+  @Output() cancelar = new EventEmitter<void>();
 
   readonly connectionType = EFConnectionType.SEGMENT;
   readonly zoomLevel = signal(100);

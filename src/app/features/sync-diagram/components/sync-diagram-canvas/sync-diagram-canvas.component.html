@@ -108,16 +108,97 @@
         <f-minimap [fMinSize]="56" />
       </div>
     </f-flow>
-
-    <nav class="canvas-toolbar" *ngIf="!state.loadingInitial()" aria-label="Controles de zoom">
-      <button type="button" class="tb-btn" title="Diminuir zoom" (click)="zoomOut()">−</button>
-      <span class="tb-zoom">{{ zoomLevel() }}%</span>
-      <button type="button" class="tb-btn" title="Aumentar zoom" (click)="zoomIn()">+</button>
-      <span class="tb-sep" aria-hidden="true"></span>
-      <button type="button" class="tb-btn" title="Enquadrar diagrama" (click)="fitView()">⊡</button>
-      <button type="button" class="tb-btn tb-label" title="Zoom 100%" (click)="resetView()">1:1</button>
-    </nav>
   </div>
+
+  <nav
+    class="canvas-toolbar"
+    *ngIf="!state.loadingInitial()"
+    aria-label="Controles do diagrama"
+  >
+    <button
+      type="button"
+      class="tb-btn"
+      pTooltip="Diminuir zoom"
+      tooltipPosition="bottom"
+      (click)="zoomOut()"
+    >
+      −
+    </button>
+    <span class="tb-zoom">{{ zoomLevel() }}%</span>
+    <button
+      type="button"
+      class="tb-btn"
+      pTooltip="Aumentar zoom"
+      tooltipPosition="bottom"
+      (click)="zoomIn()"
+    >
+      +
+    </button>
+    <span class="tb-sep" aria-hidden="true"></span>
+    <button
+      type="button"
+      class="tb-btn"
+      pTooltip="Enquadrar diagrama"
+      tooltipPosition="bottom"
+      (click)="fitView()"
+    >
+      ⊡
+    </button>
+    <button
+      type="button"
+      class="tb-btn tb-label"
+      pTooltip="Zoom 100%"
+      tooltipPosition="bottom"
+      (click)="resetView()"
+    >
+      1:1
+    </button>
+    <span class="tb-sep" aria-hidden="true"></span>
+    <button
+      type="button"
+      class="tb-btn tb-theme"
+      [pTooltip]="themeService.isDark() ? 'Alternar para tema claro' : 'Alternar para tema escuro'"
+      tooltipPosition="bottom"
+      [attr.aria-label]="themeService.isDark() ? 'Alternar para tema claro' : 'Alternar para tema escuro'"
+      (click)="themeService.toggle()"
+    >
+      <svg
+        *ngIf="themeService.isDark(); else moonIcon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="12" r="4" />
+        <path
+          d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+          stroke-linecap="round"
+        />
+      </svg>
+      <ng-template #moonIcon>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M21 14.5A7.5 7.5 0 0 1 9.5 3a6 6 0 1 0 11.8 11.5z" stroke-linejoin="round" />
+        </svg>
+      </ng-template>
+    </button>
+    <ng-container *ngIf="running">
+      <span class="tb-sep" aria-hidden="true"></span>
+      <button
+        type="button"
+        class="tb-btn tb-cancel"
+        pTooltip="Cancelar operação em andamento"
+        tooltipPosition="bottom"
+        aria-label="Cancelar operação"
+        (click)="cancelar.emit()"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="8" />
+          <path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round" />
+        </svg>
+      </button>
+    </ng-container>
+  </nav>
 
   <div class="canvas-actions-float" *ngIf="!state.loadingInitial()">
     <ng-content />
