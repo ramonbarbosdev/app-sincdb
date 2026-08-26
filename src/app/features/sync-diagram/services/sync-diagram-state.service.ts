@@ -151,18 +151,13 @@ export class SyncDiagramStateService {
 
   reuseOperation(operationId: string, operation: Omit<SyncOperation, 'id'>): void {
     this.clearErdForOperation(operationId);
-    this.activeOperationId = operationId;
-    this.closeAllOperationDetails(operationId);
+    this.closeAllOperationDetails();
     const fresh: SyncOperation = {
       id: operationId,
-      mode: operation.mode,
-      action: operation.action,
-      context: { ...operation.context },
-      phase: operation.phase,
-      progress: operation.progress,
-      label: operation.label,
-      detailOpen: operation.detailOpen,
+      ...operation,
+      detailOpen: false,
       errorsExpanded: false,
+      terminalLogs: operation.terminalLogs ?? [],
     };
     this.operations.update((list) =>
       list.map((o) => (o.id === operationId ? fresh : o))
@@ -176,7 +171,7 @@ export class SyncDiagramStateService {
       return [...without, operation];
     });
     this.activeOperationId = operation.id;
-    this.closeAllOperationDetails(operation.id);
+    this.closeAllOperationDetails();
     const opNodeId = this.operationNodeId(operation.id);
     const anchor = this.lastSelectorNodeId();
     const selectorPos =
@@ -680,10 +675,10 @@ export class SyncDiagramStateService {
 
   private closeAllOperationDetails(exceptId?: string): void {
     this.operations.update((list) =>
-      list.map((o) => ({
-        ...o,
-        detailOpen: exceptId ? o.id === exceptId : false,
-      }))
+      list.map((o) => {
+        if (exceptId && o.id === exceptId) return o;
+        return o.detailOpen ? { ...o, detailOpen: false } : o;
+      })
     );
     if (!exceptId) {
       this.erdTables.clear();

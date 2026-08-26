@@ -1,73 +1,35 @@
 <ng-container *ngIf="operation() as operation">
-  <div
-    class="operation-node-wrap"
-    [class.mode-estrutura]="operation.mode === 'estrutura'"
-    [class.mode-dados]="operation.mode === 'dados'"
-    [class.phase-running]="isRunning()"
-    [class.phase-verificado]="operation.phase === 'verificado'"
-    [class.phase-erro]="operation.phase === 'erro'"
-    [class.phase-concluido]="operation.phase === 'concluido'"
-    [class.phase-cancelado]="operation.phase === 'cancelado'"
-    [class.detail-open]="operation.detailOpen"
-  >
+  <div class="operation-node-wrap" [class.mode-estrutura]="operation.mode === 'estrutura'"
+    [class.mode-dados]="operation.mode === 'dados'" [class.phase-running]="isRunning()"
+    [class.phase-verificado]="operation.phase === 'verificado'" [class.phase-erro]="operation.phase === 'erro'"
+    [class.phase-concluido]="operation.phase === 'concluido'" [class.phase-cancelado]="operation.phase === 'cancelado'"
+    [class.detail-open]="operation.detailOpen">
     <div class="operation-node" [class.is-running]="isRunning()" [class.is-expanded]="operation.detailOpen">
       <header class="operation-header" fDragHandle>
-        <span class="operation-icon" aria-hidden="true">
-          <i class="pi pi-cog"></i>
-        </span>
+
         <div class="operation-titles">
           <strong class="operation-title-line">
-            <span>{{ displayTitle(operation.phase) }}</span>
-            <span
-              class="operation-mode-badge"
-              *ngIf="showsModeLabel(operation.phase)"
-              [attr.title]="modeLabel(operation.mode)"
-              [attr.aria-label]="modeLabel(operation.mode)"
-            >
-              <i class="pi" [class]="modeIcon(operation.mode)" aria-hidden="true"></i>
+            <span class="operation-scope-subtitle">
+              <span class="operation-mode-badge" *ngIf="showsModeLabel(operation.phase)"
+                [attr.title]="modeLabel(operation.mode)" [attr.aria-label]="modeLabel(operation.mode)">
+                <i class="pi" [class]="modeIcon(operation.mode)" aria-hidden="true"></i>
+              </span>
+              {{ scopeSubtitle(operation.context) }} - {{ displayTitle(operation.phase) }}
             </span>
           </strong>
-          <span class="operation-scope-subtitle">{{ scopeSubtitle(operation.context) }}</span>
-          <span
-            class="operation-phase-badge"
-            [class.badge-running]="isRunning()"
-            [class.badge-verificado]="operation.phase === 'verificado'"
-            [class.badge-concluido]="operation.phase === 'concluido'"
-            [class.badge-erro]="operation.phase === 'erro'"
-            [class.badge-cancelado]="operation.phase === 'cancelado'"
-            [attr.title]="phaseLabel(operation.phase)"
-            [attr.aria-label]="phaseLabel(operation.phase)"
-          >
-            <i
-              class="pi"
-              [class]="phaseIcon(operation.phase)"
-              [class.pi-spin]="isRunning()"
-              aria-hidden="true"
-            ></i>
-          </span>
         </div>
-        <button
-          type="button"
-          class="operation-detail-btn"
-          *ngIf="hasDetailContent(operation)"
-          [class.is-open]="operation.detailOpen"
-          title="Registro da operação"
-          aria-label="Ver detalhes da operação"
-          (click)="onToggleDetail($event)"
-        >
+
+
+        <button type="button" class="operation-detail-btn" *ngIf="showRegistroButton(operation)"
+          [class.is-open]="operation.detailOpen" title="Registro da operação" aria-label="Ver detalhes da operação"
+          (click)="onToggleDetail($event)">
           <i class="pi pi-list" aria-hidden="true"></i>
           <span class="detail-error-count" *ngIf="errorCount(operation) > 0">
             {{ errorCount(operation) }}
           </span>
         </button>
-        <button
-          *ngIf="!isRunning()"
-          type="button"
-          class="operation-close-btn"
-          title="Fechar caixa de operação"
-          aria-label="Fechar caixa de operação"
-          (click)="onClose($event)"
-        >
+        <button *ngIf="!isRunning()" type="button" class="operation-close-btn" title="Fechar caixa de operação"
+          aria-label="Fechar caixa de operação" (click)="onClose($event)">
           <i class="pi pi-times" aria-hidden="true"></i>
         </button>
       </header>
@@ -91,23 +53,12 @@
             <span>{{ primaryError() }}</span>
           </p>
           <div class="operation-error-actions">
-            <button
-              type="button"
-              class="op-action-btn op-action-retry"
-              title="Repetir operação"
-              aria-label="Repetir operação"
-              (click)="onRetry($event)"
-            >
+            <button type="button" class="op-action-btn op-action-retry" title="Repetir operação"
+              aria-label="Repetir operação" (click)="onRetry($event)">
               <i class="pi pi-replay" aria-hidden="true"></i>
             </button>
-            <button
-              type="button"
-              class="op-action-btn op-action-details"
-              *ngIf="hasDetailContent(operation)"
-              title="Ver detalhes"
-              aria-label="Ver detalhes da operação"
-              (click)="onOpenDetail($event)"
-            >
+            <button type="button" class="op-action-btn op-action-details" *ngIf="hasDetailContent(operation)"
+              title="Ver detalhes" aria-label="Ver detalhes da operação" (click)="onOpenDetail($event)">
               <i class="pi pi-list" aria-hidden="true"></i>
             </button>
           </div>
@@ -119,20 +70,13 @@
         </p>
       </div>
 
-      <section
-        class="operation-detail-panel"
-        *ngIf="operation.detailOpen"
-        aria-label="Registro da operação"
-      >
+      <section class="operation-detail-panel" *ngIf="operation.detailOpen" aria-label="Registro da operação">
         <header class="operation-detail-header">
           <span class="operation-detail-title">
             <i class="pi pi-list" aria-hidden="true"></i>
           </span>
-          <span
-            class="operation-detail-meta"
-            *ngIf="errorCount(operation) > 0"
-            [attr.title]="errorCount(operation) + ' aviso(s)'"
-          >
+          <span class="operation-detail-meta" *ngIf="errorCount(operation) > 0"
+            [attr.title]="errorCount(operation) + ' aviso(s)'">
             <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
             <span>{{ errorCount(operation) }}</span>
           </span>
@@ -148,23 +92,15 @@
             </li>
           </ul>
 
-          <div
-            class="log-group"
-            *ngFor="let group of logGroups(operation)"
-            [class.has-error]="group.hasError"
-          >
+          <div class="log-group" *ngFor="let group of logGroups(operation)" [class.has-error]="group.hasError">
             <div class="log-group-table" *ngIf="group.table">
               <i class="pi pi-table" aria-hidden="true"></i>
               <span>{{ group.table }}</span>
             </div>
-            <div
-              *ngFor="let line of group.lines"
-              class="log-line"
+            <div *ngFor="let line of group.lines" class="log-line"
               [class.log-error]="line.level === 'error' || isLikelyErrorMessage(line.message)"
-              [class.log-warn]="line.level === 'warn'"
-              [class.log-ok]="line.level === 'ok' || line.level === 'done'"
-              [class.log-info]="line.level === 'info' || line.level === 'skip'"
-            >
+              [class.log-warn]="line.level === 'warn'" [class.log-ok]="line.level === 'ok' || line.level === 'done'"
+              [class.log-info]="line.level === 'info' || line.level === 'skip'">
               <span class="log-tag" *ngIf="line.level !== 'text'" aria-hidden="true">
                 <i class="pi" [class]="logIcon(line.level)"></i>
               </span>
@@ -172,10 +108,7 @@
             </div>
           </div>
 
-          <div
-            class="log-group has-error"
-            *ngFor="let row of tableErrors(operation)"
-          >
+          <div class="log-group has-error" *ngFor="let row of tableErrors(operation)">
             <div class="log-group-table">
               <i class="pi pi-table" aria-hidden="true"></i>
               <span>{{ row.tabela }}</span>
@@ -194,13 +127,8 @@
         </div>
 
         <footer class="operation-detail-footer" *ngIf="operation.phase === 'erro'">
-          <button
-            type="button"
-            class="op-action-btn op-action-retry"
-            title="Repetir operação"
-            aria-label="Repetir operação"
-            (click)="onRetry($event)"
-          >
+          <button type="button" class="op-action-btn op-action-retry" title="Repetir operação"
+            aria-label="Repetir operação" (click)="onRetry($event)">
             <i class="pi pi-replay" aria-hidden="true"></i>
           </button>
         </footer>
@@ -208,13 +136,8 @@
     </div>
 
     <div class="operation-fab-strip" *ngIf="isRunning()">
-      <button
-        type="button"
-        class="fab-btn fab-cancel"
-        title="Cancelar operação"
-        aria-label="Cancelar operação"
-        (click)="onCancel($event)"
-      >
+      <button type="button" class="fab-btn fab-cancel" title="Cancelar operação" aria-label="Cancelar operação"
+        (click)="onCancel($event)">
         <i class="pi pi-times-circle" aria-hidden="true"></i>
       </button>
     </div>

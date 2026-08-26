@@ -236,6 +236,22 @@ export class SyncDiagramOperationService implements OnDestroy {
     this.state.toggleOperationDetail(operationId);
   }
 
+  prepareRetry(operation: SyncOperation): string | null {
+    if (this.state.isOperationRunning(operation)) {
+      return null;
+    }
+    const payload = this.buildOperationPayload(
+      operation.mode,
+      operation.action,
+      operation.context
+    );
+    this.state.reuseOperation(operation.id, payload);
+    this.state.closeOperationDetail(operation.id);
+    this.trackOperation(operation.id);
+    this.ws.emitClearTerminal();
+    return operation.id;
+  }
+
   dismissOperation(operationId: string): void {
     const op = this.state.getOperation(operationId);
     if (!op) return;

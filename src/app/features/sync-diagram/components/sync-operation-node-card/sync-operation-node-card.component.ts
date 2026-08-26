@@ -120,11 +120,14 @@ export class SyncOperationNodeCardComponent {
 
   hasDetailContent(operation: SyncOperation): boolean {
     return (
-      this.isRunning() ||
       (operation.terminalLogs?.length ?? 0) > 0 ||
       (operation.errors?.length ?? 0) > 0 ||
       this.tableErrors(operation).length > 0
     );
+  }
+
+  showRegistroButton(operation: SyncOperation): boolean {
+    return this.isRunning() || this.hasDetailContent(operation);
   }
 
   errorCount(operation: SyncOperation): number {

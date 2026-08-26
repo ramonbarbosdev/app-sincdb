@@ -265,9 +265,12 @@ export class SyncDiagramActionsService {
 
   retryOperation(operation: SyncOperation): void {
     if (!this.guardCanStartSync()) return;
-    const { id, context, mode, action } = operation;
-    this.state.removeOperation(id);
-    this.runOperationAction(mode, action, context);
+    const opId = this.operations.prepareRetry(operation);
+    if (!opId) {
+      this.warnOperationInProgress(operation.context, operation.mode);
+      return;
+    }
+    this.runOperationAction(operation.mode, operation.action, operation.context);
   }
 
   private runOperationAction(
