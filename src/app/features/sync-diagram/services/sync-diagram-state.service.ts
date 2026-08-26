@@ -29,9 +29,9 @@ const DEFAULT_POSITIONS: Record<string, DiagramFlowPoint> = {
   'node-bases': { x: 80, y: 100 },
 };
 
-const HORIZONTAL_GAP = 320;
-const OPERATION_GAP = 320;
-const ERD_ORIGIN_OFFSET_X = 280;
+const HORIZONTAL_GAP = 420;
+const OPERATION_GAP = 420;
+const ERD_ORIGIN_OFFSET_X = 360;
 const FLOW_CARD_WIDTH = 260;
 const FLOW_CARD_CENTER_Y = 120;
 const GRAPH_REBUILD_DELAY_MS = 120;

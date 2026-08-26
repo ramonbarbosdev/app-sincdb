@@ -22,6 +22,11 @@ export interface LayoutBoundsInput {
 const ZONE_PADDING = 48;
 const ZONE_HEADER = 44;
 
+/** Espaçamento padrão da grade ERD (colunas × linhas de tabelas). */
+const ERD_COL_WIDTH = 360;
+const ERD_ROW_HEIGHT = 260;
+const ERD_GRID_COLUMNS = 3;
+
 @Injectable()
 export class SyncDiagramLayoutService {
   readonly tableWidth = 200;
@@ -31,11 +36,11 @@ export class SyncDiagramLayoutService {
   layoutErd(
     nodes: LayoutNodeInput[],
     origin: DiagramFlowPoint,
-    columns = 3
+    columns = ERD_GRID_COLUMNS
   ): Map<string, DiagramFlowPoint> {
     const positions = new Map<string, DiagramFlowPoint>();
-    const colWidth = 300;
-    const rowHeight = 200;
+    const colWidth = ERD_COL_WIDTH;
+    const rowHeight = ERD_ROW_HEIGHT;
 
     nodes.forEach((node, index) => {
       const col = index % columns;

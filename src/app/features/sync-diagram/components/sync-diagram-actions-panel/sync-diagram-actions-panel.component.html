@@ -31,46 +31,9 @@
   <div class="actions-rail-pill actions-rail-pill-sync" aria-label="Verificar e sincronizar">
     <button
       type="button"
-      class="rail-btn"
-      [class.rail-accent-green]="isEstrutura()"
-      [class.rail-accent-orange]="isDados()"
-      [title]="verifyTitle()"
-      [attr.aria-label]="verifyAriaLabel()"
-      [disabled]="!hasSelection || running"
-      (click)="emitVerify()"
-    >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <circle cx="11" cy="11" r="7" />
-        <path d="M20 20l-3.5-3.5" stroke-linecap="round" />
-        <path d="M8 11h6" stroke-linecap="round" />
-      </svg>
-    </button>
-
-    <button
-      type="button"
-      class="rail-btn"
-      [class.rail-accent-blue]="isEstrutura()"
-      [class.rail-accent-cyan]="isDados()"
-      [title]="syncTitle()"
-      [attr.aria-label]="syncAriaLabel()"
-      [disabled]="!hasSelection || running"
-      (click)="emitSync()"
-    >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <path d="M4 12a4 4 0 0 1 4-4h2" stroke-linecap="round" />
-        <path d="M20 12a4 4 0 0 1-4 4h-2" stroke-linecap="round" />
-        <path d="M16 4l2 2-2 2" stroke-linecap="round" stroke-linejoin="round" />
-        <path d="M8 20l-2-2 2-2" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
-    </button>
-
-    <span class="rail-divider" aria-hidden="true"></span>
-
-    <button
-      type="button"
       class="rail-btn rail-accent-primary"
-      title="Verificar e sincronizar seleção"
-      [attr.aria-label]="'Verificar e sincronizar seleção · ' + scopeLabel"
+      title="Verificar e sincronizar"
+      [attr.aria-label]="'Verificar e sincronizar · ' + scopeLabel"
       [disabled]="!hasSelection || running"
       (click)="sincronizarSelecao.emit()"
     >

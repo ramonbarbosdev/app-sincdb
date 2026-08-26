@@ -68,16 +68,6 @@ export class SyncDiagramPage implements OnInit, OnDestroy {
     return parts;
   }
 
-  selectionCount(): number {
-    const sel = this.state.selection();
-    return sel.tabela ? 1 : sel.esquema ? 1 : sel.base ? 1 : 0;
-  }
-
-  syncButtonLabel(): string {
-    const count = this.selectionCount();
-    return count > 0 ? `Sincronizar seleção (${count})` : 'Sincronizar seleção';
-  }
-
   setMode(mode: SyncDiagramMode): void {
     this.state.setSyncMode(mode);
   }
@@ -103,22 +93,6 @@ export class SyncDiagramPage implements OnInit, OnDestroy {
   canRecolher(): boolean {
     const sel = this.state.selection();
     return !!(sel.base || sel.esquema || sel.tabela);
-  }
-
-  verificarEstrutura(): void {
-    this.actions.verificarEstrutura(this.state.selection());
-  }
-
-  sincronizarEstrutura(): void {
-    this.actions.sincronizarEstrutura(this.state.selection());
-  }
-
-  verificarDados(): void {
-    this.actions.verificarDados(this.state.selection());
-  }
-
-  sincronizarDados(): void {
-    this.actions.sincronizarDados(this.state.selection());
   }
 
   recolherNivel(): void {

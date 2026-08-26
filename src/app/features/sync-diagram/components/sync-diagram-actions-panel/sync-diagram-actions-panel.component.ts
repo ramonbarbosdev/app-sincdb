@@ -21,10 +21,6 @@ export class SyncDiagramActionsPanelComponent {
 
   @Output() modeChange = new EventEmitter<SyncDiagramMode>();
   @Output() sincronizarSelecao = new EventEmitter<void>();
-  @Output() verifyEstrutura = new EventEmitter<void>();
-  @Output() syncEstrutura = new EventEmitter<void>();
-  @Output() verifyDados = new EventEmitter<void>();
-  @Output() syncDados = new EventEmitter<void>();
   @Output() recolher = new EventEmitter<void>();
   @Output() cancelar = new EventEmitter<void>();
 
@@ -39,38 +35,6 @@ export class SyncDiagramActionsPanelComponent {
   selectMode(mode: SyncDiagramMode): void {
     if (this.mode !== mode) {
       this.modeChange.emit(mode);
-    }
-  }
-
-  verifyTitle(): string {
-    return this.isEstrutura() ? 'Verificar estrutura' : 'Verificar dados';
-  }
-
-  syncTitle(): string {
-    return this.isEstrutura() ? 'Sincronizar estrutura' : 'Sincronizar dados';
-  }
-
-  verifyAriaLabel(): string {
-    return `${this.verifyTitle()} · ${this.scopeLabel}`;
-  }
-
-  syncAriaLabel(): string {
-    return `${this.syncTitle()} · ${this.scopeLabel}`;
-  }
-
-  emitVerify(): void {
-    if (this.isEstrutura()) {
-      this.verifyEstrutura.emit();
-    } else {
-      this.verifyDados.emit();
-    }
-  }
-
-  emitSync(): void {
-    if (this.isEstrutura()) {
-      this.syncEstrutura.emit();
-    } else {
-      this.syncDados.emit();
     }
   }
 }
