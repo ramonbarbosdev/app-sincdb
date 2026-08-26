@@ -7,10 +7,11 @@ import {
   provideFFlow,
 } from '@foblex/flow';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, HostListener, Input, Output, inject, signal, viewChild } from '@angular/core';
 import { TooltipModule } from 'primeng/tooltip';
 import {
   SyncDiagramAction,
+  SyncDiagramContext,
   SyncDiagramNodeData,
 } from '../../models/sync-diagram.model';
 import { SyncDiagramActionsService } from '../../services/sync-diagram-actions.service';
@@ -18,6 +19,7 @@ import { SyncDiagramCameraService } from '../../services/sync-diagram-camera.ser
 import { SyncDiagramOperationService } from '../../services/sync-diagram-operation.service';
 import { SyncDiagramStateService } from '../../services/sync-diagram-state.service';
 import { SyncDiagramThemeService } from '../../services/sync-diagram-theme.service';
+import { SYNC_DIAGRAM_TOOLTIP } from '../../sync-diagram-chrome.constants';
 import { SyncDiagramNodeCardComponent } from '../sync-diagram-node-card/sync-diagram-node-card.component';
 import { SyncErdTableNodeComponent } from '../sync-erd-table-node/sync-erd-table-node.component';
 import { SyncOperationNodeCardComponent } from '../sync-operation-node-card/sync-operation-node-card.component';
@@ -39,6 +41,7 @@ import { SyncOperationNodeCardComponent } from '../sync-operation-node-card/sync
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SyncDiagramCanvasComponent {
+  readonly tip = SYNC_DIAGRAM_TOOLTIP;
   readonly state = inject(SyncDiagramStateService);
   readonly themeService = inject(SyncDiagramThemeService);
   private operations = inject(SyncDiagramOperationService);
@@ -57,6 +60,7 @@ export class SyncDiagramCanvasComponent {
 
   readonly connectionType = EFConnectionType.SEGMENT;
   readonly zoomLevel = signal(100);
+  readonly blockFlowWheelZoom = (): boolean => false;
 
   onFlowReady(): void {
     const canvasRef = this.canvas();
@@ -67,7 +71,18 @@ export class SyncDiagramCanvasComponent {
     if (zoomRef) {
       this.camera.registerZoom(zoomRef);
     }
-    canvasRef.fitToScreen(PointExtensions.initialize(80, 80), false);
+    canvasRef.fitToScreen(PointExtensions.initialize(64, 88), false);
+    this.updateZoomLabel();
+  }
+
+  @HostListener('wheel', ['$event'])
+  onWheel(event: WheelEvent): void {
+    if (this.state.loadingInitial()) return;
+    const target = event.target as HTMLElement | null;
+    if (!target?.closest('.diagram-flow')) return;
+
+    event.preventDefault();
+    this.camera.zoomAtWheel(event);
     this.updateZoomLabel();
   }
 
@@ -105,6 +120,7 @@ export class SyncDiagramCanvasComponent {
   }
 
   filteredItems(nodeId: string) {
+    this.state.filterRevision();
     return this.state.filteredItems(nodeId);
   }
 
@@ -143,6 +159,10 @@ export class SyncDiagramCanvasComponent {
     if (action === 'close-children') {
       this.state.closeChildren(node.kind);
     }
+  }
+
+  navigateBreadcrumb(item: { context: SyncDiagramContext }): void {
+    this.state.navigateToBreadcrumb(item.context);
   }
 
   private updateZoomLabel(): void {

@@ -58,6 +58,11 @@ export interface SyncDiagramContext {
   tabelas?: string[];
 }
 
+export interface SyncDiagramBreadcrumbItem {
+  label: string;
+  context: SyncDiagramContext;
+}
+
 /** Chave única de escopo para reuso de caixa de operação (base + schema + modo + tabela opcional). */
 export function operationScopeKey(context: SyncDiagramContext, mode: SyncDiagramMode): string {
   const base = context.base ?? '';

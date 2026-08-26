@@ -22,6 +22,7 @@
 
       <f-canvas
         fZoom
+        [fWheelTrigger]="blockFlowWheelZoom"
         [fZoomMinimum]="0.4"
         [fZoomMaximum]="1.2"
         [fZoomStep]="0.1"
@@ -104,11 +105,31 @@
         </div>
       </f-canvas>
 
-      <div class="minimap-shell">
-        <f-minimap [fMinSize]="56" />
+      <div class="minimap-shell" aria-label="Minimapa do diagrama">
+        <span class="minimap-label">Mapa</span>
+        <f-minimap class="minimap-widget" />
       </div>
     </f-flow>
   </div>
+
+  <nav
+    class="canvas-breadcrumb"
+    *ngIf="!state.loadingInitial() && state.breadcrumbTrail().length"
+    aria-label="Contexto da navegação"
+  >
+    <ng-container *ngFor="let crumb of state.breadcrumbTrail(); let last = last">
+      <button
+        type="button"
+        class="crumb-btn"
+        [class.is-current]="last"
+        [attr.aria-current]="last ? 'location' : null"
+        (click)="navigateBreadcrumb(crumb)"
+      >
+        {{ crumb.label }}
+      </button>
+      <span class="crumb-sep" *ngIf="!last" aria-hidden="true">›</span>
+    </ng-container>
+  </nav>
 
   <nav
     class="canvas-toolbar"
@@ -120,9 +141,13 @@
       class="tb-btn"
       pTooltip="Diminuir zoom"
       tooltipPosition="bottom"
+      [tooltipStyleClass]="tip.styleClass"
+      [showDelay]="tip.showDelay"
+      [hideDelay]="tip.hideDelay"
+      aria-label="Diminuir zoom"
       (click)="zoomOut()"
     >
-      −
+      <i class="pi pi-search-minus" aria-hidden="true"></i>
     </button>
     <span class="tb-zoom">{{ zoomLevel() }}%</span>
     <button
@@ -130,72 +155,74 @@
       class="tb-btn"
       pTooltip="Aumentar zoom"
       tooltipPosition="bottom"
+      [tooltipStyleClass]="tip.styleClass"
+      [showDelay]="tip.showDelay"
+      [hideDelay]="tip.hideDelay"
+      aria-label="Aumentar zoom"
       (click)="zoomIn()"
     >
-      +
+      <i class="pi pi-search-plus" aria-hidden="true"></i>
     </button>
     <span class="tb-sep" aria-hidden="true"></span>
     <button
       type="button"
       class="tb-btn"
-      pTooltip="Enquadrar diagrama"
+      pTooltip="Ajustar tudo à tela"
       tooltipPosition="bottom"
+      [tooltipStyleClass]="tip.styleClass"
+      [showDelay]="tip.showDelay"
+      [hideDelay]="tip.hideDelay"
+      aria-label="Ajustar tudo à tela"
       (click)="fitView()"
     >
-      ⊡
+      <i class="pi pi-expand" aria-hidden="true"></i>
     </button>
     <button
       type="button"
-      class="tb-btn tb-label"
+      class="tb-btn tb-zoom-reset"
       pTooltip="Zoom 100%"
       tooltipPosition="bottom"
+      [tooltipStyleClass]="tip.styleClass"
+      [showDelay]="tip.showDelay"
+      [hideDelay]="tip.hideDelay"
+      aria-label="Zoom 100%"
       (click)="resetView()"
     >
-      1:1
+      <span class="tb-zoom-label" aria-hidden="true">100%</span>
     </button>
     <span class="tb-sep" aria-hidden="true"></span>
     <button
       type="button"
       class="tb-btn tb-theme"
-      [pTooltip]="themeService.isDark() ? 'Alternar para tema claro' : 'Alternar para tema escuro'"
+      [pTooltip]="themeService.isDark() ? 'Tema claro' : 'Tema escuro'"
       tooltipPosition="bottom"
+      [tooltipStyleClass]="tip.styleClass"
+      [showDelay]="tip.showDelay"
+      [hideDelay]="tip.hideDelay"
       [attr.aria-label]="themeService.isDark() ? 'Alternar para tema claro' : 'Alternar para tema escuro'"
       (click)="themeService.toggle()"
     >
-      <svg
-        *ngIf="themeService.isDark(); else moonIcon"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
+      <i
+        class="pi"
+        [class.pi-sun]="themeService.isDark()"
+        [class.pi-moon]="!themeService.isDark()"
         aria-hidden="true"
-      >
-        <circle cx="12" cy="12" r="4" />
-        <path
-          d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
-          stroke-linecap="round"
-        />
-      </svg>
-      <ng-template #moonIcon>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M21 14.5A7.5 7.5 0 0 1 9.5 3a6 6 0 1 0 11.8 11.5z" stroke-linejoin="round" />
-        </svg>
-      </ng-template>
+      ></i>
     </button>
     <ng-container *ngIf="running">
       <span class="tb-sep" aria-hidden="true"></span>
       <button
         type="button"
         class="tb-btn tb-cancel"
-        pTooltip="Cancelar operação em andamento"
+        pTooltip="Cancelar operação"
         tooltipPosition="bottom"
+        [tooltipStyleClass]="tip.styleClass"
+        [showDelay]="tip.showDelay"
+        [hideDelay]="tip.hideDelay"
         aria-label="Cancelar operação"
         (click)="cancelar.emit()"
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <circle cx="12" cy="12" r="8" />
-          <path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round" />
-        </svg>
+        <i class="pi pi-times-circle" aria-hidden="true"></i>
       </button>
     </ng-container>
   </nav>
@@ -218,10 +245,7 @@
       (click)="sincronizarSelecao.emit()"
     >
       <span class="sync-selection-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M7 7h10v10H7z" stroke-linejoin="round" />
-          <path d="M4 12h3M17 12h3M12 4v3M12 17v3" stroke-linecap="round" />
-        </svg>
+        <i class="pi pi-sync"></i>
       </span>
       <span class="sync-selection-text">
         <strong>Sincronizar seleção</strong>

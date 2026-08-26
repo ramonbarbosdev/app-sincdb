@@ -1,0 +1,21 @@
+/* Tooltips do diagrama (appendTo body — importar em styles.scss). */
+.p-tooltip.sync-diagram-tooltip {
+  max-width: 15rem;
+
+  .p-tooltip-text {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    padding: 0.4rem 0.65rem;
+    border-radius: 8px;
+    font-weight: 500;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  }
+
+  &.p-tooltip-right {
+    margin-left: 8px;
+  }
+
+  &.p-tooltip-bottom {
+    margin-top: 8px;
+  }
+}

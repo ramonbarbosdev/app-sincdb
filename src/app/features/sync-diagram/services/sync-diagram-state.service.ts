@@ -12,6 +12,7 @@ import {
   ErdTableNode,
   ImpactCategoryChip,
   ImpactChipKey,
+  SyncDiagramBreadcrumbItem,
   SyncDiagramContext,
   SyncDiagramItem,
   SyncDiagramKind,
@@ -52,6 +53,8 @@ export class SyncDiagramStateService {
   readonly loadingInitial = signal(true);
   readonly selection = signal<SyncDiagramContext>({});
   readonly operations = signal<SyncOperation[]>([]);
+  /** Incrementado ao aplicar filtro — atualiza listas sem recriar nós do fluxo. */
+  readonly filterRevision = signal(0);
 
   private bases: SyncDiagramItem[] = [];
   private schemaCache = new Map<string, SyncDiagramItem[]>();
@@ -104,13 +107,7 @@ export class SyncDiagramStateService {
     if (meta) {
       this.nodeMeta.set(nodeId, { ...meta, filter: value });
     }
-    this.flowNodes.update((nodes) =>
-      nodes.map((node) =>
-        node.id === nodeId && node.selectorMeta
-          ? { ...node, selectorMeta: { ...node.selectorMeta, filter: value } }
-          : node
-      )
-    );
+    this.filterRevision.update((n) => n + 1);
     this.persistSoon();
   }
 
@@ -262,6 +259,69 @@ export class SyncDiagramStateService {
     if (context.tabelas?.length) return [...context.tabelas];
     if (context.tabela) return [context.tabela];
     return [];
+  }
+
+  breadcrumbTrail(): SyncDiagramBreadcrumbItem[] {
+    const sel = this.selection();
+    const trail: SyncDiagramBreadcrumbItem[] = [];
+    if (!sel.base) return trail;
+
+    trail.push({ label: sel.base, context: { base: sel.base } });
+
+    if (sel.esquema) {
+      trail.push({
+        label: sel.esquema,
+        context: { base: sel.base, esquema: sel.esquema },
+      });
+    }
+
+    const tabelas = this.selectedTabelas(sel);
+    if (tabelas.length === 1) {
+      trail.push({
+        label: tabelas[0],
+        context: { base: sel.base, esquema: sel.esquema!, tabelas: [tabelas[0]] },
+      });
+    } else if (tabelas.length > 1) {
+      trail.push({
+        label: `${tabelas.length} tabelas`,
+        context: { base: sel.base, esquema: sel.esquema!, tabelas: [...tabelas] },
+      });
+    }
+
+    return trail;
+  }
+
+  navigateToBreadcrumb(target: SyncDiagramContext): void {
+    const base = target.base;
+    if (!base) {
+      this.schemasNodeId = undefined;
+      this.tablesNodeId = undefined;
+      this.selection.set({});
+      this.rebuildGraph();
+      this.persistSoon();
+      return;
+    }
+
+    this.schemasNodeId = `node-schemas-${base}`;
+    this.ensurePosition(this.schemasNodeId, this.nextPosition(this.basesNodeId));
+
+    if (!target.esquema) {
+      this.tablesNodeId = undefined;
+      this.selection.set({ base });
+      this.ensureSchemasLoaded(base);
+      return;
+    }
+
+    this.tablesNodeId = `node-tables-${base}-${target.esquema}`;
+    this.ensurePosition(this.tablesNodeId, this.nextPosition(this.schemasNodeId!));
+
+    const nextSelection: SyncDiagramContext = { base, esquema: target.esquema };
+    const tabelas = target.tabelas?.length ? [...target.tabelas] : [];
+    if (tabelas.length) {
+      nextSelection.tabelas = tabelas;
+    }
+    this.selection.set(nextSelection);
+    this.ensureSchemasAndTablesLoaded(base, target.esquema);
   }
 
   patchOperation(operationId: string, patch: Partial<SyncOperation>): void {
@@ -498,11 +558,8 @@ export class SyncDiagramStateService {
     if (kind === 'bases') {
       this.schemasNodeId = undefined;
       this.tablesNodeId = undefined;
-      this.selection.set({});
     } else if (kind === 'schemas') {
       this.tablesNodeId = undefined;
-      const sel = this.selection();
-      this.selection.set({ base: sel.base });
     }
     this.rebuildGraph();
     this.persistSoon();
@@ -736,6 +793,87 @@ export class SyncDiagramStateService {
         this.finishDrillDownRestore(sel);
       },
     });
+  }
+
+  private ensureSchemasLoaded(base: string): void {
+    const cached = this.schemaCache.get(base);
+    if (cached) {
+      this.rebuildGraph();
+      this.persistSoon();
+      return;
+    }
+
+    this.loadingNodes.set(this.schemasNodeId!, true);
+    this.rebuildGraph();
+
+    this.baseService.findAll(`sincronizacao/base/esquema/${base}`).subscribe({
+      next: (res) => {
+        const items = (res as string[]).map((name) => ({ id: name, label: name }));
+        this.schemaCache.set(base, items);
+        this.loadingNodes.set(this.schemasNodeId!, false);
+        this.rebuildGraph();
+        this.persistSoon();
+      },
+      error: () => {
+        this.schemaCache.set(base, []);
+        this.loadingNodes.set(this.schemasNodeId!, false);
+        this.rebuildGraph();
+        this.persistSoon();
+      },
+    });
+  }
+
+  private ensureSchemasAndTablesLoaded(base: string, esquema: string): void {
+    if (!this.schemaCache.has(base)) {
+      this.loadingNodes.set(this.schemasNodeId!, true);
+      this.rebuildGraph();
+      this.baseService.findAll(`sincronizacao/base/esquema/${base}`).subscribe({
+        next: (res) => {
+          const items = (res as string[]).map((name) => ({ id: name, label: name }));
+          this.schemaCache.set(base, items);
+          this.loadingNodes.set(this.schemasNodeId!, false);
+          this.ensureTablesLoaded(base, esquema);
+        },
+        error: () => {
+          this.schemaCache.set(base, []);
+          this.loadingNodes.set(this.schemasNodeId!, false);
+          this.ensureTablesLoaded(base, esquema);
+        },
+      });
+      return;
+    }
+
+    this.ensureTablesLoaded(base, esquema);
+  }
+
+  private ensureTablesLoaded(base: string, esquema: string): void {
+    const key = `${base}|${esquema}`;
+    if (this.tableCache.has(key)) {
+      this.rebuildGraph();
+      this.persistSoon();
+      return;
+    }
+
+    this.loadingNodes.set(this.tablesNodeId!, true);
+    this.rebuildGraph();
+
+    this.baseService
+      .findAll(`sincronizacao/base/tabela/${base}/${esquema}`)
+      .subscribe({
+        next: (res) => {
+          const items = (res as string[]).map((name) => ({ id: name, label: name }));
+          this.tableCache.set(key, items);
+          this.loadingNodes.set(this.tablesNodeId!, false);
+          this.rebuildGraph();
+          this.persistSoon();
+        },
+        error: () => {
+          this.tableCache.set(key, []);
+          this.loadingNodes.set(this.tablesNodeId!, false);
+          this.rebuildGraph();
+          this.persistSoon();
+        },
+      });
   }
 
   private finishDrillDownRestore(sel: SyncDiagramContext): void {

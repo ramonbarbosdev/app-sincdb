@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { TooltipModule } from 'primeng/tooltip';
 import { SyncDiagramMode } from '../../models/sync-diagram.model';
+import { SYNC_DIAGRAM_TOOLTIP } from '../../sync-diagram-chrome.constants';
 
 @Component({
   selector: 'app-sync-diagram-actions-panel',
@@ -11,6 +12,8 @@ import { SyncDiagramMode } from '../../models/sync-diagram.model';
   styleUrls: ['../../sync-diagram.theme.scss', './sync-diagram-actions-panel.component.scss'],
 })
 export class SyncDiagramActionsPanelComponent {
+  readonly tip = SYNC_DIAGRAM_TOOLTIP;
+
   @Input() mode: SyncDiagramMode = 'estrutura';
   @Input() scopeLabel = '—';
   @Input() hasSelection = false;

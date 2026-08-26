@@ -24,3 +24,107 @@
     min-height: 0;
   }
 }
+
+:host ::ng-deep .minimap-shell {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  width: 168px;
+  z-index: 4;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.35rem 0.4rem 0.4rem;
+  border-radius: var(--sync-diagram-chrome-radius, 12px);
+  background: var(--sync-diagram-rail-bg);
+  border: 1px solid var(--sync-diagram-rail-border);
+  box-shadow: var(--sync-diagram-rail-shadow);
+}
+
+:host ::ng-deep .minimap-label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sync-diagram-text-muted);
+  padding: 0 0.15rem;
+  user-select: none;
+}
+
+:host ::ng-deep .minimap-widget {
+  position: relative !important;
+  bottom: auto !important;
+  right: auto !important;
+  width: 100% !important;
+  height: 112px !important;
+  border-radius: 8px;
+  cursor: crosshair;
+}
+
+:host ::ng-deep .canvas-breadcrumb {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+  max-width: min(42vw, 28rem);
+  padding: 0.35rem 0.55rem;
+  border-radius: var(--sync-diagram-chrome-radius, 12px);
+  background: var(--sync-diagram-rail-bg);
+  border: 1px solid var(--sync-diagram-rail-border);
+  box-shadow: var(--sync-diagram-rail-shadow);
+  pointer-events: auto;
+}
+
+:host ::ng-deep .crumb-btn {
+  border: none;
+  background: transparent;
+  color: var(--sync-diagram-toolbar-text-muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 0.2rem 0.35rem;
+  border-radius: 6px;
+  cursor: pointer;
+  max-width: 12rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  &:hover {
+    color: var(--sync-diagram-text);
+    background: var(--sync-diagram-toolbar-hover-bg);
+  }
+
+  &.is-current {
+    color: var(--sync-diagram-primary);
+    font-weight: 600;
+    cursor: default;
+    background: color-mix(in srgb, var(--sync-diagram-primary) 10%, transparent);
+  }
+}
+
+:host ::ng-deep .crumb-sep {
+  color: var(--sync-diagram-text-muted);
+  font-size: 0.68rem;
+  line-height: 1;
+  user-select: none;
+}
+
+@media (max-width: 720px) {
+  :host ::ng-deep .canvas-breadcrumb {
+    max-width: calc(100% - 1.5rem);
+    top: 3.5rem;
+  }
+
+  :host ::ng-deep .minimap-shell {
+    width: 140px;
+  }
+
+  :host ::ng-deep .minimap-widget {
+    height: 92px !important;
+  }
+}

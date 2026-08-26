@@ -21,8 +21,8 @@
         type="search"
         class="diagram-filter-input"
         placeholder="Filtrar..."
-        [ngModel]="node.filter"
-        (ngModelChange)="filterChange.emit($event)"
+        [ngModel]="filterText"
+        (ngModelChange)="onFilterInput($event)"
       />
     </div>
 

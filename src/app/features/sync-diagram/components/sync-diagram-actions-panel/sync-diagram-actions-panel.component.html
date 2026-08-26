@@ -1,80 +1,79 @@
 <nav class="actions-palette" aria-label="Ações de sincronização">
   <button
     type="button"
-    class="rail-btn rail-accent-violet"
+    class="rail-btn rail-btn-mode-estrutura"
     [class.is-active]="isEstrutura()"
-    pTooltip="Modo estrutura — compara e sincroniza DDL (tabelas, colunas, índices e FKs)"
+    pTooltip="Estrutura · DDL, colunas e FKs"
     tooltipPosition="right"
+    [tooltipStyleClass]="tip.styleClass"
+    [showDelay]="tip.showDelay"
+    [hideDelay]="tip.hideDelay"
     aria-label="Modo estrutura"
     (click)="selectMode('estrutura')"
   >
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-      <path d="M4 7h16M4 12h10M4 17h6" stroke-linecap="round" />
-    </svg>
+    <i class="pi pi-sitemap" aria-hidden="true"></i>
   </button>
 
   <button
     type="button"
-    class="rail-btn rail-accent-cyan"
+    class="rail-btn rail-btn-mode-dados"
     [class.is-active]="isDados()"
-    pTooltip="Modo dados — compara e sincroniza linhas (inserções e atualizações)"
+    pTooltip="Dados · linhas e registros"
     tooltipPosition="right"
+    [tooltipStyleClass]="tip.styleClass"
+    [showDelay]="tip.showDelay"
+    [hideDelay]="tip.hideDelay"
     aria-label="Modo dados"
     (click)="selectMode('dados')"
   >
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-      <rect x="5" y="5" width="14" height="14" rx="2" />
-      <path d="M5 10h14M10 5v14" stroke-linecap="round" />
-    </svg>
+    <i class="pi pi-database" aria-hidden="true"></i>
   </button>
 
   <span class="rail-divider" aria-hidden="true"></span>
 
   <button
     type="button"
-    class="rail-btn rail-accent-primary"
-    pTooltip="Verificar diferenças e sincronizar (schema inteiro ou tabelas marcadas)"
+    class="rail-btn rail-btn-sync"
+    pTooltip="Verificar diferenças e sincronizar"
     tooltipPosition="right"
+    [tooltipStyleClass]="tip.styleClass"
+    [showDelay]="tip.showDelay"
+    [hideDelay]="tip.hideDelay"
     [attr.aria-label]="'Verificar e sincronizar · ' + scopeLabel"
     [disabled]="!hasSelection || running || syncDisabled"
     (click)="sincronizarSelecao.emit()"
   >
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-      <path d="M7 7h10v10H7z" stroke-linejoin="round" />
-      <path d="M4 12h3M17 12h3M12 4v3M12 17v3" stroke-linecap="round" />
-    </svg>
+    <i class="pi pi-sync" aria-hidden="true"></i>
   </button>
 
   <span class="rail-divider" aria-hidden="true"></span>
 
   <button
     type="button"
-    class="rail-btn rail-accent-violet"
-    pTooltip="Recolher um nível (tabelas → schema → base)"
+    class="rail-btn"
+    pTooltip="Recolher um nível"
     tooltipPosition="right"
+    [tooltipStyleClass]="tip.styleClass"
+    [showDelay]="tip.showDelay"
+    [hideDelay]="tip.hideDelay"
     aria-label="Recolher nível"
     [disabled]="!canRecolher"
     (click)="recolher.emit()"
   >
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-      <path d="M8 6l-4 4 4 4" stroke-linecap="round" stroke-linejoin="round" />
-      <path d="M4 10h12a4 4 0 0 1 0 8H8" stroke-linecap="round" />
-    </svg>
+    <i class="pi pi-replay" aria-hidden="true"></i>
   </button>
 
   <button
     type="button"
-    class="rail-btn rail-accent-green"
-    pTooltip="Organizar automaticamente os nós do diagrama"
+    class="rail-btn"
+    pTooltip="Organizar layout"
     tooltipPosition="right"
+    [tooltipStyleClass]="tip.styleClass"
+    [showDelay]="tip.showDelay"
+    [hideDelay]="tip.hideDelay"
     aria-label="Organizar automaticamente"
     (click)="autoLayout.emit()"
   >
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-      <rect x="3" y="3" width="7" height="7" rx="1" />
-      <rect x="14" y="3" width="7" height="7" rx="1" />
-      <rect x="3" y="14" width="7" height="7" rx="1" />
-      <rect x="14" y="14" width="7" height="7" rx="1" />
-    </svg>
+    <i class="pi pi-th-large" aria-hidden="true"></i>
   </button>
 </nav>

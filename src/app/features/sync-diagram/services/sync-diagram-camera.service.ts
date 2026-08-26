@@ -6,6 +6,8 @@ const MIN_ZOOM = 0.4;
 const MAX_ZOOM = 1.2;
 const ZOOM_STEP = 0.1;
 const AUTO_FOLLOW_PAUSE_MS = 12000;
+const FIT_PADDING_X = 64;
+const FIT_PADDING_Y = 88;
 
 @Injectable()
 export class SyncDiagramCameraService {
@@ -80,11 +82,30 @@ export class SyncDiagramCameraService {
     this.canvas.setScale(next);
   }
 
+  zoomAtWheel(event: WheelEvent): void {
+    if (!event.deltaY) return;
+    this.pauseAutoFollow();
+    const position = PointExtensions.initialize(event.clientX, event.clientY);
+    if (event.deltaY < 0) {
+      if (this.zoom) {
+        this.zoom.zoomIn(position);
+      } else {
+        this.zoomIn();
+      }
+      return;
+    }
+    if (this.zoom) {
+      this.zoom.zoomOut(position);
+    } else {
+      this.zoomOut();
+    }
+  }
+
   fitToScreen(animated = true): void {
     this.pauseAutoFollow();
     if (!this.canvas) return;
     this.canvas.fitToScreen(
-      PointExtensions.initialize(80, 80),
+      PointExtensions.initialize(FIT_PADDING_X, FIT_PADDING_Y),
       animated && !this.prefersReducedMotion()
     );
   }

@@ -1,13 +1,25 @@
 import { FFlowModule } from '@foblex/flow';
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnDestroy,
+  Output,
+  SimpleChanges,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import {
   SyncDiagramAction,
   SyncDiagramItem,
   SyncDiagramKind,
   SyncDiagramNodeData,
 } from '../../models/sync-diagram.model';
+
+const FILTER_DEBOUNCE_MS = 1000;
 
 @Component({
   selector: 'app-sync-diagram-node-card',
@@ -16,13 +28,43 @@ import {
   templateUrl: './sync-diagram-node-card.component.html',
   styleUrls: ['../../sync-diagram.theme.scss', './sync-diagram-node-card.component.scss'],
 })
-export class SyncDiagramNodeCardComponent {
+export class SyncDiagramNodeCardComponent implements OnChanges, OnDestroy {
   @Input({ required: true }) node!: SyncDiagramNodeData;
   @Input() items: SyncDiagramItem[] = [];
 
   @Output() filterChange = new EventEmitter<string>();
   @Output() itemClick = new EventEmitter<string>();
   @Output() action = new EventEmitter<SyncDiagramAction>();
+
+  filterText = '';
+  private readonly filterInput$ = new Subject<string>();
+  private readonly filterSub: Subscription;
+
+  constructor() {
+    this.filterSub = this.filterInput$
+      .pipe(debounceTime(FILTER_DEBOUNCE_MS), distinctUntilChanged())
+      .subscribe((value) => this.filterChange.emit(value));
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['node']) {
+      const prevId = changes['node'].previousValue?.id;
+      const nextId = changes['node'].currentValue?.id;
+      if (!prevId || prevId !== nextId) {
+        this.filterText = this.node.filter ?? '';
+      }
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.filterSub.unsubscribe();
+    this.filterInput$.complete();
+  }
+
+  onFilterInput(value: string): void {
+    this.filterText = value;
+    this.filterInput$.next(value);
+  }
 
   iconLabel(kind: SyncDiagramKind): string {
     const map: Record<SyncDiagramKind, string> = {
