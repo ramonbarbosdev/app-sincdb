@@ -7,9 +7,11 @@ import {
   OperationActionKind,
   SyncDiagramContext,
   SyncDiagramMode,
+  SyncOperation,
   TabelaAfetadaDTO,
 } from '../models/sync-diagram.model';
 import { SyncDiagramOperationService } from './sync-diagram-operation.service';
+import { SyncDiagramStateService } from './sync-diagram-state.service';
 
 @Injectable()
 export class SyncDiagramActionsService {
@@ -17,6 +19,7 @@ export class SyncDiagramActionsService {
   private progressoSync = inject(ProgressoSyncService);
   private messageService = inject(MessageService);
   private operations = inject(SyncDiagramOperationService);
+  private state = inject(SyncDiagramStateService);
 
   private resolveTabelaParam(context: SyncDiagramContext): string | null {
     const base = context.base;
@@ -38,6 +41,42 @@ export class SyncDiagramActionsService {
     } else {
       this.verificarESincronizarDados(context);
     }
+  }
+
+  retryOperation(operation: SyncOperation): void {
+    const { id, context, mode, action } = operation;
+    this.state.removeOperation(id);
+    this.runOperationAction(mode, action, context);
+  }
+
+  private runOperationAction(
+    mode: SyncDiagramMode,
+    action: OperationActionKind,
+    context: SyncDiagramContext
+  ): void {
+    if (mode === 'estrutura') {
+      if (action === 'verificar') {
+        this.verificarEstrutura(context);
+      } else if (action === 'sincronizar') {
+        this.sincronizarEstrutura(context);
+      } else {
+        this.verificarESincronizarEstrutura(context);
+      }
+      return;
+    }
+
+    if (action === 'verificar') {
+      this.verificarDados(context);
+    } else if (action === 'sincronizar') {
+      this.sincronizarDados(context);
+    } else {
+      this.verificarESincronizarDados(context);
+    }
+  }
+
+  private failOp(opId: string, message: string): void {
+    this.operations.failOperation(opId, [message]);
+    this.progressoSync.marcarErro(message);
   }
 
   verificarEstrutura(context: SyncDiagramContext): void {
@@ -63,14 +102,12 @@ export class SyncDiagramActionsService {
               });
             },
             error: () => {
-              this.operations.failOperation(opId);
-              this.progressoSync.marcarErro('Falha na verificação de estrutura');
+              this.failOp(opId, 'Falha na verificação de estrutura');
             },
           });
       },
       error: () => {
-        this.operations.failOperation(opId);
-        this.progressoSync.marcarErro('Falha ao verificar esquema');
+        this.failOp(opId, 'Falha ao verificar esquema');
       },
     });
   }
@@ -95,8 +132,7 @@ export class SyncDiagramActionsService {
         this.sincronizarEstruturaInterno(context, true, opId);
       },
       error: () => {
-        this.operations.failOperation(opId);
-        this.progressoSync.marcarErro('Falha na verificação de estrutura');
+        this.failOp(opId, 'Falha na verificação de estrutura');
       },
     });
   }
@@ -144,8 +180,7 @@ export class SyncDiagramActionsService {
         });
       },
       error: () => {
-        this.operations.failOperation(opId);
-        this.progressoSync.marcarErro('Falha na sincronização de estrutura');
+        this.failOp(opId, 'Falha na sincronização de estrutura');
       },
     });
   }
@@ -173,14 +208,12 @@ export class SyncDiagramActionsService {
               });
             },
             error: () => {
-              this.operations.failOperation(opId);
-              this.progressoSync.marcarErro('Falha na verificação de dados');
+              this.failOp(opId, 'Falha na verificação de dados');
             },
           });
       },
       error: () => {
-        this.operations.failOperation(opId);
-        this.progressoSync.marcarErro('Falha ao verificar esquema');
+        this.failOp(opId, 'Falha ao verificar esquema');
       },
     });
   }
@@ -205,8 +238,7 @@ export class SyncDiagramActionsService {
         this.sincronizarDadosInterno(context, true, opId);
       },
       error: () => {
-        this.operations.failOperation(opId);
-        this.progressoSync.marcarErro('Falha na verificação de dados');
+        this.failOp(opId, 'Falha na verificação de dados');
       },
     });
   }
@@ -254,8 +286,7 @@ export class SyncDiagramActionsService {
         });
       },
       error: () => {
-        this.operations.failOperation(opId);
-        this.progressoSync.marcarErro('Falha na sincronização de dados');
+        this.failOp(opId, 'Falha na sincronização de dados');
       },
     });
   }

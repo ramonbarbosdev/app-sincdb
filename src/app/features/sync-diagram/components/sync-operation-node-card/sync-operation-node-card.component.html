@@ -1,63 +1,90 @@
-<div
-  class="operation-node-wrap"
-  [class.mode-estrutura]="operation.mode === 'estrutura'"
-  [class.mode-dados]="operation.mode === 'dados'"
-  [class.phase-erro]="operation.phase === 'erro'"
-  [class.phase-concluido]="operation.phase === 'concluido'"
-  [class.phase-cancelado]="operation.phase === 'cancelado'"
-  [class.detail-open]="operation.detailOpen"
->
-  <button
-    type="button"
-    class="operation-node"
-    [class.is-running]="isRunning()"
-    (click)="onCardClick()"
+<ng-container *ngIf="operation() as operation">
+  <div
+    class="operation-node-wrap"
+    [class.mode-estrutura]="operation.mode === 'estrutura'"
+    [class.mode-dados]="operation.mode === 'dados'"
+    [class.phase-running]="isRunning()"
+    [class.phase-verificado]="operation.phase === 'verificado'"
+    [class.phase-erro]="operation.phase === 'erro'"
+    [class.phase-concluido]="operation.phase === 'concluido'"
+    [class.phase-cancelado]="operation.phase === 'cancelado'"
+    [class.detail-open]="operation.detailOpen"
   >
-    <header class="operation-header" fDragHandle>
-      <span class="operation-icon">⚙</span>
-      <div class="operation-titles">
-        <strong>{{ operation.label }}</strong>
-        <small>{{ phaseLabel(operation.phase) }}</small>
-      </div>
-      <span class="operation-mode-badge">{{ operation.mode }}</span>
-    </header>
-
-    <div class="operation-body">
-      <div class="operation-progress-row">
-        <div class="operation-progress-bar">
-          <span class="operation-progress-fill" [style.width.%]="operation.progress"></span>
+    <button
+      type="button"
+      class="operation-node"
+      [class.is-running]="isRunning()"
+      (click)="onCardClick()"
+    >
+      <header class="operation-header" fDragHandle>
+        <span class="operation-icon">⚙</span>
+        <div class="operation-titles">
+          <strong>{{ operation.label }}</strong>
+          <span
+            class="operation-phase-badge"
+            [class.badge-running]="isRunning()"
+            [class.badge-verificado]="operation.phase === 'verificado'"
+            [class.badge-concluido]="operation.phase === 'concluido'"
+            [class.badge-erro]="operation.phase === 'erro'"
+            [class.badge-cancelado]="operation.phase === 'cancelado'"
+          >{{ phaseLabel(operation.phase) }}</span>
         </div>
-        <span class="operation-progress-label">{{ operation.progress }}%</span>
+        <span class="operation-mode-badge">{{ operation.mode }}</span>
+      </header>
+
+      <div class="operation-body">
+        <div class="operation-progress-row" *ngIf="showProgress()">
+          <div class="operation-progress-bar">
+            <span class="operation-progress-fill" [style.width.%]="progressWidth()"></span>
+          </div>
+          <span class="operation-progress-label">{{ progressLabel() }}</span>
+        </div>
+
+        <p class="operation-table-hint" *ngIf="operation.tabelaAtual && isRunning()">
+          Tabela: <span>{{ operation.tabelaAtual }}</span>
+        </p>
+
+        <div class="operation-error-panel" *ngIf="operation.phase === 'erro'">
+          <p class="operation-error-summary">{{ primaryError() }}</p>
+          <div class="operation-error-actions">
+            <button type="button" class="op-action-btn op-action-retry" (click)="onRetry($event)">
+              Repetir
+            </button>
+            <button
+              type="button"
+              class="op-action-btn op-action-details"
+              *ngIf="showErrorDetailsButton()"
+              (click)="onToggleErrors($event)"
+            >
+              {{ operation.errorsExpanded ? 'Ocultar detalhes' : 'Ver detalhes' }}
+            </button>
+          </div>
+          <ul class="operation-error-list" *ngIf="operation.errorsExpanded && operation.errors?.length">
+            <li *ngFor="let err of operation.errors">{{ err }}</li>
+          </ul>
+        </div>
+
+        <p class="operation-message" *ngIf="operation.phase === 'cancelado'">
+          Operação cancelada pelo usuário.
+        </p>
       </div>
+    </button>
 
-      <p class="operation-table-hint" *ngIf="operation.tabelaAtual">
-        Tabela: <span>{{ operation.tabelaAtual }}</span>
-      </p>
-
-      <p class="operation-message" *ngIf="operation.phase === 'cancelado'">
-        Operação cancelada pelo usuário.
-      </p>
-
-      <p class="operation-error" *ngIf="operation.phase === 'erro' && operation.errors?.length">
-        {{ operation.errors![0] }}
-      </p>
+    <div class="operation-fab-strip" *ngIf="isRunning() || operation.detailOpen">
+      <button
+        *ngIf="isRunning()"
+        type="button"
+        class="fab-btn fab-cancel"
+        title="Cancelar operação"
+        (click)="onCancel($event)"
+      >⊗</button>
+      <button
+        *ngIf="operation.detailOpen"
+        type="button"
+        class="fab-btn"
+        title="Fechar detalhe ERD"
+        (click)="onCloseDetail($event)"
+      >×</button>
     </div>
-  </button>
-
-  <div class="operation-fab-strip" *ngIf="isRunning() || operation.detailOpen">
-    <button
-      *ngIf="isRunning()"
-      type="button"
-      class="fab-btn fab-cancel"
-      title="Cancelar operação"
-      (click)="onCancel($event)"
-    >⊗</button>
-    <button
-      *ngIf="operation.detailOpen"
-      type="button"
-      class="fab-btn"
-      title="Fechar detalhe ERD"
-      (click)="onCloseDetail($event)"
-    >×</button>
   </div>
-</div>
+</ng-container>

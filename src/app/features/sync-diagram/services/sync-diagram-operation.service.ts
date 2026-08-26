@@ -123,11 +123,19 @@ export class SyncDiagramOperationService implements OnDestroy {
     this.activeOperationId = undefined;
   }
 
-  failOperation(operationId: string): void {
-    this.state.patchOperation(operationId, { phase: 'erro' });
+  failOperation(operationId: string, errors?: string[]): void {
+    this.state.patchOperation(operationId, {
+      phase: 'erro',
+      progress: 0,
+      errors: errors?.length ? errors : ['A operação falhou. Tente novamente.'],
+    });
     if (this.activeOperationId === operationId) {
       this.activeOperationId = undefined;
     }
+  }
+
+  toggleErrorsExpanded(operationId: string): void {
+    this.state.toggleOperationErrorsExpanded(operationId);
   }
 
   cancelOperation(operationId: string): void {
@@ -282,6 +290,8 @@ export class SyncDiagramOperationService implements OnDestroy {
 
         if (status === 'ERRO') {
           patch.phase = 'erro';
+          patch.progress = 0;
+          patch.errors = op.errors?.length ? op.errors : ['Falha durante a operação'];
           this.activeOperationId = undefined;
         }
 

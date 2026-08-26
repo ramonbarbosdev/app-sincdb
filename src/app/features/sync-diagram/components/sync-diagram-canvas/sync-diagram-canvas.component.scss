@@ -132,6 +132,24 @@
   position: relative;
 }
 
+.flow-edge-label {
+  pointer-events: none;
+  z-index: 1;
+}
+
+.edge-label-pill {
+  display: inline-block;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--sync-diagram-rail-border);
+  background: var(--sync-diagram-rail-bg);
+  box-shadow: var(--sync-diagram-rail-shadow);
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--sync-diagram-text-muted);
+  white-space: nowrap;
+}
+
 .flow-node-zone {
   z-index: 0;
   pointer-events: none !important;

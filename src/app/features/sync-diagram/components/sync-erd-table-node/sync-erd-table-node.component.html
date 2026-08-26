@@ -1,48 +1,50 @@
-<div
-  class="erd-table-wrap"
-  [class.mode-estrutura]="table.mode === 'estrutura'"
-  [class.mode-dados]="table.mode === 'dados'"
-  [class.status-idle]="table.status === 'idle'"
-  [class.status-running]="table.status === 'running'"
-  [class.status-created]="table.status === 'created'"
-  [class.status-altered]="table.status === 'altered'"
-  [class.status-linked]="table.status === 'linked'"
-  [class.status-syncing]="table.status === 'syncing'"
-  [class.status-done]="table.status === 'done'"
-  [class.status-error]="table.status === 'error'"
->
-  <div class="erd-table-node">
-    <header class="erd-table-header" fDragHandle>
-      <span class="erd-table-icon">T</span>
-      <strong>{{ displayName() }}</strong>
-      <span
-        class="erd-status-badge"
-        *ngIf="statusBadge(table.status) as badge"
-        [class.badge-created]="table.status === 'created'"
-        [class.badge-altered]="table.status === 'altered'"
-        [class.badge-linked]="table.status === 'linked'"
-        [class.badge-running]="table.status === 'running' || table.status === 'syncing'"
-        [class.badge-done]="table.status === 'done'"
-        [class.badge-error]="table.status === 'error'"
-      >{{ badge }}</span>
-    </header>
+<ng-container *ngIf="table() as table">
+  <div
+    class="erd-table-wrap"
+    [class.mode-estrutura]="table.mode === 'estrutura'"
+    [class.mode-dados]="table.mode === 'dados'"
+    [class.status-idle]="table.status === 'idle'"
+    [class.status-running]="table.status === 'running'"
+    [class.status-created]="table.status === 'created'"
+    [class.status-altered]="table.status === 'altered'"
+    [class.status-linked]="table.status === 'linked'"
+    [class.status-syncing]="table.status === 'syncing'"
+    [class.status-done]="table.status === 'done'"
+    [class.status-error]="table.status === 'error'"
+  >
+    <div class="erd-table-node">
+      <header class="erd-table-header" fDragHandle>
+        <span class="erd-table-icon">T</span>
+        <strong>{{ displayName(table) }}</strong>
+        <span
+          class="erd-status-badge"
+          *ngIf="statusBadge(table.status) as badge"
+          [class.badge-created]="table.status === 'created'"
+          [class.badge-altered]="table.status === 'altered'"
+          [class.badge-linked]="table.status === 'linked'"
+          [class.badge-running]="table.status === 'running' || table.status === 'syncing'"
+          [class.badge-done]="table.status === 'done'"
+          [class.badge-error]="table.status === 'error'"
+        >{{ badge }}</span>
+      </header>
 
-    <ul class="erd-column-list" *ngIf="table.columns.length">
-      <li
-        *ngFor="let col of table.columns"
-        class="erd-column-row"
-        [class.col-idle]="col.status === 'idle'"
-        [class.col-running]="col.status === 'running'"
-        [class.col-insert]="col.status === 'insert'"
-        [class.col-update]="col.status === 'update'"
-        [class.col-done]="col.status === 'done'"
-      >
-        <span class="erd-column-name">{{ col.nome }}</span>
-      </li>
-    </ul>
+      <ul class="erd-column-list" *ngIf="table.columns.length">
+        <li
+          *ngFor="let col of table.columns"
+          class="erd-column-row"
+          [class.col-idle]="col.status === 'idle'"
+          [class.col-running]="col.status === 'running'"
+          [class.col-insert]="col.status === 'insert'"
+          [class.col-update]="col.status === 'update'"
+          [class.col-done]="col.status === 'done'"
+        >
+          <span class="erd-column-name">{{ col.nome }}</span>
+        </li>
+      </ul>
 
-    <div class="erd-table-empty" *ngIf="!table.columns.length">
-      <span>Colunas...</span>
+      <div class="erd-table-empty" *ngIf="!table.columns.length">
+        <span>Colunas...</span>
+      </div>
     </div>
   </div>
-</div>
+</ng-container>

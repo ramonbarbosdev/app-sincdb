@@ -173,6 +173,11 @@
 
 .status-error .erd-table-node {
   border-color: var(--sync-diagram-status-error);
+  background: color-mix(in srgb, var(--sync-diagram-status-error) 10%, var(--sync-diagram-surface-card));
+}
+
+.status-error .erd-table-header strong {
+  color: var(--sync-diagram-status-error);
 }
 
 .col-running {

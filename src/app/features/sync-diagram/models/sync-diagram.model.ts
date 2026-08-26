@@ -94,6 +94,7 @@ export interface SyncOperation {
   tabelaAtual?: string;
   label: string;
   detailOpen: boolean;
+  errorsExpanded?: boolean;
   estruturaResponse?: EstruturaResponse;
   tabelasAfetadas?: TabelaAfetadaDTO[];
   errors?: string[];
@@ -157,4 +158,11 @@ export interface DiagramFlowConnection {
   targetId: string;
   active: boolean;
   kind: 'selector' | 'operation-link' | 'erd-fk';
+  label?: string;
+}
+
+export interface DiagramFlowConnectionLabel {
+  id: string;
+  position: DiagramFlowPoint;
+  text: string;
 }

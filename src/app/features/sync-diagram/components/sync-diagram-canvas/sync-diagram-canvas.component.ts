@@ -7,16 +7,16 @@ import {
   provideFFlow,
 } from '@foblex/flow';
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, viewChild } from '@angular/core';
 import {
   SyncDiagramAction,
   SyncDiagramNodeData,
 } from '../../models/sync-diagram.model';
+import { SyncDiagramActionsService } from '../../services/sync-diagram-actions.service';
 import { SyncDiagramCameraService } from '../../services/sync-diagram-camera.service';
 import { SyncDiagramOperationService } from '../../services/sync-diagram-operation.service';
 import { SyncDiagramStateService } from '../../services/sync-diagram-state.service';
 import { SyncDiagramNodeCardComponent } from '../sync-diagram-node-card/sync-diagram-node-card.component';
-import { SyncErdImpactZoneComponent } from '../sync-erd-impact-zone/sync-erd-impact-zone.component';
 import { SyncErdTableNodeComponent } from '../sync-erd-table-node/sync-erd-table-node.component';
 import { SyncOperationNodeCardComponent } from '../sync-operation-node-card/sync-operation-node-card.component';
 
@@ -30,14 +30,15 @@ import { SyncOperationNodeCardComponent } from '../sync-operation-node-card/sync
     SyncDiagramNodeCardComponent,
     SyncOperationNodeCardComponent,
     SyncErdTableNodeComponent,
-    SyncErdImpactZoneComponent,
   ],
   templateUrl: './sync-diagram-canvas.component.html',
   styleUrls: ['../../sync-diagram.theme.scss', './sync-diagram-canvas.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SyncDiagramCanvasComponent {
   readonly state = inject(SyncDiagramStateService);
   private operations = inject(SyncDiagramOperationService);
+  private actions = inject(SyncDiagramActionsService);
   private camera = inject(SyncDiagramCameraService);
   private canvas = viewChild(FCanvasComponent);
   private zoom = viewChild(FZoomDirective);
@@ -113,6 +114,17 @@ export class SyncDiagramCanvasComponent {
 
   onCancelOperation(operationId: string): void {
     this.operations.cancelOperation(operationId);
+  }
+
+  onRetryOperation(operationId: string): void {
+    const op = this.state.getOperation(operationId);
+    if (op) {
+      this.actions.retryOperation(op);
+    }
+  }
+
+  onToggleOperationErrors(operationId: string): void {
+    this.state.toggleOperationErrorsExpanded(operationId);
   }
 
   onNodeAction(action: SyncDiagramAction, node: SyncDiagramNodeData): void {

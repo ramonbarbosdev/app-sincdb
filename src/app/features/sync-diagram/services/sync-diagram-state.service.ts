@@ -4,6 +4,7 @@ import { BaseService } from '../../../services/base.service';
 import {
   ColumnVisualState,
   DiagramFlowConnection,
+  DiagramFlowConnectionLabel,
   DiagramFlowNode,
   DiagramFlowPoint,
   ErdEdge,
@@ -16,6 +17,7 @@ import {
   SyncDiagramKind,
   SyncDiagramMode,
   SyncDiagramNodeData,
+  OperationActionKind,
   SyncOperation,
   TableVisualStatus,
   TabelaAfetadaDTO,
@@ -30,6 +32,10 @@ const DEFAULT_POSITIONS: Record<string, DiagramFlowPoint> = {
 const HORIZONTAL_GAP = 320;
 const OPERATION_GAP = 320;
 const ERD_ORIGIN_OFFSET_X = 280;
+const FLOW_CARD_WIDTH = 260;
+const FLOW_CARD_CENTER_Y = 120;
+const GRAPH_REBUILD_DELAY_MS = 120;
+const CONNECTION_LABELS_DELAY_MS = 50;
 
 @Injectable()
 export class SyncDiagramStateService {
@@ -40,6 +46,7 @@ export class SyncDiagramStateService {
   readonly syncMode = signal<SyncDiagramMode>('estrutura');
   readonly flowNodes = signal<DiagramFlowNode[]>([]);
   readonly flowConnections = signal<DiagramFlowConnection[]>([]);
+  readonly flowConnectionLabels = signal<DiagramFlowConnectionLabel[]>([]);
   readonly loadingInitial = signal(true);
   readonly selection = signal<SyncDiagramContext>({});
   readonly operations = signal<SyncOperation[]>([]);
@@ -61,6 +68,9 @@ export class SyncDiagramStateService {
   private erdEdges = new Map<string, ErdEdge>();
   private activeOperationId?: string;
   private persistTimer?: ReturnType<typeof setTimeout>;
+  private graphRebuildTimer?: ReturnType<typeof setTimeout>;
+  private connectionLabelsTimer?: ReturnType<typeof setTimeout>;
+  private readonly erdDataVersion = signal(0);
 
   init(): void {
     this.applyStoredLayout();
@@ -88,7 +98,17 @@ export class SyncDiagramStateService {
 
   setFilter(nodeId: string, value: string): void {
     this.filters.set(nodeId, value);
-    this.rebuildGraph();
+    const meta = this.nodeMeta.get(nodeId);
+    if (meta) {
+      this.nodeMeta.set(nodeId, { ...meta, filter: value });
+    }
+    this.flowNodes.update((nodes) =>
+      nodes.map((node) =>
+        node.id === nodeId && node.selectorMeta
+          ? { ...node, selectorMeta: { ...node.selectorMeta, filter: value } }
+          : node
+      )
+    );
     this.persistSoon();
   }
 
@@ -107,8 +127,12 @@ export class SyncDiagramStateService {
             point
           );
         }
-        this.rebuildGraph();
+        this.scheduleGraphRebuild();
       }
+    }
+
+    if (nodeId.startsWith('node-')) {
+      this.scheduleConnectionLabelsRefresh();
     }
 
     this.persistSoon();
@@ -132,7 +156,14 @@ export class SyncDiagramStateService {
     this.operations.update((list) =>
       list.map((o) => (o.id === operationId ? { ...o, ...patch } : o))
     );
-    this.rebuildGraph();
+    if (this.operationPatchRequiresGraphRebuild(patch)) {
+      this.scheduleGraphRebuild();
+    }
+  }
+
+  getErdTable(tableId: string): ErdTableNode | undefined {
+    this.erdDataVersion();
+    return this.erdTables.get(tableId);
   }
 
   getOperation(operationId: string): SyncOperation | undefined {
@@ -153,6 +184,27 @@ export class SyncDiagramStateService {
   closeOperationDetail(operationId: string): void {
     this.patchOperation(operationId, { detailOpen: false });
     this.clearErdForOperation(operationId);
+  }
+
+  toggleOperationErrorsExpanded(operationId: string): void {
+    const op = this.getOperation(operationId);
+    if (!op) return;
+    this.operations.update((list) =>
+      list.map((o) =>
+        o.id === operationId ? { ...o, errorsExpanded: !op.errorsExpanded } : o
+      )
+    );
+  }
+
+  removeOperation(operationId: string): void {
+    this.operations.update((list) => list.filter((o) => o.id !== operationId));
+    this.clearErdForOperation(operationId);
+    const opNodeId = this.operationNodeId(operationId);
+    this.positions.delete(opNodeId);
+    if (this.activeOperationId === operationId) {
+      this.activeOperationId = undefined;
+    }
+    this.rebuildGraph();
   }
 
   openOperationDetail(operationId: string): void {
@@ -195,7 +247,10 @@ export class SyncDiagramStateService {
     const current = this.erdTables.get(tableId);
     if (!current) return;
     this.erdTables.set(tableId, { ...current, ...patch });
-    this.rebuildGraph();
+    this.bumpErdData();
+    if (this.erdPatchRequiresGraphRebuild(patch)) {
+      this.scheduleGraphRebuild();
+    }
   }
 
   applyEstruturaVisuals(operationId: string, response: EstruturaResponse): void {
@@ -257,7 +312,7 @@ export class SyncDiagramStateService {
         ...table,
         columns: table.columns.map((c) => ({ ...c, status: 'done' })),
       });
-      this.rebuildGraph();
+      this.bumpErdData();
     }
   }
 
@@ -818,7 +873,7 @@ export class SyncDiagramStateService {
         )
       );
       connections.push(
-        this.createSelectorConnection(this.basesNodeId, this.schemasNodeId, !!sel.esquema)
+        this.createSelectorConnection(this.basesNodeId, this.schemasNodeId, !!sel.esquema, 'Schemas')
       );
     }
 
@@ -846,7 +901,7 @@ export class SyncDiagramStateService {
         )
       );
       connections.push(
-        this.createSelectorConnection(this.schemasNodeId!, this.tablesNodeId, !!sel.tabela)
+        this.createSelectorConnection(this.schemasNodeId!, this.tablesNodeId, !!sel.tabela, 'Tabelas')
       );
     }
 
@@ -869,27 +924,14 @@ export class SyncDiagramStateService {
         id: `edge-op-link-${lastLinkId}-${opNodeId}`,
         sourceId: this.connectorIds(lastLinkId).source,
         targetId: connectors.target,
-        active: true,
+        active: op.phase !== 'erro' && op.phase !== 'cancelado',
         kind: 'operation-link',
+        label: this.operationEdgeLabel(op.action),
       });
       lastLinkId = opNodeId;
 
       if (op.detailOpen) {
         const erdTables = this.erdTablesForOperation(op.id);
-        const zone = this.computeImpactZone(op, erdTables, opPos);
-        const hasAffected = zone.chips.length > 0;
-
-        if (zone.width > 0 && zone.height > 0) {
-          const zoneConnectors = this.connectorIds(zone.id);
-          nodes.push({
-            id: zone.id,
-            type: 'erd-zone',
-            position: { x: zone.x, y: zone.y },
-            sourceConnectorId: zoneConnectors.source,
-            targetConnectorId: zoneConnectors.target,
-            erdZoneMeta: zone,
-          });
-        }
 
         for (const erd of erdTables) {
           const erdConnectors = this.connectorIds(erd.id);
@@ -918,6 +960,90 @@ export class SyncDiagramStateService {
 
     this.flowNodes.set(nodes);
     this.flowConnections.set(connections);
+    this.flowConnectionLabels.set(this.buildConnectionLabels(nodes, connections));
+  }
+
+  private scheduleGraphRebuild(): void {
+    if (this.graphRebuildTimer) {
+      clearTimeout(this.graphRebuildTimer);
+    }
+    this.graphRebuildTimer = setTimeout(() => {
+      this.graphRebuildTimer = undefined;
+      this.rebuildGraph();
+    }, GRAPH_REBUILD_DELAY_MS);
+  }
+
+  private scheduleConnectionLabelsRefresh(): void {
+    if (this.connectionLabelsTimer) {
+      clearTimeout(this.connectionLabelsTimer);
+    }
+    this.connectionLabelsTimer = setTimeout(() => {
+      this.connectionLabelsTimer = undefined;
+      this.flowConnectionLabels.set(
+        this.buildConnectionLabels(this.flowNodes(), this.flowConnections())
+      );
+    }, CONNECTION_LABELS_DELAY_MS);
+  }
+
+  private bumpErdData(): void {
+    this.erdDataVersion.update((v) => v + 1);
+  }
+
+  private operationPatchRequiresGraphRebuild(patch: Partial<SyncOperation>): boolean {
+    const keys = Object.keys(patch) as (keyof SyncOperation)[];
+    if (!keys.length) return false;
+    const lightweight: (keyof SyncOperation)[] = ['progress', 'tabelaAtual', 'errorsExpanded'];
+    return keys.some((key) => !lightweight.includes(key));
+  }
+
+  private erdPatchRequiresGraphRebuild(patch: Partial<ErdTableNode>): boolean {
+    return (
+      'status' in patch ||
+      'spotlightDim' in patch ||
+      'mode' in patch ||
+      'nome' in patch ||
+      'operationId' in patch
+    );
+  }
+
+  private buildConnectionLabels(
+    nodes: DiagramFlowNode[],
+    connections: DiagramFlowConnection[]
+  ): DiagramFlowConnectionLabel[] {
+    const posById = new Map<string, DiagramFlowPoint>();
+    for (const node of nodes) {
+      posById.set(node.id, node.position);
+    }
+    for (const [id, pos] of this.positions) {
+      if (id.startsWith('node-')) {
+        posById.set(id, pos);
+      }
+    }
+
+    const labels: DiagramFlowConnectionLabel[] = [];
+    for (const edge of connections) {
+      if (!edge.label) continue;
+      const sourceId = this.nodeIdFromConnector(edge.sourceId);
+      const targetId = this.nodeIdFromConnector(edge.targetId);
+      const sourcePos = posById.get(sourceId);
+      const targetPos = posById.get(targetId);
+      if (!sourcePos || !targetPos) continue;
+
+      labels.push({
+        id: `edge-label-${edge.id}`,
+        position: {
+          x: (sourcePos.x + FLOW_CARD_WIDTH + targetPos.x) / 2 - 36,
+          y: (sourcePos.y + FLOW_CARD_CENTER_Y + targetPos.y + FLOW_CARD_CENTER_Y) / 2 - 10,
+        },
+        text: edge.label,
+      });
+    }
+    return labels;
+  }
+
+  private nodeIdFromConnector(connectorId: string): string {
+    const idx = connectorId.lastIndexOf('::');
+    return idx >= 0 ? connectorId.slice(0, idx) : connectorId;
   }
 
   private createSelectorNode(
@@ -939,7 +1065,8 @@ export class SyncDiagramStateService {
   private createSelectorConnection(
     sourceNodeId: string,
     targetNodeId: string,
-    active: boolean
+    active: boolean,
+    label?: string
   ): DiagramFlowConnection {
     const source = this.connectorIds(sourceNodeId);
     const target = this.connectorIds(targetNodeId);
@@ -949,6 +1076,18 @@ export class SyncDiagramStateService {
       targetId: target.target,
       active,
       kind: 'selector',
+      label,
     };
+  }
+
+  private operationEdgeLabel(action: OperationActionKind): string {
+    switch (action) {
+      case 'verificar':
+        return 'Verificar';
+      case 'sincronizar':
+        return 'Sincronizar';
+      case 'verificar-sync':
+        return 'Verificar + sync';
+    }
   }
 }

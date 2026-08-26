@@ -41,15 +41,26 @@
         />
 
         <div
+          *ngFor="let lbl of state.flowConnectionLabels()"
+          fNode
+          [fNodeId]="lbl.id"
+          [fNodePosition]="lbl.position"
+          fNodeSelectionDisabled
+          fNodeDraggingDisabled
+          class="flow-edge-label"
+        >
+          <span class="edge-label-pill">{{ lbl.text }}</span>
+        </div>
+
+        <div
           *ngFor="let flowNode of state.flowNodes()"
           fNode
           [fNodeId]="flowNode.id"
           [fNodePosition]="flowNode.position"
           (fNodePositionChange)="onPositionChange(flowNode.id, $event)"
           [fNodeSelectionDisabled]="true"
-          [fNodeDraggingDisabled]="flowNode.type === 'erd-zone'"
+          [fNodeDraggingDisabled]="false"
           class="flow-node-shell"
-          [class.flow-node-zone]="flowNode.type === 'erd-zone'"
           [class.flow-node-erd]="flowNode.type === 'erd-table'"
         >
           <div
@@ -78,20 +89,17 @@
 
           <app-sync-operation-node-card
             *ngIf="flowNode.type === 'operation' && flowNode.operationMeta"
-            [operation]="flowNode.operationMeta"
-            (toggleDetail)="onToggleOperationDetail(flowNode.operationMeta!.id)"
-            (closeDetail)="onCloseOperationDetail(flowNode.operationMeta!.id)"
-            (cancel)="onCancelOperation(flowNode.operationMeta!.id)"
-          />
-
-          <app-sync-erd-impact-zone
-            *ngIf="flowNode.type === 'erd-zone' && flowNode.erdZoneMeta"
-            [zone]="flowNode.erdZoneMeta"
+            [operationId]="flowNode.operationMeta.id"
+            (toggleDetail)="onToggleOperationDetail(flowNode.operationMeta.id)"
+            (closeDetail)="onCloseOperationDetail(flowNode.operationMeta.id)"
+            (cancel)="onCancelOperation(flowNode.operationMeta.id)"
+            (retry)="onRetryOperation(flowNode.operationMeta.id)"
+            (toggleErrors)="onToggleOperationErrors(flowNode.operationMeta.id)"
           />
 
           <app-sync-erd-table-node
-            *ngIf="flowNode.type === 'erd-table' && flowNode.erdMeta"
-            [table]="flowNode.erdMeta"
+            *ngIf="flowNode.type === 'erd-table'"
+            [tableId]="flowNode.id"
           />
         </div>
       </f-canvas>

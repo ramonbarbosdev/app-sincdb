@@ -41,4 +41,36 @@ export class SyncDiagramActionsPanelComponent {
       this.modeChange.emit(mode);
     }
   }
+
+  verifyTitle(): string {
+    return this.isEstrutura() ? 'Verificar estrutura' : 'Verificar dados';
+  }
+
+  syncTitle(): string {
+    return this.isEstrutura() ? 'Sincronizar estrutura' : 'Sincronizar dados';
+  }
+
+  verifyAriaLabel(): string {
+    return `${this.verifyTitle()} · ${this.scopeLabel}`;
+  }
+
+  syncAriaLabel(): string {
+    return `${this.syncTitle()} · ${this.scopeLabel}`;
+  }
+
+  emitVerify(): void {
+    if (this.isEstrutura()) {
+      this.verifyEstrutura.emit();
+    } else {
+      this.verifyDados.emit();
+    }
+  }
+
+  emitSync(): void {
+    if (this.isEstrutura()) {
+      this.syncEstrutura.emit();
+    } else {
+      this.syncDados.emit();
+    }
+  }
 }
