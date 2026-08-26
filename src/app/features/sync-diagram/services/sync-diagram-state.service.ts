@@ -20,6 +20,7 @@ import {
   SyncDiagramNodeData,
   OperationActionKind,
   operationScopeKey,
+  OperationLogEntry,
   SyncOperation,
   TableVisualStatus,
   TabelaAfetadaDTO,
@@ -231,20 +232,22 @@ export class SyncDiagramStateService {
 
       if (op.detailOpen) {
         const erdTables = this.erdTablesForOperation(op.id);
-        const erdOrigin = { x: anchorPos.x + ERD_ORIGIN_OFFSET_X, y: anchorPos.y };
-        const layoutPositions = this.layout.layoutErd(
-          erdTables.map((t) => ({ id: t.id })),
-          erdOrigin
-        );
-        for (const [erdId, pos] of layoutPositions) {
-          this.positions.set(erdId, pos);
-          const table = this.erdTables.get(erdId);
-          if (table && op.context.base && op.context.esquema) {
-            const grafoId = erdId.replace(`erd-${table.operationId}-`, '');
-            this.positions.set(
-              this.erdStableKey(op.context.base, op.context.esquema, grafoId),
-              pos
-            );
+        if (erdTables.length > 0) {
+          const erdOrigin = { x: anchorPos.x + ERD_ORIGIN_OFFSET_X, y: anchorPos.y };
+          const layoutPositions = this.layout.layoutErd(
+            erdTables.map((t) => ({ id: t.id })),
+            erdOrigin
+          );
+          for (const [erdId, pos] of layoutPositions) {
+            this.positions.set(erdId, pos);
+            const table = this.erdTables.get(erdId);
+            if (table && op.context.base && op.context.esquema) {
+              const grafoId = erdId.replace(`erd-${table.operationId}-`, '');
+              this.positions.set(
+                this.erdStableKey(op.context.base, op.context.esquema, grafoId),
+                pos
+              );
+            }
           }
         }
       }
@@ -331,6 +334,16 @@ export class SyncDiagramStateService {
     if (this.operationPatchRequiresGraphRebuild(patch)) {
       this.scheduleGraphRebuild();
     }
+  }
+
+  appendOperationLog(operationId: string, entry: OperationLogEntry): void {
+    this.operations.update((list) =>
+      list.map((o) =>
+        o.id === operationId
+          ? { ...o, terminalLogs: [...(o.terminalLogs ?? []), entry] }
+          : o
+      )
+    );
   }
 
   getErdTable(tableId: string): ErdTableNode | undefined {
@@ -1230,9 +1243,8 @@ export class SyncDiagramStateService {
       });
       lastLinkId = opNodeId;
 
-      if (op.detailOpen) {
-        const erdTables = this.erdTablesForOperation(op.id);
-
+      const erdTables = this.erdTablesForOperation(op.id);
+      if (erdTables.length > 0) {
         for (const erd of erdTables) {
           const erdConnectors = this.connectorIds(erd.id);
           const erdPos = this.getPosition(erd.id, { x: opPos.x + ERD_ORIGIN_OFFSET_X, y: opPos.y });
@@ -1292,7 +1304,13 @@ export class SyncDiagramStateService {
   private operationPatchRequiresGraphRebuild(patch: Partial<SyncOperation>): boolean {
     const keys = Object.keys(patch) as (keyof SyncOperation)[];
     if (!keys.length) return false;
-    const lightweight: (keyof SyncOperation)[] = ['progress', 'tabelaAtual', 'errorsExpanded'];
+    const lightweight: (keyof SyncOperation)[] = [
+      'progress',
+      'tabelaAtual',
+      'errorsExpanded',
+      'terminalLogs',
+      'detailOpen',
+    ];
     return keys.some((key) => !lightweight.includes(key));
   }
 

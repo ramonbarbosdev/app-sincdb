@@ -12,13 +12,11 @@
   background: var(--sync-diagram-surface-card);
   box-shadow: var(--sync-diagram-shadow);
   overflow: hidden;
-  cursor: pointer;
   text-align: left;
-  padding: 0;
   transition: box-shadow 160ms ease, border-color 160ms ease, background 160ms ease;
 
-  &:hover {
-    border-color: color-mix(in srgb, var(--sync-diagram-primary) 45%, var(--sync-diagram-border));
+  &.is-expanded {
+    width: 320px;
   }
 }
 
@@ -73,9 +71,15 @@
 }
 
 .operation-icon {
+  display: grid;
+  place-items: center;
   font-size: 0.9rem;
   line-height: 1;
   color: var(--sync-diagram-primary);
+
+  .pi {
+    font-size: 0.85rem;
+  }
 }
 
 .mode-dados .operation-icon {
@@ -95,6 +99,13 @@
   }
 }
 
+.operation-title-line {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
 .operation-scope-subtitle {
   display: block;
   font-size: 0.68rem;
@@ -107,13 +118,17 @@
 }
 
 .operation-phase-badge {
-  display: inline-block;
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 0.12rem 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
   border-radius: 999px;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+
+  .pi {
+    font-size: 0.62rem;
+  }
 }
 
 .badge-running {
@@ -147,13 +162,19 @@
 }
 
 .operation-mode-badge {
-  font-size: 0.65rem;
-  font-weight: 600;
-  padding: 0.1rem 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
   border-radius: 999px;
-  text-transform: uppercase;
   background: color-mix(in srgb, var(--sync-diagram-primary) 12%, transparent);
   color: var(--sync-diagram-primary);
+
+  .pi {
+    font-size: 0.62rem;
+  }
 }
 
 .mode-dados .operation-mode-badge {
@@ -225,8 +246,16 @@
 
 .operation-table-hint {
   margin: 0.45rem 0 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.72rem;
   color: var(--sync-diagram-text-muted);
+
+  .pi {
+    font-size: 0.68rem;
+    color: var(--sync-diagram-primary);
+  }
 
   span {
     font-family: var(--sync-diagram-mono);
@@ -240,9 +269,18 @@
 
 .operation-error-summary {
   margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
   font-size: 0.72rem;
   line-height: 1.45;
   color: var(--sync-diagram-status-error);
+
+  .pi {
+    font-size: 0.72rem;
+    margin-top: 0.1rem;
+    flex-shrink: 0;
+  }
 }
 
 .operation-error-actions {
@@ -255,12 +293,19 @@
 .op-action-btn {
   border: 1px solid var(--sync-diagram-border);
   border-radius: 6px;
-  padding: 0.28rem 0.55rem;
-  font-size: 0.7rem;
-  font-weight: 600;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  font-size: 0.72rem;
   cursor: pointer;
   background: var(--sync-diagram-surface);
   color: var(--sync-diagram-text);
+
+  .pi {
+    font-size: 0.72rem;
+  }
 }
 
 .op-action-retry {
@@ -287,8 +332,15 @@
 
 .operation-message {
   margin: 0.45rem 0 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.72rem;
   color: var(--sync-diagram-text-muted);
+
+  .pi {
+    font-size: 0.72rem;
+  }
 }
 
 .operation-fab-strip {
@@ -310,7 +362,12 @@
   background: transparent;
   color: var(--sync-diagram-text);
   cursor: pointer;
-  font-size: 0.82rem;
+  display: grid;
+  place-items: center;
+
+  .pi {
+    font-size: 0.82rem;
+  }
 
   &:hover {
     background: color-mix(in srgb, var(--sync-diagram-primary) 12%, transparent);

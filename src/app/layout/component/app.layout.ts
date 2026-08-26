@@ -8,7 +8,6 @@ import { AppFooter } from './app.footer';
 import { LayoutService } from '../service/layout.service';
 import { LoadingService } from '../../services/loading.service';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { ProductTipBanner } from '../../components/product-tip-banner/product-tip-banner';
 import { SeasonalGreeting } from '../../components/seasonal-greeting/seasonal-greeting';
 @Component({
   selector: 'app-layout',
@@ -20,7 +19,6 @@ import { SeasonalGreeting } from '../../components/seasonal-greeting/seasonal-gr
     RouterModule,
     AppFooter,
     ProgressSpinnerModule,
-    ProductTipBanner,
     SeasonalGreeting,
   ],
   template: `

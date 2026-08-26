@@ -11,6 +11,7 @@ import {
   ErdTableNode,
   formatOperationScopeSubtitle,
   OperationActionKind,
+  parseTerminalLogLine,
   SyncDiagramContext,
   SyncDiagramMode,
   SyncOperation,
@@ -29,6 +30,7 @@ export class SyncDiagramOperationService implements OnDestroy {
 
   private progressSub?: Subscription;
   private wsBridgeSub?: Subscription;
+  private operationLogsSub?: Subscription;
   private activeOperationId?: string;
   private onOperationIdle?: () => void;
 
@@ -41,6 +43,7 @@ export class SyncDiagramOperationService implements OnDestroy {
   ngOnDestroy(): void {
     this.progressSub?.unsubscribe();
     this.wsBridgeSub?.unsubscribe();
+    this.operationLogsSub?.unsubscribe();
     this.onOperationIdle = undefined;
   }
 
@@ -67,9 +70,6 @@ export class SyncDiagramOperationService implements OnDestroy {
     if (existing) {
       this.state.reuseOperation(existing.id, operationPayload);
       this.trackOperation(existing.id);
-      if (this.shouldLoadErdGraph(mode)) {
-        this.loadErdGraph(existing.id);
-      }
       return existing.id;
     }
 
@@ -77,14 +77,7 @@ export class SyncDiagramOperationService implements OnDestroy {
     const operation: SyncOperation = { ...operationPayload, id };
     this.state.spawnOperation(operation);
     this.trackOperation(id);
-    if (this.shouldLoadErdGraph(mode)) {
-      this.loadErdGraph(id);
-    }
     return id;
-  }
-
-  private shouldLoadErdGraph(mode: SyncDiagramMode): boolean {
-    return mode !== 'estrutura';
   }
 
   private buildOperationPayload(
@@ -101,12 +94,13 @@ export class SyncDiagramOperationService implements OnDestroy {
       phase: action === 'sincronizar' ? 'sincronizando' : 'verificando',
       progress: 0,
       label: scope,
-      detailOpen: mode !== 'estrutura',
+      detailOpen: false,
       errorsExpanded: false,
       estruturaResponse: undefined,
       tabelasAfetadas: undefined,
       errors: undefined,
       tabelaAtual: undefined,
+      terminalLogs: [],
     };
   }
 
@@ -118,9 +112,7 @@ export class SyncDiagramOperationService implements OnDestroy {
       progress: 0,
       label: formatOperationScopeSubtitle(op.context),
     });
-    if (op.mode === 'estrutura') {
-      this.state.closeOperationDetail(operationId);
-    }
+    this.state.closeOperationDetail(operationId);
     this.trackOperation(operationId);
   }
 
@@ -167,10 +159,8 @@ export class SyncDiagramOperationService implements OnDestroy {
     if (res.tabelas_afetadas && op?.mode !== 'estrutura') {
       this.state.applySyncResultVisuals(operationId, res.tabelas_afetadas, res.errors);
     }
-    if (op?.mode === 'estrutura') {
-      this.state.closeOperationDetail(operationId);
-    }
-    this.activeOperationId = undefined;
+    this.state.closeOperationDetail(operationId);
+    this.releaseOperationTracking();
     this.notifyOperationIdle();
   }
 
@@ -182,7 +172,7 @@ export class SyncDiagramOperationService implements OnDestroy {
       errorsExpanded: false,
     });
     if (this.activeOperationId === operationId) {
-      this.activeOperationId = undefined;
+      this.releaseOperationTracking();
     }
     this.notifyOperationIdle();
   }
@@ -195,7 +185,7 @@ export class SyncDiagramOperationService implements OnDestroy {
       errors: errors?.length ? errors : ['A operação falhou. Tente novamente.'],
     });
     if (this.activeOperationId === operationId) {
-      this.activeOperationId = undefined;
+      this.releaseOperationTracking();
     }
     this.notifyOperationIdle();
   }
@@ -242,12 +232,8 @@ export class SyncDiagramOperationService implements OnDestroy {
 
   toggleDetail(operationId: string): void {
     const op = this.state.getOperation(operationId);
-    if (!op || op.mode === 'estrutura') return;
-    const opening = !op.detailOpen;
+    if (!op) return;
     this.state.toggleOperationDetail(operationId);
-    if (opening) {
-      this.loadErdGraph(operationId);
-    }
   }
 
   dismissOperation(operationId: string): void {
@@ -334,6 +320,15 @@ export class SyncDiagramOperationService implements OnDestroy {
 
   private trackOperation(operationId: string): void {
     this.activeOperationId = operationId;
+    this.operationLogsSub?.unsubscribe();
+    this.operationLogsSub = this.ws.logs$.subscribe((msg) => {
+      if (this.activeOperationId !== operationId) return;
+      const entry = parseTerminalLogLine(msg);
+      if (entry) {
+        this.state.appendOperationLog(operationId, entry);
+      }
+    });
+
     if (!this.progressSub) {
       this.progressSub = this.progressoSync.progressoState$.subscribe((estado) => {
         const opId = this.activeOperationId;
@@ -368,14 +363,14 @@ export class SyncDiagramOperationService implements OnDestroy {
           patch.progress = 0;
           patch.errors = [];
           patch.errorsExpanded = false;
-          this.activeOperationId = undefined;
+          this.releaseOperationTracking();
         }
 
         if (status === 'ERRO') {
           patch.phase = 'erro';
           patch.progress = 0;
           patch.errors = op.errors?.length ? op.errors : ['Falha durante a operação'];
-          this.activeOperationId = undefined;
+          this.releaseOperationTracking();
         }
 
         if (status === 'CONCLUIDO') {
@@ -385,6 +380,12 @@ export class SyncDiagramOperationService implements OnDestroy {
         this.state.patchOperation(opId, patch);
       });
     }
+  }
+
+  private releaseOperationTracking(): void {
+    this.operationLogsSub?.unsubscribe();
+    this.operationLogsSub = undefined;
+    this.activeOperationId = undefined;
   }
 
   private isCancelled(operationId: string): boolean {

@@ -10,16 +10,23 @@
     [class.phase-cancelado]="operation.phase === 'cancelado'"
     [class.detail-open]="operation.detailOpen"
   >
-    <button
-      type="button"
-      class="operation-node"
-      [class.is-running]="isRunning()"
-      (click)="onCardClick()"
-    >
+    <div class="operation-node" [class.is-running]="isRunning()" [class.is-expanded]="operation.detailOpen">
       <header class="operation-header" fDragHandle>
-        <span class="operation-icon">⚙</span>
+        <span class="operation-icon" aria-hidden="true">
+          <i class="pi pi-cog"></i>
+        </span>
         <div class="operation-titles">
-          <strong>{{ displayTitle(operation.phase) }}</strong>
+          <strong class="operation-title-line">
+            <span>{{ displayTitle(operation.phase) }}</span>
+            <span
+              class="operation-mode-badge"
+              *ngIf="showsModeLabel(operation.phase)"
+              [attr.title]="modeLabel(operation.mode)"
+              [attr.aria-label]="modeLabel(operation.mode)"
+            >
+              <i class="pi" [class]="modeIcon(operation.mode)" aria-hidden="true"></i>
+            </span>
+          </strong>
           <span class="operation-scope-subtitle">{{ scopeSubtitle(operation.context) }}</span>
           <span
             class="operation-phase-badge"
@@ -28,8 +35,31 @@
             [class.badge-concluido]="operation.phase === 'concluido'"
             [class.badge-erro]="operation.phase === 'erro'"
             [class.badge-cancelado]="operation.phase === 'cancelado'"
-          >{{ phaseLabel(operation.phase) }}</span>
+            [attr.title]="phaseLabel(operation.phase)"
+            [attr.aria-label]="phaseLabel(operation.phase)"
+          >
+            <i
+              class="pi"
+              [class]="phaseIcon(operation.phase)"
+              [class.pi-spin]="isRunning()"
+              aria-hidden="true"
+            ></i>
+          </span>
         </div>
+        <button
+          type="button"
+          class="operation-detail-btn"
+          *ngIf="hasDetailContent(operation)"
+          [class.is-open]="operation.detailOpen"
+          title="Registro da operação"
+          aria-label="Ver detalhes da operação"
+          (click)="onToggleDetail($event)"
+        >
+          <i class="pi pi-list" aria-hidden="true"></i>
+          <span class="detail-error-count" *ngIf="errorCount(operation) > 0">
+            {{ errorCount(operation) }}
+          </span>
+        </button>
         <button
           *ngIf="!isRunning()"
           type="button"
@@ -38,7 +68,7 @@
           aria-label="Fechar caixa de operação"
           (click)="onClose($event)"
         >
-          ×
+          <i class="pi pi-times" aria-hidden="true"></i>
         </button>
       </header>
 
@@ -51,42 +81,142 @@
         </div>
 
         <p class="operation-table-hint" *ngIf="operation.tabelaAtual && isRunning()">
-          Tabela: <span>{{ operation.tabelaAtual }}</span>
+          <i class="pi pi-table" aria-hidden="true"></i>
+          <span>{{ operation.tabelaAtual }}</span>
         </p>
 
-        <div class="operation-error-panel" *ngIf="operation.phase === 'erro'">
-          <p class="operation-error-summary">{{ primaryError() }}</p>
+        <div class="operation-error-panel" *ngIf="operation.phase === 'erro' && !operation.detailOpen">
+          <p class="operation-error-summary">
+            <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+            <span>{{ primaryError() }}</span>
+          </p>
           <div class="operation-error-actions">
-            <button type="button" class="op-action-btn op-action-retry" (click)="onRetry($event)">
-              Repetir
+            <button
+              type="button"
+              class="op-action-btn op-action-retry"
+              title="Repetir operação"
+              aria-label="Repetir operação"
+              (click)="onRetry($event)"
+            >
+              <i class="pi pi-replay" aria-hidden="true"></i>
             </button>
             <button
               type="button"
               class="op-action-btn op-action-details"
-              *ngIf="showErrorDetailsButton()"
-              (click)="onToggleErrors($event)"
+              *ngIf="hasDetailContent(operation)"
+              title="Ver detalhes"
+              aria-label="Ver detalhes da operação"
+              (click)="onOpenDetail($event)"
             >
-              {{ operation.errorsExpanded ? 'Ocultar detalhes' : 'Ver detalhes' }}
+              <i class="pi pi-list" aria-hidden="true"></i>
             </button>
           </div>
-          <ul class="operation-error-list" *ngIf="operation.errorsExpanded && operation.errors?.length">
-            <li *ngFor="let err of operation.errors">{{ err }}</li>
-          </ul>
         </div>
 
         <p class="operation-message" *ngIf="operation.phase === 'cancelado'">
-          Você cancelou esta operação. Nada foi marcado como falha.
+          <i class="pi pi-ban" aria-hidden="true"></i>
+          <span>Operação cancelada.</span>
         </p>
       </div>
-    </button>
+
+      <section
+        class="operation-detail-panel"
+        *ngIf="operation.detailOpen"
+        aria-label="Registro da operação"
+      >
+        <header class="operation-detail-header">
+          <span class="operation-detail-title">
+            <i class="pi pi-list" aria-hidden="true"></i>
+          </span>
+          <span
+            class="operation-detail-meta"
+            *ngIf="errorCount(operation) > 0"
+            [attr.title]="errorCount(operation) + ' aviso(s)'"
+          >
+            <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+            <span>{{ errorCount(operation) }}</span>
+          </span>
+        </header>
+
+        <div class="operation-detail-body">
+          <ul class="operation-api-errors" *ngIf="operation.errors?.length">
+            <li *ngFor="let err of operation.errors" class="log-line log-error">
+              <span class="log-tag" aria-hidden="true">
+                <i class="pi pi-times-circle"></i>
+              </span>
+              <span class="log-text">{{ err }}</span>
+            </li>
+          </ul>
+
+          <div
+            class="log-group"
+            *ngFor="let group of logGroups(operation)"
+            [class.has-error]="group.hasError"
+          >
+            <div class="log-group-table" *ngIf="group.table">
+              <i class="pi pi-table" aria-hidden="true"></i>
+              <span>{{ group.table }}</span>
+            </div>
+            <div
+              *ngFor="let line of group.lines"
+              class="log-line"
+              [class.log-error]="line.level === 'error' || isLikelyErrorMessage(line.message)"
+              [class.log-warn]="line.level === 'warn'"
+              [class.log-ok]="line.level === 'ok' || line.level === 'done'"
+              [class.log-info]="line.level === 'info' || line.level === 'skip'"
+            >
+              <span class="log-tag" *ngIf="line.level !== 'text'" aria-hidden="true">
+                <i class="pi" [class]="logIcon(line.level)"></i>
+              </span>
+              <span class="log-text">{{ line.message }}</span>
+            </div>
+          </div>
+
+          <div
+            class="log-group has-error"
+            *ngFor="let row of tableErrors(operation)"
+          >
+            <div class="log-group-table">
+              <i class="pi pi-table" aria-hidden="true"></i>
+              <span>{{ row.tabela }}</span>
+            </div>
+            <div class="log-line log-error">
+              <span class="log-tag" aria-hidden="true">
+                <i class="pi pi-times-circle"></i>
+              </span>
+              <span class="log-text">{{ row.erro }}</span>
+            </div>
+          </div>
+
+          <p class="operation-detail-empty" *ngIf="!hasDetailContent(operation)">
+            <i class="pi pi-inbox" aria-hidden="true"></i>
+          </p>
+        </div>
+
+        <footer class="operation-detail-footer" *ngIf="operation.phase === 'erro'">
+          <button
+            type="button"
+            class="op-action-btn op-action-retry"
+            title="Repetir operação"
+            aria-label="Repetir operação"
+            (click)="onRetry($event)"
+          >
+            <i class="pi pi-replay" aria-hidden="true"></i>
+          </button>
+        </footer>
+      </section>
+    </div>
 
     <div class="operation-fab-strip" *ngIf="isRunning()">
       <button
         type="button"
         class="fab-btn fab-cancel"
         title="Cancelar operação"
+        aria-label="Cancelar operação"
         (click)="onCancel($event)"
-      >⊗</button>
+      >
+        <i class="pi pi-times-circle" aria-hidden="true"></i>
+      </button>
     </div>
   </div>
 </ng-container>

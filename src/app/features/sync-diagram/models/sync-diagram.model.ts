@@ -152,6 +152,106 @@ export interface TabelaAfetadaDTO {
   linhaAtualizadas?: number;
 }
 
+export type OperationLogLevel =
+  | 'table'
+  | 'error'
+  | 'warn'
+  | 'info'
+  | 'ok'
+  | 'skip'
+  | 'done'
+  | 'text';
+
+export interface OperationLogEntry {
+  level: OperationLogLevel;
+  message: string;
+  table?: string;
+}
+
+export interface OperationLogGroup {
+  table?: string;
+  lines: OperationLogEntry[];
+  hasError: boolean;
+}
+
+const TERMINAL_LOG_PREFIX: Array<{ prefix: string; level: OperationLogLevel }> = [
+  { prefix: '[TABLE]', level: 'table' },
+  { prefix: '[ERROR]', level: 'error' },
+  { prefix: '[WARN]', level: 'warn' },
+  { prefix: '[INFO]', level: 'info' },
+  { prefix: '[ OK ]', level: 'ok' },
+  { prefix: '[SKIP]', level: 'skip' },
+  { prefix: '[DONE]', level: 'done' },
+];
+
+export function parseTerminalLogLine(raw: string): OperationLogEntry | null {
+  const line = raw.replace(/^\s+/, '').trim();
+  if (!line) return null;
+
+  for (const { prefix, level } of TERMINAL_LOG_PREFIX) {
+    if (line.startsWith(prefix)) {
+      const message = line.slice(prefix.length).trim();
+      if (level === 'table') {
+        return { level, message, table: message };
+      }
+      return { level, message };
+    }
+  }
+
+  return { level: 'text', message: line };
+}
+
+export function groupOperationLogs(entries: OperationLogEntry[]): OperationLogGroup[] {
+  const groups: OperationLogGroup[] = [];
+  let current: OperationLogGroup | null = null;
+
+  for (const entry of entries) {
+    if (entry.level === 'table') {
+      current = {
+        table: entry.table ?? entry.message,
+        lines: [],
+        hasError: false,
+      };
+      groups.push(current);
+      continue;
+    }
+
+    if (!current) {
+      current = { lines: [], hasError: false };
+      groups.push(current);
+    }
+
+    current.lines.push(entry);
+    if (entry.level === 'error' || isLikelyErrorMessage(entry.message)) {
+      current.hasError = true;
+    }
+  }
+
+  return groups;
+}
+
+export function isLikelyErrorMessage(message: string): boolean {
+  const text = message.toLowerCase();
+  return (
+    text.includes('não existe') ||
+    text.includes('nao existe') ||
+    text.includes('erro') ||
+    text.includes('falha') ||
+    text.includes('exception')
+  );
+}
+
+export function countOperationLogErrors(
+  entries: OperationLogEntry[],
+  errors?: string[],
+  tabelasAfetadas?: TabelaAfetadaDTO[]
+): number {
+  let count = entries.filter((e) => e.level === 'error').length;
+  count += errors?.length ?? 0;
+  count += tabelasAfetadas?.filter((t) => t.erro)?.length ?? 0;
+  return count;
+}
+
 export interface SyncOperation {
   id: string;
   mode: SyncDiagramMode;
@@ -166,6 +266,7 @@ export interface SyncOperation {
   estruturaResponse?: EstruturaResponse;
   tabelasAfetadas?: TabelaAfetadaDTO[];
   errors?: string[];
+  terminalLogs?: OperationLogEntry[];
 }
 
 export interface ColumnVisualState {

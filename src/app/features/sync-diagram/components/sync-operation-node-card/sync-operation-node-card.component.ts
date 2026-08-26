@@ -10,9 +10,17 @@ import {
   Output,
 } from '@angular/core';
 import {
+  countOperationLogErrors,
   formatOperationScopeSubtitle,
+  groupOperationLogs,
+  isLikelyErrorMessage,
+  OperationLogGroup,
+  OperationLogLevel,
   OperationPhase,
   SyncDiagramContext,
+  SyncDiagramMode,
+  SyncOperation,
+  TabelaAfetadaDTO,
 } from '../../models/sync-diagram.model';
 import { SyncDiagramStateService } from '../../services/sync-diagram-state.service';
 
@@ -50,6 +58,10 @@ export class SyncOperationNodeCardComponent {
       cancelado: 'Cancelado',
     };
     return map[phase];
+  }
+
+  showsModeLabel(phase: OperationPhase): boolean {
+    return phase === 'verificando' || phase === 'verificado' || phase === 'sincronizando';
   }
 
   scopeSubtitle(context: SyncDiagramContext): string {
@@ -106,13 +118,85 @@ export class SyncOperationNodeCardComponent {
     return op?.errors?.[0] ?? 'A operação falhou. Tente novamente.';
   }
 
-  showErrorDetailsButton(): boolean {
-    const op = this.operation();
-    return (op?.errors?.length ?? 0) > 0;
+  hasDetailContent(operation: SyncOperation): boolean {
+    return (
+      this.isRunning() ||
+      (operation.terminalLogs?.length ?? 0) > 0 ||
+      (operation.errors?.length ?? 0) > 0 ||
+      this.tableErrors(operation).length > 0
+    );
   }
 
-  onCardClick(): void {
+  errorCount(operation: SyncOperation): number {
+    return countOperationLogErrors(
+      operation.terminalLogs ?? [],
+      operation.errors,
+      operation.tabelasAfetadas
+    );
+  }
+
+  logGroups(operation: SyncOperation): OperationLogGroup[] {
+    return groupOperationLogs(operation.terminalLogs ?? []);
+  }
+
+  tableErrors(operation: SyncOperation): TabelaAfetadaDTO[] {
+    const loggedTables = new Set(
+      (operation.terminalLogs ?? [])
+        .filter((e) => e.level === 'table')
+        .map((e) => e.table ?? e.message)
+    );
+    return (operation.tabelasAfetadas ?? []).filter(
+      (row) => row.erro && row.tabela && !loggedTables.has(row.tabela)
+    );
+  }
+
+  readonly isLikelyErrorMessage = isLikelyErrorMessage;
+
+  modeIcon(mode: SyncDiagramMode): string {
+    return mode === 'estrutura' ? 'pi-sitemap' : 'pi-database';
+  }
+
+  modeLabel(mode: SyncDiagramMode): string {
+    return mode === 'estrutura' ? 'Estrutura' : 'Dados';
+  }
+
+  phaseIcon(phase: OperationPhase): string {
+    const map: Record<OperationPhase, string> = {
+      verificando: 'pi-search',
+      verificado: 'pi-check',
+      sincronizando: 'pi-sync',
+      concluido: 'pi-check-circle',
+      erro: 'pi-exclamation-circle',
+      cancelado: 'pi-ban',
+    };
+    return map[phase];
+  }
+
+  logIcon(level: OperationLogLevel): string {
+    const map: Record<OperationLogLevel, string> = {
+      table: 'pi-table',
+      error: 'pi-times-circle',
+      warn: 'pi-exclamation-triangle',
+      info: 'pi-info-circle',
+      ok: 'pi-check',
+      skip: 'pi-forward',
+      done: 'pi-check-circle',
+      text: '',
+    };
+    return map[level];
+  }
+
+  onToggleDetail(event: Event): void {
+    event.stopPropagation();
     this.toggleDetail.emit();
+  }
+
+  onOpenDetail(event: Event): void {
+    event.stopPropagation();
+    const op = this.operation();
+    if (op && !op.detailOpen) {
+      this.toggleDetail.emit();
+    }
   }
 
   onClose(event: Event): void {
@@ -128,10 +212,5 @@ export class SyncOperationNodeCardComponent {
   onRetry(event: Event): void {
     event.stopPropagation();
     this.retry.emit();
-  }
-
-  onToggleErrors(event: Event): void {
-    event.stopPropagation();
-    this.toggleErrors.emit();
   }
 }
