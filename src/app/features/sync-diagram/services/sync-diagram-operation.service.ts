@@ -74,7 +74,11 @@ export class SyncDiagramOperationService implements OnDestroy {
     context: SyncDiagramContext
   ): string | null {
     const existing = this.state.findOperationByScope(context, mode);
-    if (existing && this.state.isOperationRunning(existing)) {
+    if (
+      existing &&
+      this.state.isOperationRunning(existing) &&
+      !this.state.isTerminalOperationPhase(existing.phase)
+    ) {
       return null;
     }
 
@@ -185,9 +189,12 @@ export class SyncDiagramOperationService implements OnDestroy {
   }
 
   markCancelled(operationId: string): void {
+    this.state.closeOperationDetail(operationId);
+    this.state.resetOperationVisualsOnCancel(operationId);
     this.state.patchOperation(operationId, {
       phase: 'cancelado',
       progress: 0,
+      tabelaAtual: undefined,
       errors: [],
       errorsExpanded: false,
     });
@@ -217,20 +224,20 @@ export class SyncDiagramOperationService implements OnDestroy {
   cancelOperation(operationId: string): void {
     const op = this.state.getOperation(operationId);
     if (!op) return;
-    if (op.phase !== 'verificando' && op.phase !== 'sincronizando') return;
+    const cancellable =
+      op.phase === 'verificando' ||
+      op.phase === 'sincronizando' ||
+      op.phase === 'verificado';
+    if (!cancellable) return;
+
+    this.markCancelled(operationId);
+    this.progressoSync.marcarCancelado();
+    this.ws.emitClearTerminal();
 
     const endpoint = op.mode === 'estrutura' ? 'estrutura/cancelar' : 'dados/cancelar';
     this.baseService.findAll(endpoint).subscribe({
-      next: () => {
-        this.markCancelled(operationId);
-        this.progressoSync.marcarCancelado();
-        this.ws.emitClearTerminal();
-      },
       error: () => {
-        // Cancelamento solicitado — não tratar como falha da operação
-        this.markCancelled(operationId);
-        this.progressoSync.marcarCancelado();
-        this.ws.emitClearTerminal();
+        // Cancelamento já refletido no diagrama
       },
     });
   }
@@ -238,16 +245,19 @@ export class SyncDiagramOperationService implements OnDestroy {
   cancelActiveOperation(): void {
     const running = this.state
       .operations()
-      .find((o) => o.phase === 'verificando' || o.phase === 'sincronizando');
+      .find((o) => this.state.isOperationRunning(o));
     if (running) {
       this.cancelOperation(running.id);
     }
   }
 
   hasRunningOperation(): boolean {
-    return this.state
-      .operations()
-      .some((o) => o.phase === 'verificando' || o.phase === 'sincronizando');
+    return this.state.operations().some((o) => this.state.isOperationRunning(o));
+  }
+
+  isScopeActive(context: SyncDiagramContext, mode: SyncDiagramMode): boolean {
+    const existing = this.state.findOperationByScope(context, mode);
+    return existing ? this.state.isOperationRunning(existing) : false;
   }
 
   toggleDetail(operationId: string): void {
@@ -257,7 +267,10 @@ export class SyncDiagramOperationService implements OnDestroy {
   }
 
   prepareRetry(operation: SyncOperation): string | null {
-    if (this.state.isOperationRunning(operation)) {
+    if (
+      this.state.isOperationRunning(operation) &&
+      !this.state.isTerminalOperationPhase(operation.phase)
+    ) {
       return null;
     }
     const payload = this.buildOperationPayload(
@@ -267,7 +280,6 @@ export class SyncDiagramOperationService implements OnDestroy {
     );
     this.state.reuseOperation(operation.id, payload);
     this.state.closeOperationDetail(operation.id);
-    this.trackOperation(operation.id);
     this.ws.emitClearTerminal();
     return operation.id;
   }
@@ -373,7 +385,7 @@ export class SyncDiagramOperationService implements OnDestroy {
     });
   }
 
-  private trackOperation(operationId: string): void {
+  trackOperation(operationId: string): void {
     this.progressoSync.iniciarGenericoProgressoLocal();
     this.ws.emitClearTerminal();
     this.activeOperationId = operationId;
@@ -388,62 +400,76 @@ export class SyncDiagramOperationService implements OnDestroy {
 
     if (!this.progressSub) {
       this.progressSub = this.progressoSync.progressoState$.subscribe((estado) => {
-        const opId = this.activeOperationId;
-        if (!opId) return;
-
-        const status = estado.status;
-        if (status === 'IDLE') return;
-
-        const op = this.state.getOperation(opId);
-        if (!op) return;
-
-        if (op.phase === 'cancelado') {
-          this.activeOperationId = undefined;
-          return;
-        }
-
-        const patch: Partial<SyncOperation> = {
-          progress: estado.progresso ?? 0,
-          tabelaAtual: estado.tabelaAtual ?? undefined,
-        };
-
-        if (status === 'RUNNING' && op.phase === 'verificado') {
-          patch.phase = 'sincronizando';
-        }
-
-        if (status === 'CANCELADO') {
-          if (op.phase !== 'verificando' && op.phase !== 'sincronizando') return;
-          patch.phase = 'cancelado';
-          patch.progress = 0;
-          patch.errors = [];
-          patch.errorsExpanded = false;
-          this.releaseOperationTracking();
-        }
-
-        if (status === 'ERRO') {
-          if (op.phase !== 'verificando' && op.phase !== 'sincronizando') return;
-          patch.phase = 'erro';
-          patch.progress = 0;
-          patch.errors = op.errors?.length ? op.errors : ['Falha durante a operação'];
-          this.releaseOperationTracking();
-        }
-
-        if (status === 'CONCLUIDO') {
-          if (op.phase === 'sincronizando') {
-            return;
-          }
-          patch.progress = 100;
-        }
-
-        this.state.patchOperation(opId, patch);
+        this.handleProgressUpdate(estado);
       });
     }
+  }
+
+  private handleProgressUpdate(estado: {
+    status: string;
+    progresso?: number;
+    tabelaAtual?: string | null;
+  }): void {
+    const opId = this.activeOperationId;
+    if (!opId) return;
+
+    const status = estado.status;
+    if (status === 'IDLE') return;
+
+    const op = this.state.getOperation(opId);
+    if (!op) return;
+
+    if (op.phase === 'cancelado') {
+      this.activeOperationId = undefined;
+      return;
+    }
+
+    const patch: Partial<SyncOperation> = {
+      progress: estado.progresso ?? 0,
+      tabelaAtual: estado.tabelaAtual ?? undefined,
+    };
+
+    if (status === 'RUNNING' && op.phase === 'verificado') {
+      patch.phase = 'sincronizando';
+    }
+
+    if (status === 'CANCELADO') {
+      if (op.phase !== 'verificando' && op.phase !== 'sincronizando' && op.phase !== 'verificado') {
+        return;
+      }
+      this.markCancelled(opId);
+      return;
+    }
+
+    if (status === 'ERRO') {
+      if (op.phase !== 'verificando' && op.phase !== 'sincronizando' && op.phase !== 'verificado') {
+        return;
+      }
+      patch.phase = 'erro';
+      patch.progress = 0;
+      patch.errors = op.errors?.length ? op.errors : ['Falha durante a operação'];
+      this.state.patchOperation(opId, patch);
+      this.releaseOperationTracking();
+      return;
+    }
+
+    if (status === 'CONCLUIDO') {
+      if (op.phase === 'sincronizando') {
+        return;
+      }
+      patch.progress = 100;
+    }
+
+    this.state.patchOperation(opId, patch);
   }
 
   private releaseOperationTracking(): void {
     this.operationLogsSub?.unsubscribe();
     this.operationLogsSub = undefined;
+    this.progressSub?.unsubscribe();
+    this.progressSub = undefined;
     this.activeOperationId = undefined;
+    this.progressoSync.resetar();
   }
 
   private isCancelled(operationId: string): boolean {

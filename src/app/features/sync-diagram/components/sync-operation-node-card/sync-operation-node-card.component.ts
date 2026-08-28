@@ -84,7 +84,12 @@ export class SyncOperationNodeCardComponent {
 
   isRunning(): boolean {
     const op = this.operation();
-    return op?.phase === 'verificando' || op?.phase === 'sincronizando';
+    if (!op) return false;
+    return (
+      op.phase === 'verificando' ||
+      op.phase === 'sincronizando' ||
+      op.phase === 'verificado'
+    );
   }
 
   showProgress(): boolean {

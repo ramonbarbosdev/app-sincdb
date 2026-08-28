@@ -280,7 +280,7 @@ export class SyncDiagramActionsService {
     const op =
       this.state.findOperationByQueueItemId(item.id) ??
       this.state.findOperationByScope(item.context, item.mode);
-    if (!op) return;
+    if (!op || this.state.isTerminalOperationPhase(op.phase)) return;
 
     this.state.patchOperation(op.id, {
       phase: 'sincronizando',
@@ -295,6 +295,10 @@ export class SyncDiagramActionsService {
       this.state.findOperationByQueueItemId(item.id) ??
       this.state.findOperationByScope(item.context, item.mode);
     if (!op || !item.status) return;
+
+    if (this.state.isTerminalOperationPhase(op.phase)) {
+      return;
+    }
 
     switch (item.status) {
       case 'PENDING':
@@ -367,36 +371,44 @@ export class SyncDiagramActionsService {
 
   retryOperation(operation: SyncOperation): void {
     if (!this.guardCanStartSync()) return;
-    const opId = this.operations.prepareRetry(operation);
-    if (!opId) {
+    if (
+      this.state.isOperationRunning(operation) &&
+      !this.state.isTerminalOperationPhase(operation.phase)
+    ) {
       this.warnOperationInProgress(operation.context, operation.mode);
       return;
     }
-    this.runOperationAction(operation.mode, operation.action, operation.context);
+    this.runOperationAction(
+      operation.mode,
+      operation.action,
+      operation.context,
+      operation.id
+    );
   }
 
   private runOperationAction(
     mode: SyncDiagramMode,
     action: OperationActionKind,
-    context: SyncDiagramContext
+    context: SyncDiagramContext,
+    reuseOpId?: string
   ): void {
     if (mode === 'estrutura') {
       if (action === 'verificar') {
-        this.verificarEstrutura(context);
+        this.verificarEstrutura(context, reuseOpId);
       } else if (action === 'sincronizar') {
-        this.sincronizarEstrutura(context);
+        this.sincronizarEstrutura(context, reuseOpId);
       } else {
-        this.syncNow(context, mode);
+        this.verificarESincronizarEstrutura(context, undefined, reuseOpId);
       }
       return;
     }
 
     if (action === 'verificar') {
-      this.verificarDados(context);
+      this.verificarDados(context, reuseOpId);
     } else if (action === 'sincronizar') {
-      this.sincronizarDados(context);
+      this.sincronizarDados(context, reuseOpId);
     } else {
-      this.syncNow(context, mode);
+      this.verificarESincronizarDados(context, undefined, reuseOpId);
     }
   }
 
@@ -520,8 +532,21 @@ export class SyncDiagramActionsService {
   private startOperation(
     mode: SyncDiagramMode,
     action: OperationActionKind,
-    context: SyncDiagramContext
+    context: SyncDiagramContext,
+    reuseOpId?: string
   ): string | null {
+    if (reuseOpId) {
+      const existing = this.state.getOperation(reuseOpId);
+      if (!existing) return null;
+      this.state.ensureNodesForContext(context);
+      if (!this.operations.prepareRetry(existing)) {
+        this.warnOperationInProgress(context, mode);
+        return null;
+      }
+      this.operations.trackOperation(reuseOpId);
+      return reuseOpId;
+    }
+
     const opId = this.operations.createOrReuseOperation(mode, action, context);
     if (!opId) {
       this.warnOperationInProgress(context, mode);
@@ -547,15 +572,15 @@ export class SyncDiagramActionsService {
     return false;
   }
 
-  verificarEstrutura(context: SyncDiagramContext): void {
-    if (!this.guardCanStartSync()) return;
+  verificarEstrutura(context: SyncDiagramContext, reuseOpId?: string): void {
+    if (!reuseOpId && !this.guardCanStartSync()) return;
 
     const base = context.base;
     const esquema = context.esquema;
     const tabelaParam = this.resolveTabelaParam(context);
     if (!base || !esquema || !tabelaParam) return;
 
-    const opId = this.startOperation('estrutura', 'verificar', context);
+    const opId = this.startOperation('estrutura', 'verificar', context, reuseOpId);
     if (!opId) return;
     this.progressoSync.iniciarGenericoProgressoLocal();
 
@@ -584,14 +609,15 @@ export class SyncDiagramActionsService {
     });
   }
 
-  sincronizarEstrutura(context: SyncDiagramContext): void {
-    if (!this.guardCanStartSync()) return;
-    this.sincronizarEstruturaInterno(context, false);
+  sincronizarEstrutura(context: SyncDiagramContext, reuseOpId?: string): void {
+    if (!reuseOpId && !this.guardCanStartSync()) return;
+    this.sincronizarEstruturaInterno(context, false, reuseOpId);
   }
 
   private verificarESincronizarEstrutura(
     context: SyncDiagramContext,
-    onFinished?: () => void
+    onFinished?: () => void,
+    reuseOpId?: string
   ): void {
     const base = context.base;
     const esquema = context.esquema;
@@ -601,7 +627,7 @@ export class SyncDiagramActionsService {
       return;
     }
 
-    const opId = this.startOperation('estrutura', 'verificar-sync', context);
+    const opId = this.startOperation('estrutura', 'verificar-sync', context, reuseOpId);
     if (!opId) {
       onFinished?.();
       return;
@@ -698,15 +724,15 @@ export class SyncDiagramActionsService {
     });
   }
 
-  verificarDados(context: SyncDiagramContext): void {
-    if (!this.guardCanStartSync()) return;
+  verificarDados(context: SyncDiagramContext, reuseOpId?: string): void {
+    if (!reuseOpId && !this.guardCanStartSync()) return;
 
     const base = context.base;
     const esquema = context.esquema;
     const tabelaParam = this.resolveTabelaParam(context);
     if (!base || !esquema || !tabelaParam) return;
 
-    const opId = this.startOperation('dados', 'verificar', context);
+    const opId = this.startOperation('dados', 'verificar', context, reuseOpId);
     if (!opId) return;
     this.progressoSync.iniciarGenericoProgressoLocal();
 
@@ -735,14 +761,15 @@ export class SyncDiagramActionsService {
     });
   }
 
-  sincronizarDados(context: SyncDiagramContext): void {
-    if (!this.guardCanStartSync()) return;
-    this.sincronizarDadosInterno(context, false);
+  sincronizarDados(context: SyncDiagramContext, reuseOpId?: string): void {
+    if (!reuseOpId && !this.guardCanStartSync()) return;
+    this.sincronizarDadosInterno(context, false, reuseOpId);
   }
 
   private verificarESincronizarDados(
     context: SyncDiagramContext,
-    onFinished?: () => void
+    onFinished?: () => void,
+    reuseOpId?: string
   ): void {
     const base = context.base;
     const esquema = context.esquema;
@@ -752,7 +779,7 @@ export class SyncDiagramActionsService {
       return;
     }
 
-    const opId = this.startOperation('dados', 'verificar-sync', context);
+    const opId = this.startOperation('dados', 'verificar-sync', context, reuseOpId);
     if (!opId) {
       onFinished?.();
       return;

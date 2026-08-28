@@ -20,6 +20,7 @@ import {
   SyncDiagramNodeData,
   SyncDiagramTreeLayout,
   OperationActionKind,
+  OperationPhase,
   operationScopeKey,
   OperationLogEntry,
   schemaScopeKey,
@@ -168,7 +169,15 @@ export class SyncDiagramStateService {
   }
 
   isOperationRunning(op: SyncOperation): boolean {
-    return op.phase === 'verificando' || op.phase === 'sincronizando';
+    return (
+      op.phase === 'verificando' ||
+      op.phase === 'sincronizando' ||
+      op.phase === 'verificado'
+    );
+  }
+
+  isTerminalOperationPhase(phase: OperationPhase): boolean {
+    return phase === 'cancelado' || phase === 'erro' || phase === 'concluido';
   }
 
   schemasListNodeId(base: string): string {
@@ -502,8 +511,23 @@ export class SyncDiagramStateService {
       list.map((o) => (o.id === operationId ? { ...o, ...changedPatch } : o))
     );
     if (this.operationPatchRequiresGraphRebuild(changedPatch)) {
-      this.scheduleGraphRebuild();
+      if (changedPatch.phase === 'cancelado') {
+        this.rebuildGraph();
+      } else {
+        this.scheduleGraphRebuild();
+      }
     }
+  }
+
+  resetOperationVisualsOnCancel(operationId: string): void {
+    for (const table of this.erdTablesForOperation(operationId)) {
+      const columns = table.columns.map((c) => ({ ...c, status: 'idle' as const }));
+      this.erdTables.set(table.id, { ...table, status: 'idle', columns });
+    }
+    for (const edge of this.erdEdgesForOperation(operationId)) {
+      this.erdEdges.set(edge.id, { ...edge, status: 'idle' });
+    }
+    this.bumpErdData();
   }
 
   appendOperationLog(operationId: string, entry: OperationLogEntry): void {

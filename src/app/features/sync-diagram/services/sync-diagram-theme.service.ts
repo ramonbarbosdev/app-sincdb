@@ -7,7 +7,7 @@ export type SyncDiagramCanvasTheme = 'dark' | 'light';
 export class SyncDiagramThemeService {
   private layoutService = inject(LayoutService);
 
-  readonly isDark = computed(() => this.layoutService.layoutConfig().darkTheme ?? true);
+  readonly isDark = computed(() => this.layoutService.layoutConfig().darkTheme ?? false);
   readonly isLight = computed(() => !this.isDark());
 
   toggle(): void {
