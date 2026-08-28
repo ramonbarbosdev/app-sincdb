@@ -79,6 +79,7 @@ export class SyncDiagramStateService {
   private filters = new Map<string, string>();
   private loadingNodes = new Map<string, boolean>();
   private positions = new Map<string, DiagramFlowPoint>();
+  private readonly manualNodePositions = new Set<string>();
 
   private basesNodeId = 'node-bases';
   private readonly openSchemaListBases = new Set<string>();
@@ -139,6 +140,10 @@ export class SyncDiagramStateService {
     const point = { x: position.x, y: position.y };
     this.positions.set(nodeId, point);
 
+    if (nodeId.startsWith('node-') || nodeId.startsWith('erd-')) {
+      this.manualNodePositions.add(nodeId);
+    }
+
     if (nodeId.startsWith('erd-') && !nodeId.startsWith('erd-zone-')) {
       const table = this.erdTables.get(nodeId);
       if (table) {
@@ -150,7 +155,10 @@ export class SyncDiagramStateService {
             point
           );
         }
-        this.scheduleGraphRebuild();
+        this.flowNodes.update((nodes) =>
+          nodes.map((n) => (n.id === nodeId ? { ...n, position: point } : n))
+        );
+        this.scheduleConnectionLabelsRefresh();
       }
     }
 
@@ -347,7 +355,13 @@ export class SyncDiagramStateService {
     this.closeAllOperationDetails();
 
     const opNodeId = this.operationNodeId(operation.id);
-    this.layoutTreeBranches();
+    if (!this.manualNodePositions.has(opNodeId) && !this.positions.has(opNodeId)) {
+      this.positions.set(
+        opNodeId,
+        this.computeOperationPosition(operation.anchorNodeId, operation.id)
+      );
+    }
+    this.syncOperationAnchors();
     this.rebuildGraph();
   }
 
@@ -377,6 +391,7 @@ export class SyncDiagramStateService {
   }
 
   autoLayoutCanvas(): void {
+    this.manualNodePositions.clear();
     const basesPos = { x: 80, y: 100 };
     this.positions.set(this.basesNodeId, { ...basesPos });
     this.layoutTreeBranches();
@@ -908,12 +923,15 @@ export class SyncDiagramStateService {
   }
 
   private spawnSchemaList(base: string, options?: { silent?: boolean }): void {
+    const alreadyOpen = this.openSchemaListBases.has(base);
     this.openSchemaListBases.add(base);
     const listId = this.schemasListNodeId(base);
     if (!options?.silent) {
       this.selection.set({ base });
     }
-    this.layoutTreeBranches();
+    if (!alreadyOpen) {
+      this.layoutTreeBranches();
+    }
 
     const cached = this.schemaCache.get(base);
     if (cached) {
@@ -948,6 +966,7 @@ export class SyncDiagramStateService {
     options?: { silent?: boolean }
   ): void {
     const key = schemaScopeKey(base, esquema);
+    const alreadyOpen = this.openSchemaBoxes.has(key);
     this.openSchemaBoxes.add(key);
     if (!this.openSchemaListBases.has(base)) {
       this.spawnSchemaList(base, { silent: true });
@@ -955,7 +974,9 @@ export class SyncDiagramStateService {
     if (!options?.silent) {
       this.selection.set({ base, esquema });
     }
-    this.layoutTreeBranches();
+    if (!alreadyOpen) {
+      this.layoutTreeBranches();
+    }
     this.rebuildGraph();
     if (!options?.silent) this.persistSoon();
   }
@@ -974,6 +995,7 @@ export class SyncDiagramStateService {
     options?: { silent?: boolean; fromSchemaList?: boolean }
   ): void {
     const key = schemaScopeKey(base, esquema);
+    const wasOpen = this.openTablesKeys.has(key);
     this.openTablesKeys.add(key);
     if (this.openSchemaBoxes.has(key)) {
       this.openSchemaBoxes.delete(key);
@@ -982,7 +1004,10 @@ export class SyncDiagramStateService {
     if (!this.openSchemaListBases.has(base)) {
       this.spawnSchemaList(base, { silent: true });
     }
-    this.layoutTreeBranches();
+    if (!wasOpen) {
+      this.layoutTreeBranches();
+      this.syncOperationAnchors();
+    }
     const nodeId = this.tablesNodeIdFor(base, esquema);
     const cacheKey = key;
     const cached = this.tableCache.get(cacheKey);
@@ -1044,7 +1069,7 @@ export class SyncDiagramStateService {
     let height = 0;
 
     for (const op of ops) {
-      this.positions.set(this.operationNodeId(op.id), { x: cursorX, y: cursorY });
+      this.setLayoutPosition(this.operationNodeId(op.id), { x: cursorX, y: cursorY });
       if (direction === 'vertical') {
         cursorY += OPERATION_CARD_HEIGHT + TREE_SIBLING_GAP;
         width = Math.max(width, OPERATION_CARD_WIDTH);
@@ -1066,7 +1091,7 @@ export class SyncDiagramStateService {
     nodeWidth: number,
     nodeHeight: number
   ): { width: number; height: number } {
-    this.positions.set(nodeId, { x, y });
+    this.setLayoutPosition(nodeId, { x, y });
     const opsExt = this.layoutOperationChildren(
       nodeId,
       x + nodeWidth + TREE_LEVEL_GAP,
@@ -1105,7 +1130,7 @@ export class SyncDiagramStateService {
 
   private layoutBaseBranch(base: string, x: number, y: number): { width: number; height: number } {
     const listId = this.schemasListNodeId(base);
-    this.positions.set(listId, { x, y });
+    this.setLayoutPosition(listId, { x, y });
 
     const keys = this.schemaChildrenKeys(base);
     if (!keys.length) {
@@ -1142,7 +1167,7 @@ export class SyncDiagramStateService {
   /** Árvore: Bases → Schemas → Tabelas → operação. */
   layoutTreeBranches(): void {
     const basesPos = { ...(this.positions.get(this.basesNodeId) ?? DEFAULT_POSITIONS['node-bases']) };
-    this.positions.set(this.basesNodeId, basesPos);
+    this.setLayoutPosition(this.basesNodeId, basesPos);
 
     const bases = this.sortedOpenBases();
     if (!bases.length) return;
@@ -1391,6 +1416,9 @@ export class SyncDiagramStateService {
 
     for (const [key, pos] of Object.entries(stored.positions ?? {})) {
       this.positions.set(key, { x: pos.x, y: pos.y });
+      if (key.startsWith('node-') || key.startsWith('erd-')) {
+        this.manualNodePositions.add(key);
+      }
     }
 
     for (const base of stored.openSchemaListBases ?? []) {
@@ -1776,6 +1804,7 @@ export class SyncDiagramStateService {
   }
 
   private rebuildGraph(): void {
+    this.syncOperationAnchors();
     this.nodeMeta.clear();
     const nodes: DiagramFlowNode[] = [];
     const connections: DiagramFlowConnection[] = [];
@@ -1939,7 +1968,7 @@ export class SyncDiagramStateService {
         targetConnectorId: connectors.target,
         operationMeta: op,
       });
-      const anchorId = op.anchorNodeId;
+      const anchorId = this.resolveEffectiveAnchorNodeId(op);
       connections.push({
         id: `edge-op-link-${anchorId}-${opNodeId}`,
         sourceId: this.connectorIds(anchorId).source,
@@ -1979,9 +2008,80 @@ export class SyncDiagramStateService {
       }
     }
 
+    const validConnections = this.filterConnectionsWithVisibleEndpoints(nodes, connections);
+
     this.flowNodes.set(nodes);
-    this.flowConnections.set(connections);
-    this.flowConnectionLabels.set(this.buildConnectionLabels(nodes, connections));
+    this.flowConnections.set(validConnections);
+    this.flowConnectionLabels.set(this.buildConnectionLabels(nodes, validConnections));
+  }
+
+  private setLayoutPosition(nodeId: string, position: DiagramFlowPoint): void {
+    if (this.manualNodePositions.has(nodeId)) return;
+    this.positions.set(nodeId, position);
+  }
+
+  private collectVisibleSelectorNodeIds(): Set<string> {
+    const ids = new Set<string>([this.basesNodeId]);
+    for (const base of this.openSchemaListBases) {
+      ids.add(this.schemasListNodeId(base));
+    }
+    for (const key of this.openSchemaBoxes) {
+      if (this.openTablesKeys.has(key)) continue;
+      const parsed = this.parseScopeKey(key);
+      if (parsed) {
+        ids.add(this.schemaBoxNodeId(parsed.base, parsed.esquema));
+      }
+    }
+    for (const key of this.openTablesKeys) {
+      const parsed = this.parseScopeKey(key);
+      if (parsed) {
+        ids.add(this.tablesNodeIdFor(parsed.base, parsed.esquema));
+      }
+    }
+    return ids;
+  }
+
+  private isSelectorNodeVisible(nodeId: string): boolean {
+    return this.collectVisibleSelectorNodeIds().has(nodeId);
+  }
+
+  private resolveEffectiveAnchorNodeId(op: SyncOperation): string {
+    if (this.isSelectorNodeVisible(op.anchorNodeId)) {
+      return op.anchorNodeId;
+    }
+    return this.resolveOperationAnchorNodeId(op.context);
+  }
+
+  private syncOperationAnchors(): void {
+    const updates = new Map<string, string>();
+    for (const op of this.operations()) {
+      const effective = this.resolveEffectiveAnchorNodeId(op);
+      if (effective !== op.anchorNodeId) {
+        updates.set(op.id, effective);
+      }
+    }
+    if (!updates.size) return;
+
+    this.operations.update((list) =>
+      list.map((op) => {
+        const nextAnchor = updates.get(op.id);
+        return nextAnchor ? { ...op, anchorNodeId: nextAnchor } : op;
+      })
+    );
+  }
+
+  private filterConnectionsWithVisibleEndpoints(
+    nodes: DiagramFlowNode[],
+    connections: DiagramFlowConnection[]
+  ): DiagramFlowConnection[] {
+    const connectorIds = new Set<string>();
+    for (const node of nodes) {
+      connectorIds.add(node.sourceConnectorId);
+      connectorIds.add(node.targetConnectorId);
+    }
+    return connections.filter(
+      (edge) => connectorIds.has(edge.sourceId) && connectorIds.has(edge.targetId)
+    );
   }
 
   private scheduleGraphRebuild(): void {
