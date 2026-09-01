@@ -147,22 +147,31 @@ export class SyncDiagramOperationService implements OnDestroy {
   ): void {
     if (this.isCancelled(operationId)) return;
 
+    const op = this.state.getOperation(operationId);
+    const verifyOnly = op?.action === 'verificar';
+
     if (mode === 'estrutura') {
       const estrutura = response as EstruturaResponse;
       this.state.patchOperation(operationId, {
-        phase: 'verificado',
+        phase: verifyOnly ? 'concluido' : 'verificado',
         progress: 100,
         estruturaResponse: estrutura,
       });
     } else {
       const tabelas = (response as { tabelas_afetadas?: TabelaAfetadaDTO[] }).tabelas_afetadas ?? [];
       this.state.patchOperation(operationId, {
-        phase: 'verificado',
+        phase: verifyOnly ? 'concluido' : 'verificado',
         progress: 100,
         tabelasAfetadas: tabelas,
       });
       this.state.applyDadosVisuals(operationId, tabelas);
       this.reloadColumnsAfterVerify(operationId);
+    }
+
+    if (verifyOnly) {
+      this.state.closeOperationDetail(operationId);
+      this.releaseOperationTracking();
+      this.notifyOperationIdle();
     }
   }
 
@@ -245,7 +254,7 @@ export class SyncDiagramOperationService implements OnDestroy {
   cancelActiveOperation(): void {
     const running = this.state
       .operations()
-      .find((o) => this.state.isOperationRunning(o));
+      .find((o) => this.state.isOperationActive(o));
     if (running) {
       this.cancelOperation(running.id);
     }
@@ -268,7 +277,7 @@ export class SyncDiagramOperationService implements OnDestroy {
 
   prepareRetry(operation: SyncOperation): string | null {
     if (
-      this.state.isOperationRunning(operation) &&
+      this.state.isOperationActive(operation) &&
       !this.state.isTerminalOperationPhase(operation.phase)
     ) {
       return null;
@@ -396,6 +405,9 @@ export class SyncDiagramOperationService implements OnDestroy {
       if (entry) {
         this.state.appendOperationLog(operationId, entry);
       }
+      if (this.isTerminalTransactionFailure(msg)) {
+        this.failOperationFromTerminalLog(operationId, msg);
+      }
     });
 
     if (!this.progressSub) {
@@ -414,13 +426,15 @@ export class SyncDiagramOperationService implements OnDestroy {
     if (!opId) return;
 
     const status = estado.status;
-    if (status === 'IDLE') return;
+    if (status === 'IDLE') {
+      this.recoverStaleRunningOperations();
+      return;
+    }
 
     const op = this.state.getOperation(opId);
     if (!op) return;
 
-    if (op.phase === 'cancelado') {
-      this.activeOperationId = undefined;
+    if (op.phase === 'cancelado' || op.phase === 'erro' || op.phase === 'concluido') {
       return;
     }
 
@@ -470,6 +484,34 @@ export class SyncDiagramOperationService implements OnDestroy {
     this.progressSub = undefined;
     this.activeOperationId = undefined;
     this.progressoSync.resetar();
+  }
+
+  private recoverStaleRunningOperations(): void {
+    if (this.activeOperationId) return;
+
+    for (const op of this.state.operations()) {
+      if (!this.state.isOperationActive(op)) continue;
+      this.state.patchOperation(op.id, {
+        phase: 'erro',
+        progress: 0,
+        errors: op.errors?.length
+          ? op.errors
+          : ['Operação interrompida. Tente sincronizar novamente.'],
+      });
+    }
+  }
+
+  private isTerminalTransactionFailure(msg: string): boolean {
+    return /Falha na transação geral/i.test(msg);
+  }
+
+  private failOperationFromTerminalLog(operationId: string, msg: string): void {
+    const op = this.state.getOperation(operationId);
+    if (!op || this.state.isTerminalOperationPhase(op.phase)) return;
+
+    const message = msg.replace(/^\[ERROR\]\s*/i, '').trim();
+    this.progressoSync.marcarErro(message || 'Falha na sincronização');
+    this.failOperation(operationId, [message || 'Falha na sincronização']);
   }
 
   private isCancelled(operationId: string): boolean {

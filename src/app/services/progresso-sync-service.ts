@@ -66,7 +66,11 @@ export class ProgressoSyncService {
       duracaoMs: data.duracaoMs ?? this.progressoState.value.duracaoMs,
     });
 
-    if (normalizedStatus === 'CONCLUIDO' || normalizedStatus === 'CANCELADO') {
+    if (
+      normalizedStatus === 'CONCLUIDO' ||
+      normalizedStatus === 'CANCELADO' ||
+      normalizedStatus === 'ERRO'
+    ) {
       setTimeout(() => this.resetar(), 2200);
     }
   }

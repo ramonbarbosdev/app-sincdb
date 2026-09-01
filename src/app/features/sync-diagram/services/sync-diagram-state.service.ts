@@ -177,6 +177,10 @@ export class SyncDiagramStateService {
   }
 
   isOperationRunning(op: SyncOperation): boolean {
+    return op.phase === 'verificando' || op.phase === 'sincronizando';
+  }
+
+  isOperationActive(op: SyncOperation): boolean {
     return (
       op.phase === 'verificando' ||
       op.phase === 'sincronizando' ||

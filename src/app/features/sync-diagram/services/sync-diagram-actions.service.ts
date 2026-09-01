@@ -370,14 +370,14 @@ export class SyncDiagramActionsService {
   }
 
   retryOperation(operation: SyncOperation): void {
-    if (!this.guardCanStartSync()) return;
     if (
-      this.state.isOperationRunning(operation) &&
+      this.state.isOperationActive(operation) &&
       !this.state.isTerminalOperationPhase(operation.phase)
     ) {
       this.warnOperationInProgress(operation.context, operation.mode);
       return;
     }
+    if (!this.guardCanStartSync({ allowRetry: true })) return;
     this.runOperationAction(
       operation.mode,
       operation.action,
@@ -412,7 +412,7 @@ export class SyncDiagramActionsService {
     }
   }
 
-  private guardCanStartSync(): boolean {
+  private guardCanStartSync(options?: { allowRetry?: boolean }): boolean {
     if (!this.hasConexaoPadrao()) {
       this.messageService.add({
         severity: 'warn',
@@ -431,7 +431,7 @@ export class SyncDiagramActionsService {
       return false;
     }
 
-    if (this.operations.hasRunningOperation()) {
+    if (!options?.allowRetry && this.operations.hasRunningOperation()) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Operação em andamento',
@@ -718,8 +718,14 @@ export class SyncDiagramActionsService {
         });
         onFinished?.();
       },
-      error: () => {
-        this.failOp(opId!, 'Falha na sincronização de estrutura', onFinished);
+      error: (err) => {
+        const body = err?.error;
+        const message =
+          (typeof body?.detalhes === 'string' && body.detalhes) ||
+          (typeof body?.error === 'string' && body.error) ||
+          (typeof body?.errors?.[0] === 'string' && body.errors[0]) ||
+          'Falha na sincronização de estrutura';
+        this.failOp(opId!, message, onFinished);
       },
     });
   }
@@ -870,8 +876,14 @@ export class SyncDiagramActionsService {
         });
         onFinished?.();
       },
-      error: () => {
-        this.failOp(opId!, 'Falha na sincronização de dados', onFinished);
+      error: (err) => {
+        const body = err?.error;
+        const message =
+          (typeof body?.detalhes === 'string' && body.detalhes) ||
+          (typeof body?.error === 'string' && body.error) ||
+          (typeof body?.errors?.[0] === 'string' && body.errors[0]) ||
+          'Falha na sincronização de dados';
+        this.failOp(opId!, message, onFinished);
       },
     });
   }
