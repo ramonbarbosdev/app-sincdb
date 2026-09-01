@@ -18,6 +18,7 @@ import { BaseService } from '../../../../services/base.service';
 import { ConexaoSchema } from '../../../../schema/conexao-schema';
 import { Conexao } from '../../../../models/conexao';
 import { UploadCertiicado } from '../upload-certiicado/upload-certiicado';
+import { TabsModule } from 'primeng/tabs';
 
 @Component({
   selector: 'app-conexaoform',
@@ -35,6 +36,7 @@ import { UploadCertiicado } from '../upload-certiicado/upload-certiicado';
     ToggleSwitchModule,
     TooltipModule,
     UploadCertiicado,
+    TabsModule,
   ],
   templateUrl: './conexaoform.html',
   styleUrl: './conexaoform.scss',
@@ -49,6 +51,7 @@ export class Conexaoform {
   public salvando = false;
   public carregandoConexao = false;
   public senhaCloudProtegidaPorCertificado = false;
+  public abaDialogConexao: 'conexao' | 'ssh' | 'admin' = 'conexao';
 
   private baseService = inject(BaseService);
   private cd = inject(ChangeDetectorRef);
@@ -86,6 +89,7 @@ export class Conexaoform {
     this.objeto.fl_padrao = this.listaConexoes.length === 0;
     this.limparProtecaoSenhaCertificado();
     this.errorValidacao = {};
+    this.abaDialogConexao = 'conexao';
     this.dialogVisible = true;
   }
 
@@ -104,6 +108,7 @@ export class Conexaoform {
         this.objeto = this.normalizarConexao(res);
         this.protegerSenhasCertificado(this.objeto);
         this.errorValidacao = {};
+        this.abaDialogConexao = this.definirAbaInicialDialog(this.objeto);
         this.dialogVisible = true;
         this.carregandoConexao = false;
         this.cd.markForCheck();
@@ -296,6 +301,11 @@ export class Conexaoform {
         db_cloud_user: conexao.db_cloud_user,
         db_cloud_password: conexao.db_cloud_password,
         fl_admin: conexao.fl_admin,
+        db_cloud_ssh_enabled: conexao.db_cloud_ssh_enabled,
+        db_cloud_ssh_host: conexao.db_cloud_ssh_host,
+        db_cloud_ssh_port: conexao.db_cloud_ssh_port,
+        db_cloud_ssh_user: conexao.db_cloud_ssh_user,
+        db_cloud_ssh_password: conexao.db_cloud_ssh_password,
       },
 
       local: {
@@ -303,6 +313,11 @@ export class Conexaoform {
         db_local_port: conexao.db_local_port,
         db_local_user: conexao.db_local_user,
         db_local_password: conexao.db_local_password,
+        db_local_ssh_enabled: conexao.db_local_ssh_enabled,
+        db_local_ssh_host: conexao.db_local_ssh_host,
+        db_local_ssh_port: conexao.db_local_ssh_port,
+        db_local_ssh_user: conexao.db_local_ssh_user,
+        db_local_ssh_password: conexao.db_local_ssh_password,
       },
     };
   }
@@ -345,11 +360,31 @@ export class Conexaoform {
     conexao.db_cloud_password =
       dados?.db_cloud_password ?? cloud.db_cloud_password ?? conexao.db_cloud_password;
     conexao.fl_admin = dados?.fl_admin ?? cloud.fl_admin ?? conexao.fl_admin;
+    conexao.db_cloud_ssh_enabled =
+      dados?.db_cloud_ssh_enabled ?? cloud.db_cloud_ssh_enabled ?? conexao.db_cloud_ssh_enabled;
+    conexao.db_cloud_ssh_host =
+      dados?.db_cloud_ssh_host ?? cloud.db_cloud_ssh_host ?? conexao.db_cloud_ssh_host;
+    conexao.db_cloud_ssh_port =
+      dados?.db_cloud_ssh_port ?? cloud.db_cloud_ssh_port ?? conexao.db_cloud_ssh_port ?? '22';
+    conexao.db_cloud_ssh_user =
+      dados?.db_cloud_ssh_user ?? cloud.db_cloud_ssh_user ?? conexao.db_cloud_ssh_user;
+    conexao.db_cloud_ssh_password =
+      dados?.db_cloud_ssh_password ?? cloud.db_cloud_ssh_password ?? conexao.db_cloud_ssh_password;
     conexao.db_local_host = dados?.db_local_host ?? local.db_local_host ?? conexao.db_local_host;
     conexao.db_local_port = dados?.db_local_port ?? local.db_local_port ?? conexao.db_local_port;
     conexao.db_local_user = dados?.db_local_user ?? local.db_local_user ?? conexao.db_local_user;
     conexao.db_local_password =
       dados?.db_local_password ?? local.db_local_password ?? conexao.db_local_password;
+    conexao.db_local_ssh_enabled =
+      dados?.db_local_ssh_enabled ?? local.db_local_ssh_enabled ?? conexao.db_local_ssh_enabled;
+    conexao.db_local_ssh_host =
+      dados?.db_local_ssh_host ?? local.db_local_ssh_host ?? conexao.db_local_ssh_host;
+    conexao.db_local_ssh_port =
+      dados?.db_local_ssh_port ?? local.db_local_ssh_port ?? conexao.db_local_ssh_port ?? '22';
+    conexao.db_local_ssh_user =
+      dados?.db_local_ssh_user ?? local.db_local_ssh_user ?? conexao.db_local_ssh_user;
+    conexao.db_local_ssh_password =
+      dados?.db_local_ssh_password ?? local.db_local_ssh_password ?? conexao.db_local_ssh_password;
 
     conexao.cloud = {
       db_cloud_host: conexao.db_cloud_host,
@@ -357,12 +392,22 @@ export class Conexaoform {
       db_cloud_user: conexao.db_cloud_user,
       db_cloud_password: conexao.db_cloud_password,
       fl_admin: conexao.fl_admin,
+      db_cloud_ssh_enabled: conexao.db_cloud_ssh_enabled,
+      db_cloud_ssh_host: conexao.db_cloud_ssh_host,
+      db_cloud_ssh_port: conexao.db_cloud_ssh_port,
+      db_cloud_ssh_user: conexao.db_cloud_ssh_user,
+      db_cloud_ssh_password: conexao.db_cloud_ssh_password,
     };
     conexao.local = {
       db_local_host: conexao.db_local_host,
       db_local_port: conexao.db_local_port,
       db_local_user: conexao.db_local_user,
       db_local_password: conexao.db_local_password,
+      db_local_ssh_enabled: conexao.db_local_ssh_enabled,
+      db_local_ssh_host: conexao.db_local_ssh_host,
+      db_local_ssh_port: conexao.db_local_ssh_port,
+      db_local_ssh_user: conexao.db_local_ssh_user,
+      db_local_ssh_password: conexao.db_local_ssh_password,
     };
   }
 

@@ -6,6 +6,11 @@ export interface ConexaoCloud {
   db_cloud_user: string;
   db_cloud_password: string;
   fl_admin: boolean;
+  db_cloud_ssh_enabled?: boolean;
+  db_cloud_ssh_host?: string;
+  db_cloud_ssh_port?: string;
+  db_cloud_ssh_user?: string;
+  db_cloud_ssh_password?: string;
 }
 
 export interface ConexaoLocal {
@@ -13,6 +18,11 @@ export interface ConexaoLocal {
   db_local_port: string;
   db_local_user: string;
   db_local_password: string;
+  db_local_ssh_enabled?: boolean;
+  db_local_ssh_host?: string;
+  db_local_ssh_port?: string;
+  db_local_ssh_user?: string;
+  db_local_ssh_password?: string;
 }
 
 export class Conexao {
@@ -28,21 +38,41 @@ export class Conexao {
   public db_cloud_user: string = '';
   public db_cloud_password: string = '';
   public fl_admin: boolean = false;
+  public db_cloud_ssh_enabled: boolean = false;
+  public db_cloud_ssh_host: string = '';
+  public db_cloud_ssh_port: string = '22';
+  public db_cloud_ssh_user: string = '';
+  public db_cloud_ssh_password: string = '';
   public db_local_host: string = '';
   public db_local_port: string = '5432';
   public db_local_user: string = '';
   public db_local_password: string = '';
+  public db_local_ssh_enabled: boolean = false;
+  public db_local_ssh_host: string = '';
+  public db_local_ssh_port: string = '22';
+  public db_local_ssh_user: string = '';
+  public db_local_ssh_password: string = '';
   public cloud: ConexaoCloud = {
     db_cloud_host: '',
     db_cloud_port: '5432',
     db_cloud_user: '',
     db_cloud_password: '',
     fl_admin: false,
+    db_cloud_ssh_enabled: false,
+    db_cloud_ssh_host: '',
+    db_cloud_ssh_port: '22',
+    db_cloud_ssh_user: '',
+    db_cloud_ssh_password: '',
   };
   public local: ConexaoLocal = {
     db_local_host: '',
     db_local_port: '5432',
     db_local_user: '',
     db_local_password: '',
+    db_local_ssh_enabled: false,
+    db_local_ssh_host: '',
+    db_local_ssh_port: '22',
+    db_local_ssh_user: '',
+    db_local_ssh_password: '',
   };
 }

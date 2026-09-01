@@ -224,6 +224,39 @@
     </app-layout-campo>
   </div>
 
+  <div class="ssh-panel mb-4">
+    <div class="flex items-center gap-3 mb-3">
+      <p-toggleswitch [(ngModel)]="objeto.db_cloud_ssh_enabled" name="db_cloud_ssh_enabled" />
+      <label>Conectar Cloud via túnel SSH</label>
+    </div>
+    <p class="text-sm text-muted-color mb-3">
+      No host do banco use <strong>localhost</strong> se o Postgres está no mesmo servidor SSH (como no DBeaver).
+    </p>
+
+    <div *ngIf="objeto.db_cloud_ssh_enabled" class="flex-row-responsive w-full">
+      <app-layout-campo [label]="'SSH Host: (*)'" [width]="'md:w-6/12'">
+        <input pInputText [(ngModel)]="objeto.db_cloud_ssh_host" class="w-full" />
+      </app-layout-campo>
+      <app-layout-campo [label]="'SSH Porta: (*)'" [width]="'md:w-6/12'">
+        <input pInputText [(ngModel)]="objeto.db_cloud_ssh_port" class="w-full" />
+      </app-layout-campo>
+    </div>
+
+    <div *ngIf="objeto.db_cloud_ssh_enabled" class="flex-row-responsive w-full">
+      <app-layout-campo [label]="'SSH Usuário: (*)'" [width]="'md:w-6/12'">
+        <input pInputText [(ngModel)]="objeto.db_cloud_ssh_user" class="w-full" />
+      </app-layout-campo>
+      <app-layout-campo [label]="'SSH Senha: (*)'" [width]="'md:w-6/12'">
+        <p-password
+          [(ngModel)]="objeto.db_cloud_ssh_password"
+          [toggleMask]="true"
+          [fluid]="true"
+          [feedback]="false"
+        />
+      </app-layout-campo>
+    </div>
+  </div>
+
   <div class="flex items-center gap-3 mb-5">
     <p-toggleswitch
       [(ngModel)]="objeto.fl_admin"
@@ -307,6 +340,36 @@
         [feedback]="false"
       />
     </app-layout-campo>
+  </div>
+
+  <div class="ssh-panel mb-2">
+    <div class="flex items-center gap-3 mb-3">
+      <p-toggleswitch [(ngModel)]="objeto.db_local_ssh_enabled" name="db_local_ssh_enabled" />
+      <label>Conectar Local via túnel SSH</label>
+    </div>
+
+    <div *ngIf="objeto.db_local_ssh_enabled" class="flex-row-responsive w-full">
+      <app-layout-campo [label]="'SSH Host: (*)'" [width]="'md:w-6/12'">
+        <input pInputText [(ngModel)]="objeto.db_local_ssh_host" class="w-full" />
+      </app-layout-campo>
+      <app-layout-campo [label]="'SSH Porta: (*)'" [width]="'md:w-6/12'">
+        <input pInputText [(ngModel)]="objeto.db_local_ssh_port" class="w-full" />
+      </app-layout-campo>
+    </div>
+
+    <div *ngIf="objeto.db_local_ssh_enabled" class="flex-row-responsive w-full">
+      <app-layout-campo [label]="'SSH Usuário: (*)'" [width]="'md:w-6/12'">
+        <input pInputText [(ngModel)]="objeto.db_local_ssh_user" class="w-full" />
+      </app-layout-campo>
+      <app-layout-campo [label]="'SSH Senha: (*)'" [width]="'md:w-6/12'">
+        <p-password
+          [(ngModel)]="objeto.db_local_ssh_password"
+          [toggleMask]="true"
+          [fluid]="true"
+          [feedback]="false"
+        />
+      </app-layout-campo>
+    </div>
   </div>
 
   <ng-template pTemplate="footer">
