@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { FormsModule } from '@angular/forms';
@@ -13,12 +14,14 @@ import { TagModule } from 'primeng/tag';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { finalize, timeout } from 'rxjs';
 import { LayoutCampo } from '../../../../components/layout-campo/layout-campo';
 import { BaseService } from '../../../../services/base.service';
 import { ConexaoSchema } from '../../../../schema/conexao-schema';
 import { Conexao } from '../../../../models/conexao';
 import { UploadCertiicado } from '../upload-certiicado/upload-certiicado';
 import { TabsModule } from 'primeng/tabs';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-conexaoform',
@@ -42,18 +45,21 @@ import { TabsModule } from 'primeng/tabs';
   styleUrl: './conexaoform.scss',
 })
 export class Conexaoform {
-  private readonly senhaMascarada = '*****';
   public errorValidacao: Record<string, string> = {};
   public listaConexoes: Conexao[] = [];
   public objeto: Conexao = new Conexao();
   public dialogVisible = false;
   public loading = false;
   public salvando = false;
+  public testandoConexao = false;
   public carregandoConexao = false;
-  public senhaCloudProtegidaPorCertificado = false;
+  public senhaCloudDefinida = false;
+  public senhaCloudSshDefinida = false;
+  public senhaLocalSshDefinida = false;
   public abaDialogConexao: 'conexao' | 'ssh' | 'admin' = 'conexao';
 
   private baseService = inject(BaseService);
+  private http = inject(HttpClient);
   private cd = inject(ChangeDetectorRef);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
@@ -87,7 +93,7 @@ export class Conexaoform {
   novaConexao() {
     this.objeto = new Conexao();
     this.objeto.fl_padrao = this.listaConexoes.length === 0;
-    this.limparProtecaoSenhaCertificado();
+    this.limparEstadoSenhas();
     this.errorValidacao = {};
     this.abaDialogConexao = 'conexao';
     this.dialogVisible = true;
@@ -106,7 +112,7 @@ export class Conexaoform {
     this.baseService.findById(this.endpoint, id).subscribe({
       next: (res: any) => {
         this.objeto = this.normalizarConexao(res);
-        this.protegerSenhasCertificado(this.objeto);
+        this.aplicarEstadoSenhas(this.objeto);
         this.errorValidacao = {};
         this.abaDialogConexao = this.definirAbaInicialDialog(this.objeto);
         this.dialogVisible = true;
@@ -161,6 +167,66 @@ export class Conexaoform {
         this.cd.markForCheck();
       },
     });
+  }
+
+  testarConexao() {
+    const payload = this.montarPayload(this.objeto);
+
+    this.testandoConexao = true;
+
+    this.http
+      .post(`${environment.apiUrl}/conexao/testar`, payload)
+      .pipe(
+        timeout(60000),
+        finalize(() => {
+          this.testandoConexao = false;
+          this.cd.markForCheck();
+        })
+      )
+      .subscribe({
+        next: (res: any) => {
+          if (res?.ok) {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Conexão OK',
+              detail: res.message || 'Cloud e Local conectados com sucesso.',
+            });
+          } else {
+            this.messageService.add({
+              severity: 'warn',
+              summary: 'Teste com falhas',
+              detail: this.formatarResultadoTeste(res),
+            });
+          }
+        },
+        error: (error) => {
+          if (error?.name === 'TimeoutError') {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Teste expirou',
+              detail: 'A validacao da conexao demorou demais. Verifique host, SSH e credenciais.',
+            });
+            return;
+          }
+
+          this.baseService.exibirErros(error);
+        },
+      });
+  }
+
+  private formatarResultadoTeste(res: any): string {
+    if (res?.message) {
+      return res.message;
+    }
+
+    const cloudMsg = res?.cloud?.message;
+    const localMsg = res?.local?.message;
+
+    if (cloudMsg && localMsg) {
+      return `Cloud: ${cloudMsg} | Local: ${localMsg}`;
+    }
+
+    return cloudMsg || localMsg || 'Não foi possível testar a conexão.';
   }
 
   marcarPadrao(conexao: Conexao) {
@@ -241,6 +307,25 @@ export class Conexaoform {
   fecharDialog() {
     this.dialogVisible = false;
     this.errorValidacao = {};
+    this.abaDialogConexao = 'conexao';
+  }
+
+  alterarAbaDialog(value: string | number | undefined) {
+    if (value === 'conexao' || value === 'ssh' || value === 'admin') {
+      this.abaDialogConexao = value;
+    }
+  }
+
+  private definirAbaInicialDialog(conexao: Conexao): 'conexao' | 'ssh' | 'admin' {
+    if (conexao.fl_admin || conexao.arquivoValidado) {
+      return 'admin';
+    }
+
+    if (conexao.db_cloud_ssh_enabled || conexao.db_local_ssh_enabled) {
+      return 'ssh';
+    }
+
+    return 'conexao';
   }
 
   onCertificadoEnviado(res: any) {
@@ -257,14 +342,19 @@ export class Conexaoform {
     }
 
     this.aplicarDadosConexao(this.objeto, dados);
-    this.protegerSenhasCertificado(this.objeto);
+    this.aplicarEstadoSenhas(this.objeto);
 
     this.cd.markForCheck();
   }
 
   validarItens(): boolean {
     try {
-      ConexaoSchema.parse([this.objeto]);
+      const objetoValidacao = {
+        ...this.objeto,
+        db_cloud_password: this.obterSenhaCloudParaValidacao(),
+      };
+
+      ConexaoSchema.parse([objetoValidacao]);
       this.errorValidacao = {};
       return true;
     } catch (error) {
@@ -284,11 +374,29 @@ export class Conexaoform {
     return conexao.id || conexao.id_conexao;
   }
 
-  get senhaCertificadoMascarada(): string {
-    return this.senhaMascarada;
+  get senhaCloudPlaceholder(): string {
+    return this.senhaCloudDefinida
+      ? 'Senha definida (digite apenas para alterar)'
+      : 'Senha';
+  }
+
+  get senhaCloudSshPlaceholder(): string {
+    return this.senhaCloudSshDefinida
+      ? 'Senha SSH definida (digite apenas para alterar)'
+      : 'Senha SSH';
+  }
+
+  get senhaLocalSshPlaceholder(): string {
+    return this.senhaLocalSshDefinida
+      ? 'Senha SSH definida (digite apenas para alterar)'
+      : 'Senha SSH';
   }
 
   private montarPayload(conexao: Conexao) {
+    const cloudPassword = conexao.db_cloud_password?.trim();
+    const cloudSshPassword = conexao.db_cloud_ssh_password?.trim();
+    const localSshPassword = conexao.db_local_ssh_password?.trim();
+
     return {
       id: this.obterIdConexao(conexao),
       nm_conexao: conexao.nm_conexao,
@@ -299,13 +407,13 @@ export class Conexaoform {
         db_cloud_host: conexao.db_cloud_host,
         db_cloud_port: conexao.db_cloud_port,
         db_cloud_user: conexao.db_cloud_user,
-        db_cloud_password: conexao.db_cloud_password,
+        ...(cloudPassword ? { db_cloud_password: cloudPassword } : {}),
         fl_admin: conexao.fl_admin,
         db_cloud_ssh_enabled: conexao.db_cloud_ssh_enabled,
         db_cloud_ssh_host: conexao.db_cloud_ssh_host,
         db_cloud_ssh_port: conexao.db_cloud_ssh_port,
         db_cloud_ssh_user: conexao.db_cloud_ssh_user,
-        db_cloud_ssh_password: conexao.db_cloud_ssh_password,
+        ...(cloudSshPassword ? { db_cloud_ssh_password: cloudSshPassword } : {}),
       },
 
       local: {
@@ -317,7 +425,7 @@ export class Conexaoform {
         db_local_ssh_host: conexao.db_local_ssh_host,
         db_local_ssh_port: conexao.db_local_ssh_port,
         db_local_ssh_user: conexao.db_local_ssh_user,
-        db_local_ssh_password: conexao.db_local_ssh_password,
+        ...(localSshPassword ? { db_local_ssh_password: localSshPassword } : {}),
       },
     };
   }
@@ -357,9 +465,11 @@ export class Conexaoform {
     conexao.db_cloud_host = dados?.db_cloud_host ?? cloud.db_cloud_host ?? conexao.db_cloud_host;
     conexao.db_cloud_port = dados?.db_cloud_port ?? cloud.db_cloud_port ?? conexao.db_cloud_port;
     conexao.db_cloud_user = dados?.db_cloud_user ?? cloud.db_cloud_user ?? conexao.db_cloud_user;
-    conexao.db_cloud_password =
-      dados?.db_cloud_password ?? cloud.db_cloud_password ?? conexao.db_cloud_password;
     conexao.fl_admin = dados?.fl_admin ?? cloud.fl_admin ?? conexao.fl_admin;
+    conexao.fl_cloud_password_defined =
+      dados?.fl_cloud_password_defined ??
+      cloud.fl_cloud_password_defined ??
+      conexao.fl_cloud_password_defined;
     conexao.db_cloud_ssh_enabled =
       dados?.db_cloud_ssh_enabled ?? cloud.db_cloud_ssh_enabled ?? conexao.db_cloud_ssh_enabled;
     conexao.db_cloud_ssh_host =
@@ -368,8 +478,10 @@ export class Conexaoform {
       dados?.db_cloud_ssh_port ?? cloud.db_cloud_ssh_port ?? conexao.db_cloud_ssh_port ?? '22';
     conexao.db_cloud_ssh_user =
       dados?.db_cloud_ssh_user ?? cloud.db_cloud_ssh_user ?? conexao.db_cloud_ssh_user;
-    conexao.db_cloud_ssh_password =
-      dados?.db_cloud_ssh_password ?? cloud.db_cloud_ssh_password ?? conexao.db_cloud_ssh_password;
+    conexao.fl_cloud_ssh_password_defined =
+      dados?.fl_cloud_ssh_password_defined ??
+      cloud.fl_cloud_ssh_password_defined ??
+      conexao.fl_cloud_ssh_password_defined;
     conexao.db_local_host = dados?.db_local_host ?? local.db_local_host ?? conexao.db_local_host;
     conexao.db_local_port = dados?.db_local_port ?? local.db_local_port ?? conexao.db_local_port;
     conexao.db_local_user = dados?.db_local_user ?? local.db_local_user ?? conexao.db_local_user;
@@ -383,20 +495,22 @@ export class Conexaoform {
       dados?.db_local_ssh_port ?? local.db_local_ssh_port ?? conexao.db_local_ssh_port ?? '22';
     conexao.db_local_ssh_user =
       dados?.db_local_ssh_user ?? local.db_local_ssh_user ?? conexao.db_local_ssh_user;
-    conexao.db_local_ssh_password =
-      dados?.db_local_ssh_password ?? local.db_local_ssh_password ?? conexao.db_local_ssh_password;
+    conexao.fl_local_ssh_password_defined =
+      dados?.fl_local_ssh_password_defined ??
+      local.fl_local_ssh_password_defined ??
+      conexao.fl_local_ssh_password_defined;
 
     conexao.cloud = {
       db_cloud_host: conexao.db_cloud_host,
       db_cloud_port: conexao.db_cloud_port,
       db_cloud_user: conexao.db_cloud_user,
-      db_cloud_password: conexao.db_cloud_password,
       fl_admin: conexao.fl_admin,
+      fl_cloud_password_defined: conexao.fl_cloud_password_defined,
       db_cloud_ssh_enabled: conexao.db_cloud_ssh_enabled,
       db_cloud_ssh_host: conexao.db_cloud_ssh_host,
       db_cloud_ssh_port: conexao.db_cloud_ssh_port,
       db_cloud_ssh_user: conexao.db_cloud_ssh_user,
-      db_cloud_ssh_password: conexao.db_cloud_ssh_password,
+      fl_cloud_ssh_password_defined: conexao.fl_cloud_ssh_password_defined,
     };
     conexao.local = {
       db_local_host: conexao.db_local_host,
@@ -407,7 +521,7 @@ export class Conexaoform {
       db_local_ssh_host: conexao.db_local_ssh_host,
       db_local_ssh_port: conexao.db_local_ssh_port,
       db_local_ssh_user: conexao.db_local_ssh_user,
-      db_local_ssh_password: conexao.db_local_ssh_password,
+      fl_local_ssh_password_defined: conexao.fl_local_ssh_password_defined,
     };
   }
 
@@ -418,16 +532,55 @@ export class Conexaoform {
     return conexoes;
   }
 
-  private protegerSenhasCertificado(conexao: Conexao) {
-    if (!conexao.arquivoValidado) {
-      this.limparProtecaoSenhaCertificado();
-      return;
-    }
+  private aplicarEstadoSenhas(conexao: Conexao) {
+    this.senhaCloudDefinida =
+      !!conexao.fl_cloud_password_defined ||
+      !!conexao.cloud?.fl_cloud_password_defined ||
+      (conexao.arquivoValidado && !!conexao.fl_admin);
 
-    this.senhaCloudProtegidaPorCertificado = !!conexao.db_cloud_password;
+    this.senhaCloudSshDefinida =
+      !!conexao.fl_cloud_ssh_password_defined ||
+      !!conexao.cloud?.fl_cloud_ssh_password_defined;
+
+    this.senhaLocalSshDefinida =
+      !!conexao.fl_local_ssh_password_defined ||
+      !!conexao.local?.fl_local_ssh_password_defined;
+
+    this.limparSenhasProtegidas(conexao);
   }
 
-  private limparProtecaoSenhaCertificado() {
-    this.senhaCloudProtegidaPorCertificado = false;
+  private limparSenhasProtegidas(conexao: Conexao) {
+    conexao.db_cloud_password = '';
+    conexao.db_cloud_ssh_password = '';
+    conexao.db_local_ssh_password = '';
+
+    if (conexao.cloud) {
+      conexao.cloud.db_cloud_password = '';
+      conexao.cloud.db_cloud_ssh_password = '';
+    }
+
+    if (conexao.local) {
+      conexao.local.db_local_ssh_password = '';
+    }
+  }
+
+  private limparEstadoSenhas() {
+    this.senhaCloudDefinida = false;
+    this.senhaCloudSshDefinida = false;
+    this.senhaLocalSshDefinida = false;
+    this.limparSenhasProtegidas(this.objeto);
+  }
+
+  private obterSenhaCloudParaValidacao(): string {
+    const senhaDigitada = this.objeto.db_cloud_password?.trim();
+    if (senhaDigitada) {
+      return senhaDigitada;
+    }
+
+    if (this.senhaCloudDefinida) {
+      return 'defined';
+    }
+
+    return '';
   }
 }

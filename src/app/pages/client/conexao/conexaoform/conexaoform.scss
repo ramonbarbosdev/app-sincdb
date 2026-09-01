@@ -37,3 +37,18 @@
   border-radius: 8px;
   padding: 1rem;
 }
+
+.ssh-panel,
+.admin-panel {
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.conexao-dialog-tabs {
+  display: block;
+}
+
+.conexao-dialog-tabs ::ng-deep .p-tabpanels {
+  padding-top: 0.75rem;
+}

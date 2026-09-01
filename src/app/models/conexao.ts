@@ -4,13 +4,15 @@ export interface ConexaoCloud {
   db_cloud_host: string;
   db_cloud_port: string;
   db_cloud_user: string;
-  db_cloud_password: string;
+  db_cloud_password?: string;
   fl_admin: boolean;
+  fl_cloud_password_defined?: boolean;
   db_cloud_ssh_enabled?: boolean;
   db_cloud_ssh_host?: string;
   db_cloud_ssh_port?: string;
   db_cloud_ssh_user?: string;
   db_cloud_ssh_password?: string;
+  fl_cloud_ssh_password_defined?: boolean;
 }
 
 export interface ConexaoLocal {
@@ -23,6 +25,7 @@ export interface ConexaoLocal {
   db_local_ssh_port?: string;
   db_local_ssh_user?: string;
   db_local_ssh_password?: string;
+  fl_local_ssh_password_defined?: boolean;
 }
 
 export class Conexao {
@@ -37,12 +40,14 @@ export class Conexao {
   public db_cloud_port: string = '5432';
   public db_cloud_user: string = '';
   public db_cloud_password: string = '';
+  public fl_cloud_password_defined: boolean = false;
   public fl_admin: boolean = false;
   public db_cloud_ssh_enabled: boolean = false;
   public db_cloud_ssh_host: string = '';
   public db_cloud_ssh_port: string = '22';
   public db_cloud_ssh_user: string = '';
   public db_cloud_ssh_password: string = '';
+  public fl_cloud_ssh_password_defined: boolean = false;
   public db_local_host: string = '';
   public db_local_port: string = '5432';
   public db_local_user: string = '';
@@ -52,17 +57,20 @@ export class Conexao {
   public db_local_ssh_port: string = '22';
   public db_local_ssh_user: string = '';
   public db_local_ssh_password: string = '';
+  public fl_local_ssh_password_defined: boolean = false;
   public cloud: ConexaoCloud = {
     db_cloud_host: '',
     db_cloud_port: '5432',
     db_cloud_user: '',
     db_cloud_password: '',
     fl_admin: false,
+    fl_cloud_password_defined: false,
     db_cloud_ssh_enabled: false,
     db_cloud_ssh_host: '',
     db_cloud_ssh_port: '22',
     db_cloud_ssh_user: '',
     db_cloud_ssh_password: '',
+    fl_cloud_ssh_password_defined: false,
   };
   public local: ConexaoLocal = {
     db_local_host: '',
@@ -74,5 +82,6 @@ export class Conexao {
     db_local_ssh_port: '22',
     db_local_ssh_user: '',
     db_local_ssh_password: '',
+    fl_local_ssh_password_defined: false,
   };
 }

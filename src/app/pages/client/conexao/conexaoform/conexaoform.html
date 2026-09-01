@@ -158,236 +158,284 @@
     </app-layout-campo>
   </div>
 
-  <h3 class="text-lg font-semibold mt-2 mb-3 text-primary">
-    Servidor Cloud
-  </h3>
+  <p-tabs
+    [value]="abaDialogConexao"
+    (valueChange)="alterarAbaDialog($event)"
+    class="conexao-dialog-tabs mt-3"
+  >
+    <p-tablist>
+      <p-tab value="conexao">Conexão</p-tab>
+      <p-tab value="ssh">Túnel SSH</p-tab>
+      <p-tab value="admin">Acesso administrador</p-tab>
+    </p-tablist>
 
-  <div class="flex-row-responsive w-full">
-    <app-layout-campo
-      [error]="errorValidacao['db_cloud_host']"
-      [label]="'Host: (*)'"
-      [width]="'md:w-6/12'"
-    >
-      <input
-        pInputText
-        [(ngModel)]="objeto.db_cloud_host"
-        class="w-full"
-      />
-    </app-layout-campo>
+    <p-tabpanels>
+      <p-tabpanel value="conexao">
+        <h3 class="text-lg font-semibold mt-1 mb-3 text-primary">
+          Servidor Cloud
+        </h3>
 
-    <app-layout-campo
-      [error]="errorValidacao['db_cloud_port']"
-      [label]="'Porta: (*)'"
-      [width]="'md:w-6/12'"
-    >
-      <input
-        pInputText
-        [(ngModel)]="objeto.db_cloud_port"
-        class="w-full"
-      />
-    </app-layout-campo>
-  </div>
+        <div class="flex-row-responsive w-full">
+          <app-layout-campo
+            [error]="errorValidacao['db_cloud_host']"
+            [label]="'Host: (*)'"
+            [width]="'md:w-6/12'"
+          >
+            <input
+              pInputText
+              [(ngModel)]="objeto.db_cloud_host"
+              class="w-full"
+            />
+          </app-layout-campo>
 
-  <div class="flex-row-responsive w-full">
-    <app-layout-campo
-      [error]="errorValidacao['db_cloud_user']"
-      [label]="'Usuário: (*)'"
-      [width]="'md:w-6/12'"
-    >
-      <input
-        pInputText
-        [(ngModel)]="objeto.db_cloud_user"
-        class="w-full"
-      />
-    </app-layout-campo>
+          <app-layout-campo
+            [error]="errorValidacao['db_cloud_port']"
+            [label]="'Porta: (*)'"
+            [width]="'md:w-6/12'"
+          >
+            <input
+              pInputText
+              [(ngModel)]="objeto.db_cloud_port"
+              class="w-full"
+            />
+          </app-layout-campo>
+        </div>
 
-    <app-layout-campo
-      [error]="errorValidacao['db_cloud_password']"
-      [label]="'Senha: (*)'"
-      [width]="'md:w-6/12'"
-    >
-      <input
-        *ngIf="senhaCloudProtegidaPorCertificado"
-        pInputText
-        [value]="senhaCertificadoMascarada"
-        class="w-full"
-        readonly
-      />
+        <div class="flex-row-responsive w-full">
+          <app-layout-campo
+            [error]="errorValidacao['db_cloud_user']"
+            [label]="'Usuário: (*)'"
+            [width]="'md:w-6/12'"
+          >
+            <input
+              pInputText
+              [(ngModel)]="objeto.db_cloud_user"
+              class="w-full"
+            />
+          </app-layout-campo>
 
-      <p-password
-        *ngIf="!senhaCloudProtegidaPorCertificado"
-        [(ngModel)]="objeto.db_cloud_password"
-        [toggleMask]="true"
-        [fluid]="true"
-        [feedback]="false"
-      />
-    </app-layout-campo>
-  </div>
+          <app-layout-campo
+            [error]="errorValidacao['db_cloud_password']"
+            [label]="'Senha: (*)'"
+            [width]="'md:w-6/12'"
+            [sublabel]="senhaCloudDefinida ? 'A senha Cloud nao pode ser exibida. Digite apenas para alterar.' : 'Informe a senha do PostgreSQL Cloud'"
+            [describedby]="'db_cloud_password'"
+          >
+            <p-password
+              [(ngModel)]="objeto.db_cloud_password"
+              [toggleMask]="false"
+              [fluid]="true"
+              [feedback]="false"
+              [placeholder]="senhaCloudPlaceholder"
+            />
+          </app-layout-campo>
+        </div>
 
-  <div class="ssh-panel mb-4">
-    <div class="flex items-center gap-3 mb-3">
-      <p-toggleswitch [(ngModel)]="objeto.db_cloud_ssh_enabled" name="db_cloud_ssh_enabled" />
-      <label>Conectar Cloud via túnel SSH</label>
-    </div>
-    <p class="text-sm text-muted-color mb-3">
-      No host do banco use <strong>localhost</strong> se o Postgres está no mesmo servidor SSH (como no DBeaver).
-    </p>
+        <h3 class="text-lg font-semibold mt-4 mb-3 text-primary">
+          Servidor Local
+        </h3>
 
-    <div *ngIf="objeto.db_cloud_ssh_enabled" class="flex-row-responsive w-full">
-      <app-layout-campo [label]="'SSH Host: (*)'" [width]="'md:w-6/12'">
-        <input pInputText [(ngModel)]="objeto.db_cloud_ssh_host" class="w-full" />
-      </app-layout-campo>
-      <app-layout-campo [label]="'SSH Porta: (*)'" [width]="'md:w-6/12'">
-        <input pInputText [(ngModel)]="objeto.db_cloud_ssh_port" class="w-full" />
-      </app-layout-campo>
-    </div>
+        <div class="flex-row-responsive w-full">
+          <app-layout-campo
+            [error]="errorValidacao['db_local_host']"
+            [label]="'Host: (*)'"
+            [width]="'md:w-6/12'"
+          >
+            <input
+              pInputText
+              [(ngModel)]="objeto.db_local_host"
+              class="w-full"
+            />
+          </app-layout-campo>
 
-    <div *ngIf="objeto.db_cloud_ssh_enabled" class="flex-row-responsive w-full">
-      <app-layout-campo [label]="'SSH Usuário: (*)'" [width]="'md:w-6/12'">
-        <input pInputText [(ngModel)]="objeto.db_cloud_ssh_user" class="w-full" />
-      </app-layout-campo>
-      <app-layout-campo [label]="'SSH Senha: (*)'" [width]="'md:w-6/12'">
-        <p-password
-          [(ngModel)]="objeto.db_cloud_ssh_password"
-          [toggleMask]="true"
-          [fluid]="true"
-          [feedback]="false"
-        />
-      </app-layout-campo>
-    </div>
-  </div>
+          <app-layout-campo
+            [error]="errorValidacao['db_local_port']"
+            [label]="'Porta: (*)'"
+            [width]="'md:w-6/12'"
+          >
+            <input
+              pInputText
+              [(ngModel)]="objeto.db_local_port"
+              class="w-full"
+            />
+          </app-layout-campo>
+        </div>
 
-  <div class="flex items-center gap-3 mb-5">
-    <p-toggleswitch
-      [(ngModel)]="objeto.fl_admin"
-    />
+        <div class="flex-row-responsive w-full">
+          <app-layout-campo
+            [error]="errorValidacao['db_local_user']"
+            [label]="'Usuário: (*)'"
+            [width]="'md:w-6/12'"
+          >
+            <input
+              pInputText
+              [(ngModel)]="objeto.db_local_user"
+              class="w-full"
+            />
+          </app-layout-campo>
 
-    <label>
-      Acesso administrador
-    </label>
-  </div>
+          <app-layout-campo
+            [error]="errorValidacao['db_local_password']"
+            [label]="'Senha: (*)'"
+            [width]="'md:w-6/12'"
+          >
+            <p-password
+              [(ngModel)]="objeto.db_local_password"
+              [toggleMask]="true"
+              [fluid]="true"
+              [feedback]="false"
+            />
+          </app-layout-campo>
+        </div>
+      </p-tabpanel>
 
-  <div class="certificate-panel mb-5">
-    <div class="flex items-center justify-between gap-3 mb-3">
-      <h3 class="text-lg font-semibold text-primary">
-        Certificado
-      </h3>
+      <p-tabpanel value="ssh">
+        <p class="text-sm text-muted-color mb-4">
+          Use o túnel SSH quando o banco não é acessível diretamente. No host do banco, use
+          <strong>localhost</strong> se o Postgres está no mesmo servidor SSH.
+        </p>
 
-      <p-tag
-        [value]="objeto.arquivoValidado ? 'Enviado' : 'Pendente'"
-        [severity]="objeto.arquivoValidado ? 'success' : 'warn'"
-      />
-    </div>
+        <div class="ssh-panel mb-4">
+          <div class="flex items-center gap-3 mb-3">
+            <p-toggleswitch
+              [(ngModel)]="objeto.db_cloud_ssh_enabled"
+              name="db_cloud_ssh_enabled"
+            />
+            <label>Usar túnel SSH no Cloud</label>
+          </div>
 
-    <app-upload-certiicado
-      [arquivoValido]="objeto.arquivoValidado"
-      (certificadoEnviado)="onCertificadoEnviado($event)"
-    />
-  </div>
+          <div *ngIf="objeto.db_cloud_ssh_enabled" class="flex-row-responsive w-full">
+            <app-layout-campo [label]="'SSH Host: (*)'" [width]="'md:w-6/12'">
+              <input pInputText [(ngModel)]="objeto.db_cloud_ssh_host" class="w-full" />
+            </app-layout-campo>
+            <app-layout-campo [label]="'SSH Porta: (*)'" [width]="'md:w-6/12'">
+              <input pInputText [(ngModel)]="objeto.db_cloud_ssh_port" class="w-full" />
+            </app-layout-campo>
+          </div>
 
-  <h3 class="text-lg font-semibold mb-3 text-primary">
-    Servidor Local
-  </h3>
+          <div *ngIf="objeto.db_cloud_ssh_enabled" class="flex-row-responsive w-full">
+            <app-layout-campo [label]="'SSH Usuário: (*)'" [width]="'md:w-6/12'">
+              <input pInputText [(ngModel)]="objeto.db_cloud_ssh_user" class="w-full" />
+            </app-layout-campo>
+            <app-layout-campo
+              [label]="'SSH Senha: (*)'"
+              [width]="'md:w-6/12'"
+              [sublabel]="senhaCloudSshDefinida ? 'A senha SSH nao pode ser exibida. Digite apenas para alterar.' : 'Informe a senha SSH do Cloud'"
+              [describedby]="'db_cloud_ssh_password'"
+            >
+              <p-password
+                [(ngModel)]="objeto.db_cloud_ssh_password"
+                [toggleMask]="false"
+                [fluid]="true"
+                [feedback]="false"
+                [placeholder]="senhaCloudSshPlaceholder"
+              />
+            </app-layout-campo>
+          </div>
+        </div>
 
-  <div class="flex-row-responsive w-full">
-    <app-layout-campo
-      [error]="errorValidacao['db_local_host']"
-      [label]="'Host: (*)'"
-      [width]="'md:w-6/12'"
-    >
-      <input
-        pInputText
-        [(ngModel)]="objeto.db_local_host"
-        class="w-full"
-      />
-    </app-layout-campo>
+        <div class="ssh-panel">
+          <div class="flex items-center gap-3 mb-3">
+            <p-toggleswitch
+              [(ngModel)]="objeto.db_local_ssh_enabled"
+              name="db_local_ssh_enabled"
+            />
+            <label>Usar túnel SSH no Local</label>
+          </div>
 
-    <app-layout-campo
-      [error]="errorValidacao['db_local_port']"
-      [label]="'Porta: (*)'"
-      [width]="'md:w-6/12'"
-    >
-      <input
-        pInputText
-        [(ngModel)]="objeto.db_local_port"
-        class="w-full"
-      />
-    </app-layout-campo>
-  </div>
+          <div *ngIf="objeto.db_local_ssh_enabled" class="flex-row-responsive w-full">
+            <app-layout-campo [label]="'SSH Host: (*)'" [width]="'md:w-6/12'">
+              <input pInputText [(ngModel)]="objeto.db_local_ssh_host" class="w-full" />
+            </app-layout-campo>
+            <app-layout-campo [label]="'SSH Porta: (*)'" [width]="'md:w-6/12'">
+              <input pInputText [(ngModel)]="objeto.db_local_ssh_port" class="w-full" />
+            </app-layout-campo>
+          </div>
 
-  <div class="flex-row-responsive w-full">
-    <app-layout-campo
-      [error]="errorValidacao['db_local_user']"
-      [label]="'Usuário: (*)'"
-      [width]="'md:w-6/12'"
-    >
-      <input
-        pInputText
-        [(ngModel)]="objeto.db_local_user"
-        class="w-full"
-      />
-    </app-layout-campo>
+          <div *ngIf="objeto.db_local_ssh_enabled" class="flex-row-responsive w-full">
+            <app-layout-campo [label]="'SSH Usuário: (*)'" [width]="'md:w-6/12'">
+              <input pInputText [(ngModel)]="objeto.db_local_ssh_user" class="w-full" />
+            </app-layout-campo>
+            <app-layout-campo
+              [label]="'SSH Senha: (*)'"
+              [width]="'md:w-6/12'"
+              [sublabel]="senhaLocalSshDefinida ? 'A senha SSH nao pode ser exibida. Digite apenas para alterar.' : 'Informe a senha SSH do Local'"
+              [describedby]="'db_local_ssh_password'"
+            >
+              <p-password
+                [(ngModel)]="objeto.db_local_ssh_password"
+                [toggleMask]="false"
+                [fluid]="true"
+                [feedback]="false"
+                [placeholder]="senhaLocalSshPlaceholder"
+              />
+            </app-layout-campo>
+          </div>
+        </div>
+      </p-tabpanel>
 
-    <app-layout-campo
-      [error]="errorValidacao['db_local_password']"
-      [label]="'Senha: (*)'"
-      [width]="'md:w-6/12'"
-    >
-      <p-password
-        [(ngModel)]="objeto.db_local_password"
-        [toggleMask]="true"
-        [fluid]="true"
-        [feedback]="false"
-      />
-    </app-layout-campo>
-  </div>
+      <p-tabpanel value="admin">
+        <div class="admin-panel mb-4">
+          <div class="flex items-center gap-3 mb-2">
+            <p-toggleswitch [(ngModel)]="objeto.fl_admin" name="fl_admin" />
+            <label>Acesso administrador</label>
+          </div>
+          <p class="text-sm text-muted-color">
+            Habilita credenciais administrativas na Cloud e o envio de certificado para autenticação.
+          </p>
+        </div>
 
-  <div class="ssh-panel mb-2">
-    <div class="flex items-center gap-3 mb-3">
-      <p-toggleswitch [(ngModel)]="objeto.db_local_ssh_enabled" name="db_local_ssh_enabled" />
-      <label>Conectar Local via túnel SSH</label>
-    </div>
+        <div class="certificate-panel">
+          <div class="flex items-center justify-between gap-3 mb-3">
+            <h3 class="text-lg font-semibold text-primary">
+              Certificado
+            </h3>
 
-    <div *ngIf="objeto.db_local_ssh_enabled" class="flex-row-responsive w-full">
-      <app-layout-campo [label]="'SSH Host: (*)'" [width]="'md:w-6/12'">
-        <input pInputText [(ngModel)]="objeto.db_local_ssh_host" class="w-full" />
-      </app-layout-campo>
-      <app-layout-campo [label]="'SSH Porta: (*)'" [width]="'md:w-6/12'">
-        <input pInputText [(ngModel)]="objeto.db_local_ssh_port" class="w-full" />
-      </app-layout-campo>
-    </div>
+            <p-tag
+              [value]="objeto.arquivoValidado ? 'Enviado' : 'Pendente'"
+              [severity]="objeto.arquivoValidado ? 'success' : 'warn'"
+            />
+          </div>
 
-    <div *ngIf="objeto.db_local_ssh_enabled" class="flex-row-responsive w-full">
-      <app-layout-campo [label]="'SSH Usuário: (*)'" [width]="'md:w-6/12'">
-        <input pInputText [(ngModel)]="objeto.db_local_ssh_user" class="w-full" />
-      </app-layout-campo>
-      <app-layout-campo [label]="'SSH Senha: (*)'" [width]="'md:w-6/12'">
-        <p-password
-          [(ngModel)]="objeto.db_local_ssh_password"
-          [toggleMask]="true"
-          [fluid]="true"
-          [feedback]="false"
-        />
-      </app-layout-campo>
-    </div>
-  </div>
+          <app-upload-certiicado
+            [arquivoValido]="objeto.arquivoValidado"
+            (certificadoEnviado)="onCertificadoEnviado($event)"
+          />
+        </div>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
 
   <ng-template pTemplate="footer">
-    <div class="flex flex-col sm:flex-row justify-end gap-2">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 w-full">
       <p-button
-        label="Cancelar"
-        icon="pi pi-ban"
-        [text]="true"
-        (click)="fecharDialog()"
+        label="Testar conexão"
+        icon="pi pi-plug"
+        severity="secondary"
+        [outlined]="true"
+        styleClass="w-full sm:w-auto"
+        (click)="testarConexao()"
+        [loading]="testandoConexao"
+        [disabled]="salvando"
       />
 
-      <p-button
-        label="Salvar"
-        icon="pi pi-check"
-        (click)="salvarConexao()"
-        styleClass="action-press"
-        [loading]="salvando"
-      />
+      <div class="flex flex-col sm:flex-row justify-end gap-2">
+        <p-button
+          label="Cancelar"
+          icon="pi pi-ban"
+          [text]="true"
+          (click)="fecharDialog()"
+        />
+
+        <p-button
+          label="Salvar"
+          icon="pi pi-check"
+          (click)="salvarConexao()"
+          styleClass="action-press"
+          [loading]="salvando"
+          [disabled]="testandoConexao"
+        />
+      </div>
     </div>
   </ng-template>
 </p-dialog>
