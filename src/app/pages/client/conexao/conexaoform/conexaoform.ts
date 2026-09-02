@@ -65,6 +65,8 @@ export class Conexaoform {
   private messageService = inject(MessageService);
   private router = inject(Router);
   private endpoint = 'conexao';
+  /** Máscara exibida quando a senha já está salva (não enviar ao backend). */
+  private readonly SENHA_MASCARA = '*****';
 
   ngOnInit(): void {
     this.carregarConexoes();
@@ -114,7 +116,7 @@ export class Conexaoform {
         this.objeto = this.normalizarConexao(res);
         this.aplicarEstadoSenhas(this.objeto);
         this.errorValidacao = {};
-        this.abaDialogConexao = this.definirAbaInicialDialog(this.objeto);
+        this.abaDialogConexao = 'conexao';
         this.dialogVisible = true;
         this.carregandoConexao = false;
         this.cd.markForCheck();
@@ -316,18 +318,6 @@ export class Conexaoform {
     }
   }
 
-  private definirAbaInicialDialog(conexao: Conexao): 'conexao' | 'ssh' | 'admin' {
-    if (conexao.fl_admin || conexao.arquivoValidado) {
-      return 'admin';
-    }
-
-    if (conexao.db_cloud_ssh_enabled || conexao.db_local_ssh_enabled) {
-      return 'ssh';
-    }
-
-    return 'conexao';
-  }
-
   onCertificadoEnviado(res: any) {
     this.objeto.arquivoValidado = !!res;
 
@@ -374,28 +364,38 @@ export class Conexaoform {
     return conexao.id || conexao.id_conexao;
   }
 
-  get senhaCloudPlaceholder(): string {
-    return this.senhaCloudDefinida
-      ? 'Senha definida (digite apenas para alterar)'
-      : 'Senha';
-  }
+  limparMascaraSenhaAoFocar(
+    campo: 'cloud' | 'cloud_ssh' | 'local' | 'local_ssh'
+  ): void {
+    const map: Record<string, string | undefined> = {
+      cloud: this.objeto.db_cloud_password,
+      cloud_ssh: this.objeto.db_cloud_ssh_password,
+      local: this.objeto.db_local_password,
+      local_ssh: this.objeto.db_local_ssh_password,
+    };
 
-  get senhaCloudSshPlaceholder(): string {
-    return this.senhaCloudSshDefinida
-      ? 'Senha SSH definida (digite apenas para alterar)'
-      : 'Senha SSH';
-  }
-
-  get senhaLocalSshPlaceholder(): string {
-    return this.senhaLocalSshDefinida
-      ? 'Senha SSH definida (digite apenas para alterar)'
-      : 'Senha SSH';
+    if (map[campo] === this.SENHA_MASCARA) {
+      switch (campo) {
+        case 'cloud':
+          this.objeto.db_cloud_password = '';
+          break;
+        case 'cloud_ssh':
+          this.objeto.db_cloud_ssh_password = '';
+          break;
+        case 'local':
+          this.objeto.db_local_password = '';
+          break;
+        case 'local_ssh':
+          this.objeto.db_local_ssh_password = '';
+          break;
+      }
+    }
   }
 
   private montarPayload(conexao: Conexao) {
-    const cloudPassword = conexao.db_cloud_password?.trim();
-    const cloudSshPassword = conexao.db_cloud_ssh_password?.trim();
-    const localSshPassword = conexao.db_local_ssh_password?.trim();
+    const cloudPassword = this.senhaParaEnvio(conexao.db_cloud_password);
+    const cloudSshPassword = this.senhaParaEnvio(conexao.db_cloud_ssh_password);
+    const localSshPassword = this.senhaParaEnvio(conexao.db_local_ssh_password);
 
     return {
       id: this.obterIdConexao(conexao),
@@ -546,21 +546,27 @@ export class Conexaoform {
       !!conexao.fl_local_ssh_password_defined ||
       !!conexao.local?.fl_local_ssh_password_defined;
 
-    this.limparSenhasProtegidas(conexao);
+    this.aplicarMascaraSenhas(conexao);
   }
 
-  private limparSenhasProtegidas(conexao: Conexao) {
-    conexao.db_cloud_password = '';
-    conexao.db_cloud_ssh_password = '';
-    conexao.db_local_ssh_password = '';
+  private aplicarMascaraSenhas(conexao: Conexao) {
+    conexao.db_cloud_password = this.senhaCloudDefinida
+      ? this.SENHA_MASCARA
+      : conexao.db_cloud_password?.trim() || '';
+    conexao.db_cloud_ssh_password = this.senhaCloudSshDefinida
+      ? this.SENHA_MASCARA
+      : conexao.db_cloud_ssh_password?.trim() || '';
+    conexao.db_local_ssh_password = this.senhaLocalSshDefinida
+      ? this.SENHA_MASCARA
+      : conexao.db_local_ssh_password?.trim() || '';
 
     if (conexao.cloud) {
-      conexao.cloud.db_cloud_password = '';
-      conexao.cloud.db_cloud_ssh_password = '';
+      conexao.cloud.db_cloud_password = conexao.db_cloud_password;
+      conexao.cloud.db_cloud_ssh_password = conexao.db_cloud_ssh_password;
     }
 
     if (conexao.local) {
-      conexao.local.db_local_ssh_password = '';
+      conexao.local.db_local_ssh_password = conexao.db_local_ssh_password;
     }
   }
 
@@ -568,12 +574,22 @@ export class Conexaoform {
     this.senhaCloudDefinida = false;
     this.senhaCloudSshDefinida = false;
     this.senhaLocalSshDefinida = false;
-    this.limparSenhasProtegidas(this.objeto);
+    this.objeto.db_cloud_password = '';
+    this.objeto.db_cloud_ssh_password = '';
+    this.objeto.db_local_ssh_password = '';
+  }
+
+  private senhaParaEnvio(valor?: string): string | undefined {
+    const trimmed = valor?.trim();
+    if (!trimmed || trimmed === this.SENHA_MASCARA) {
+      return undefined;
+    }
+    return trimmed;
   }
 
   private obterSenhaCloudParaValidacao(): string {
     const senhaDigitada = this.objeto.db_cloud_password?.trim();
-    if (senhaDigitada) {
+    if (senhaDigitada && senhaDigitada !== this.SENHA_MASCARA) {
       return senhaDigitada;
     }
 

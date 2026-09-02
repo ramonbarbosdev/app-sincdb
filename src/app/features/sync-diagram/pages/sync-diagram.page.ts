@@ -7,7 +7,6 @@ import { SyncDiagramActionsPanelComponent } from '../components/sync-diagram-act
 import { SyncDiagramMode, SyncDiagramTreeLayout } from '../models/sync-diagram.model';
 import { SyncDiagramActionsService } from '../services/sync-diagram-actions.service';
 import { SyncDiagramCameraService } from '../services/sync-diagram-camera.service';
-import { SyncDiagramLayoutPersistenceService } from '../services/sync-diagram-layout-persistence.service';
 import { SyncDiagramLayoutService } from '../services/sync-diagram-layout.service';
 import { SyncDiagramOperationService } from '../services/sync-diagram-operation.service';
 import { SyncDiagramQueueService } from '../services/sync-diagram-queue.service';
@@ -18,7 +17,6 @@ import { SyncDiagramThemeService } from '../services/sync-diagram-theme.service'
   selector: 'app-sync-diagram-page',
   standalone: true,
   providers: [
-    SyncDiagramLayoutPersistenceService,
     SyncDiagramLayoutService,
     SyncDiagramCameraService,
     SyncDiagramThemeService,
@@ -56,7 +54,6 @@ export class SyncDiagramPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.state.flushPersist();
     this.layoutService.layoutState.update((prev) => ({
       ...prev,
       staticMenuDesktopInactive: this.previousMenuInactive,

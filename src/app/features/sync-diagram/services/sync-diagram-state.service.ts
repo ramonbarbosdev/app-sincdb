@@ -30,7 +30,6 @@ import {
   TableVisualStatus,
   TabelaAfetadaDTO,
 } from '../models/sync-diagram.model';
-import { SyncDiagramLayoutPersistenceService } from './sync-diagram-layout-persistence.service';
 import { SyncDiagramLayoutService } from './sync-diagram-layout.service';
 
 const DEFAULT_POSITIONS: Record<string, DiagramFlowPoint> = {
@@ -58,7 +57,6 @@ const CONNECTION_LABELS_DELAY_MS = 50;
 export class SyncDiagramStateService {
   private baseService = inject(BaseService);
   private layout = inject(SyncDiagramLayoutService);
-  private persistence = inject(SyncDiagramLayoutPersistenceService);
 
   readonly syncMode = signal<SyncDiagramMode>('estrutura');
   readonly flowNodes = signal<DiagramFlowNode[]>([]);
@@ -89,13 +87,17 @@ export class SyncDiagramStateService {
   private erdTables = new Map<string, ErdTableNode>();
   private erdEdges = new Map<string, ErdEdge>();
   private activeOperationId?: string;
-  private persistTimer?: ReturnType<typeof setTimeout>;
   private graphRebuildTimer?: ReturnType<typeof setTimeout>;
   private connectionLabelsTimer?: ReturnType<typeof setTimeout>;
   private readonly erdDataVersion = signal(0);
 
   init(): void {
-    this.applyStoredLayout();
+    try {
+      localStorage.removeItem('sync-diagram-layout-v1');
+    } catch {
+      // ignore private mode / quota
+    }
+
     this.loadingInitial.set(true);
     this.baseService.findAll('sincronizacao/bases/').subscribe({
       next: (res) => {
@@ -115,7 +117,6 @@ export class SyncDiagramStateService {
 
   setSyncMode(mode: SyncDiagramMode): void {
     this.syncMode.set(mode);
-    this.persistSoon();
   }
 
   setTreeLayout(mode: SyncDiagramTreeLayout): void {
@@ -123,7 +124,6 @@ export class SyncDiagramStateService {
     this.treeLayout.set(mode);
     this.layoutTreeBranches();
     this.rebuildGraph();
-    this.persistSoon();
   }
 
   setFilter(nodeId: string, value: string): void {
@@ -133,7 +133,6 @@ export class SyncDiagramStateService {
       this.nodeMeta.set(nodeId, { ...meta, filter: value });
     }
     this.filterRevision.update((n) => n + 1);
-    this.persistSoon();
   }
 
   updateNodePosition(nodeId: string, position: DiagramFlowPoint): void {
@@ -165,8 +164,6 @@ export class SyncDiagramStateService {
     if (nodeId.startsWith('node-')) {
       this.scheduleConnectionLabelsRefresh();
     }
-
-    this.persistSoon();
   }
 
   findOperationByScope(context: SyncDiagramContext, mode: SyncDiagramMode): SyncOperation | undefined {
@@ -438,7 +435,6 @@ export class SyncDiagramStateService {
     }
 
     this.rebuildGraph();
-    this.persistNow();
   }
 
   selectedTabelas(sel?: SyncDiagramContext): string[] {
@@ -486,7 +482,6 @@ export class SyncDiagramStateService {
       this.openTablesKeys.clear();
       this.selection.set({});
       this.rebuildGraph();
-      this.persistSoon();
       return;
     }
 
@@ -603,7 +598,6 @@ export class SyncDiagramStateService {
       this.activeOperationId = undefined;
     }
     this.rebuildGraph();
-    this.persistSoon();
   }
 
   openOperationDetail(operationId: string): void {
@@ -751,7 +745,6 @@ export class SyncDiagramStateService {
     if (kind === 'bases') {
       this.selection.set({ base: itemId });
       this.spawnSchemaList(itemId);
-      this.persistSoon();
       return;
     }
     if (kind === 'schemas') {
@@ -759,7 +752,6 @@ export class SyncDiagramStateService {
       if (!base) return;
       this.selection.set({ base, esquema: itemId });
       this.rebuildGraph();
-      this.persistSoon();
       return;
     }
     if (kind === 'tables') {
@@ -781,7 +773,6 @@ export class SyncDiagramStateService {
         tabelas: [...tabelas],
       });
       this.rebuildGraph();
-      this.persistSoon();
     }
   }
 
@@ -791,7 +782,6 @@ export class SyncDiagramStateService {
       if (!base) return;
       this.selection.set({ base, esquema: itemId });
       this.spawnTables(base, itemId, { fromSchemaList: true });
-      this.persistSoon();
       return;
     }
     if (kind === 'schema') {
@@ -800,13 +790,11 @@ export class SyncDiagramStateService {
       if (!base || !esquema) return;
       this.selection.set({ base, esquema });
       this.spawnTables(base, esquema);
-      this.persistSoon();
       return;
     }
     if (kind === 'bases') {
       this.selection.set({ base: itemId });
       this.spawnSchemaList(itemId);
-      this.persistSoon();
     }
   }
 
@@ -828,7 +816,6 @@ export class SyncDiagramStateService {
         }
         this.layoutTreeBranches();
         this.rebuildGraph();
-        this.persistSoon();
       } else if (node.openedItemId) {
         this.closeTablesForSchema(base, node.openedItemId);
       } else {
@@ -874,7 +861,6 @@ export class SyncDiagramStateService {
     }
     this.layoutTreeBranches();
     this.rebuildGraph();
-    this.persistSoon();
   }
 
   private closeTablesForSchema(base: string, esquema: string): void {
@@ -887,7 +873,6 @@ export class SyncDiagramStateService {
     }
     this.layoutTreeBranches();
     this.rebuildGraph();
-    this.persistSoon();
   }
 
   closeSchemaBox(base: string, esquema: string): void {
@@ -898,7 +883,6 @@ export class SyncDiagramStateService {
     this.positions.delete(this.tablesNodeIdFor(base, esquema));
     this.layoutTreeBranches();
     this.rebuildGraph();
-    this.persistSoon();
   }
 
   recolherNivel(): void {
@@ -906,7 +890,6 @@ export class SyncDiagramStateService {
     if (this.selectedTabelas(sel).length > 0) {
       this.selection.set({ base: sel.base, esquema: sel.esquema });
       this.rebuildGraph();
-      this.persistSoon();
       return;
     }
     if (sel.esquema) {
@@ -940,7 +923,6 @@ export class SyncDiagramStateService {
     const cached = this.schemaCache.get(base);
     if (cached) {
       this.rebuildGraph();
-      if (!options?.silent) this.persistSoon();
       return;
     }
 
@@ -953,13 +935,11 @@ export class SyncDiagramStateService {
         this.schemaCache.set(base, items);
         this.loadingNodes.set(listId, false);
         this.rebuildGraph();
-        if (!options?.silent) this.persistSoon();
       },
       error: () => {
         this.schemaCache.set(base, []);
         this.loadingNodes.set(listId, false);
         this.rebuildGraph();
-        if (!options?.silent) this.persistSoon();
       },
     });
   }
@@ -982,7 +962,6 @@ export class SyncDiagramStateService {
       this.layoutTreeBranches();
     }
     this.rebuildGraph();
-    if (!options?.silent) this.persistSoon();
   }
 
   private tablesLinkFromId(base: string, esquema: string): string {
@@ -1018,7 +997,6 @@ export class SyncDiagramStateService {
 
     if (cached) {
       this.rebuildGraph();
-      if (!options?.silent) this.persistSoon();
       return;
     }
 
@@ -1031,13 +1009,11 @@ export class SyncDiagramStateService {
         this.tableCache.set(cacheKey, items);
         this.loadingNodes.set(nodeId, false);
         this.rebuildGraph();
-        if (!options?.silent) this.persistSoon();
       },
       error: () => {
         this.tableCache.set(cacheKey, []);
         this.loadingNodes.set(nodeId, false);
         this.rebuildGraph();
-        if (!options?.silent) this.persistSoon();
       },
     });
   }
@@ -1406,49 +1382,6 @@ export class SyncDiagramStateService {
     return { source: `${nodeId}::out`, target: `${nodeId}::in` };
   }
 
-  private applyStoredLayout(): void {
-    const stored = this.persistence.load();
-    if (!stored) return;
-
-    this.syncMode.set(stored.syncMode ?? 'estrutura');
-    this.treeLayout.set(stored.treeLayout ?? 'vertical');
-    this.selection.set(this.normalizePersistedSelection(stored.selection));
-
-    for (const [nodeId, filter] of Object.entries(stored.filters ?? {})) {
-      this.filters.set(nodeId, filter);
-    }
-
-    for (const [key, pos] of Object.entries(stored.positions ?? {})) {
-      this.positions.set(key, { x: pos.x, y: pos.y });
-      if (key.startsWith('node-') || key.startsWith('erd-')) {
-        this.manualNodePositions.add(key);
-      }
-    }
-
-    for (const base of stored.openSchemaListBases ?? []) {
-      this.openSchemaListBases.add(base);
-    }
-    for (const key of stored.openSchemaBoxes ?? []) {
-      this.openSchemaBoxes.add(key);
-    }
-    for (const key of stored.openTablesKeys ?? []) {
-      this.openTablesKeys.add(key);
-    }
-
-    if (this.openSchemaListBases.size > 0) {
-      this.layoutTreeBranches();
-    }
-  }
-
-  private normalizePersistedSelection(selection: SyncDiagramContext): SyncDiagramContext {
-    const sel = { ...selection };
-    if (sel.tabela && !sel.tabelas?.length) {
-      sel.tabelas = [sel.tabela];
-      delete sel.tabela;
-    }
-    return sel;
-  }
-
   private restoreDrillDownFromSelection(): void {
     const sel = this.selection();
 
@@ -1501,7 +1434,6 @@ export class SyncDiagramStateService {
     const cached = this.schemaCache.get(base);
     if (cached) {
       this.rebuildGraph();
-      this.persistSoon();
       return;
     }
 
@@ -1514,13 +1446,11 @@ export class SyncDiagramStateService {
         this.schemaCache.set(base, items);
         this.loadingNodes.set(listId, false);
         this.rebuildGraph();
-        this.persistSoon();
       },
       error: () => {
         this.schemaCache.set(base, []);
         this.loadingNodes.set(listId, false);
         this.rebuildGraph();
-        this.persistSoon();
       },
     });
   }
@@ -1554,7 +1484,6 @@ export class SyncDiagramStateService {
     const nodeId = this.tablesNodeIdFor(base, esquema);
     if (this.tableCache.has(key)) {
       this.rebuildGraph();
-      this.persistSoon();
       return;
     }
 
@@ -1569,13 +1498,11 @@ export class SyncDiagramStateService {
           this.tableCache.set(key, items);
           this.loadingNodes.set(nodeId, false);
           this.rebuildGraph();
-          this.persistSoon();
         },
         error: () => {
           this.tableCache.set(key, []);
           this.loadingNodes.set(nodeId, false);
           this.rebuildGraph();
-          this.persistSoon();
         },
       });
   }
@@ -1740,62 +1667,6 @@ export class SyncDiagramStateService {
     push('error', 'Erros', counts.error);
 
     return chips;
-  }
-
-  private persistSoon(): void {
-    if (this.persistTimer) {
-      clearTimeout(this.persistTimer);
-    }
-    this.persistTimer = setTimeout(() => this.persistNow(), 250);
-  }
-
-  flushPersist(): void {
-    if (this.persistTimer) {
-      clearTimeout(this.persistTimer);
-      this.persistTimer = undefined;
-    }
-    this.persistNow();
-  }
-
-  private persistNow(): void {
-    this.persistence.save({
-      version: 1,
-      syncMode: this.syncMode(),
-      selection: this.normalizePersistedSelection(this.selection()),
-      filters: Object.fromEntries(this.filters.entries()),
-      positions: this.toPersistablePositions(),
-      openSchemaListBases: [...this.openSchemaListBases],
-      openSchemaBoxes: [...this.openSchemaBoxes],
-      openTablesKeys: [...this.openTablesKeys],
-      treeLayout: this.treeLayout(),
-    });
-  }
-
-  private toPersistablePositions(): Record<string, DiagramFlowPoint> {
-    const out: Record<string, DiagramFlowPoint> = {};
-
-    for (const [nodeId, pos] of this.positions.entries()) {
-      if (nodeId.startsWith('erd:')) {
-        out[nodeId] = { ...pos };
-        continue;
-      }
-
-      if (nodeId.startsWith('erd-')) {
-        const table = this.erdTables.get(nodeId);
-        if (table) {
-          const op = this.getOperation(table.operationId);
-          if (op?.context.base && op?.context.esquema) {
-            const grafoId = nodeId.replace(`erd-${table.operationId}-`, '');
-            out[this.erdStableKey(op.context.base, op.context.esquema, grafoId)] = { ...pos };
-          }
-        }
-        continue;
-      }
-
-      out[nodeId] = { ...pos };
-    }
-
-    return out;
   }
 
   private openedSchemaIdsForList(base: string): string[] {

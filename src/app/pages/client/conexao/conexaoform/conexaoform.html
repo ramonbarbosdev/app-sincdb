@@ -218,15 +218,14 @@
             [error]="errorValidacao['db_cloud_password']"
             [label]="'Senha: (*)'"
             [width]="'md:w-6/12'"
-            [sublabel]="senhaCloudDefinida ? 'A senha Cloud nao pode ser exibida. Digite apenas para alterar.' : 'Informe a senha do PostgreSQL Cloud'"
-            [describedby]="'db_cloud_password'"
           >
             <p-password
               [(ngModel)]="objeto.db_cloud_password"
               [toggleMask]="false"
               [fluid]="true"
               [feedback]="false"
-              [placeholder]="senhaCloudPlaceholder"
+              placeholder="Senha"
+              (onFocus)="limparMascaraSenhaAoFocar('cloud')"
             />
           </app-layout-campo>
         </div>
@@ -281,9 +280,11 @@
           >
             <p-password
               [(ngModel)]="objeto.db_local_password"
-              [toggleMask]="true"
+              [toggleMask]="false"
               [fluid]="true"
               [feedback]="false"
+              placeholder="Senha"
+              (onFocus)="limparMascaraSenhaAoFocar('local')"
             />
           </app-layout-campo>
         </div>
@@ -320,15 +321,14 @@
             <app-layout-campo
               [label]="'SSH Senha: (*)'"
               [width]="'md:w-6/12'"
-              [sublabel]="senhaCloudSshDefinida ? 'A senha SSH nao pode ser exibida. Digite apenas para alterar.' : 'Informe a senha SSH do Cloud'"
-              [describedby]="'db_cloud_ssh_password'"
             >
               <p-password
                 [(ngModel)]="objeto.db_cloud_ssh_password"
                 [toggleMask]="false"
                 [fluid]="true"
                 [feedback]="false"
-                [placeholder]="senhaCloudSshPlaceholder"
+                placeholder="Senha SSH"
+                (onFocus)="limparMascaraSenhaAoFocar('cloud_ssh')"
               />
             </app-layout-campo>
           </div>
@@ -359,15 +359,14 @@
             <app-layout-campo
               [label]="'SSH Senha: (*)'"
               [width]="'md:w-6/12'"
-              [sublabel]="senhaLocalSshDefinida ? 'A senha SSH nao pode ser exibida. Digite apenas para alterar.' : 'Informe a senha SSH do Local'"
-              [describedby]="'db_local_ssh_password'"
             >
               <p-password
                 [(ngModel)]="objeto.db_local_ssh_password"
                 [toggleMask]="false"
                 [fluid]="true"
                 [feedback]="false"
-                [placeholder]="senhaLocalSshPlaceholder"
+                placeholder="Senha SSH"
+                (onFocus)="limparMascaraSenhaAoFocar('local_ssh')"
               />
             </app-layout-campo>
           </div>
