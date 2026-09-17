@@ -2,7 +2,7 @@ export { };
 
 declare global {
   interface Window {
-    updater: {
+    updater?: {
       onUpdateAvailable: (cb: (data?: {
         currentVersion?: string;
         version?: string;

@@ -6,6 +6,11 @@ import { environment } from '../../environments/environment';
 import { LoadingService } from '../services/loading.service';
 import { MessageService } from 'primeng/api';
 import { criarAuthHeader } from './auth-header';
+import {
+  AUTH_USER_STORAGE_KEY,
+  authStorage,
+  migrateAuthUserToPersistentStorage,
+} from '../utils/platform-storage';
 
 @Injectable({
   providedIn: 'root',
@@ -20,7 +25,8 @@ export class AuthService {
   user$ = this.userSubject.asObservable();
 
   constructor(private http: HttpClient, private loadingService: LoadingService) {
-    const userJson = sessionStorage.getItem('user');
+    migrateAuthUserToPersistentStorage();
+    const userJson = authStorage().getItem(AUTH_USER_STORAGE_KEY);
     if (userJson) {
       const user = JSON.parse(userJson);
       this.userSubject.next(user);
@@ -108,7 +114,7 @@ export class AuthService {
   }
 
   checkAuth(): Observable<any> {
-    const userJson = sessionStorage.getItem('user');
+    const userJson = authStorage().getItem(AUTH_USER_STORAGE_KEY);
     if (!userJson) return of();
 
     const user = JSON.parse(userJson);
@@ -221,12 +227,13 @@ export class AuthService {
 
   private salvarSessao(user: any) {
     this.userSubject.next(user);
-    sessionStorage.setItem('user', JSON.stringify(user));
+    authStorage().setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(user));
   }
 
   private limparSessao() {
     this.userSubject.next(null);
-    sessionStorage.removeItem('user');
+    authStorage().removeItem(AUTH_USER_STORAGE_KEY);
+    sessionStorage.removeItem(AUTH_USER_STORAGE_KEY);
   }
 
   private extrairRole(data: any): string | undefined {

@@ -36,7 +36,12 @@ export class UpdateService {
   }
 
   private listenElectronEvents() {
-    window.updater.onUpdateAvailable((data) => {
+    const updater = window.updater;
+    if (!updater) {
+      return;
+    }
+
+    updater.onUpdateAvailable((data) => {
       this.resetState();
       this.versionInfo$.next({
         currentVersion: data?.currentVersion || '-',
@@ -45,46 +50,46 @@ export class UpdateService {
       this.updateAvailable$.next(true);
     });
 
-    window.updater.onProgress((data) => {
+    updater.onProgress((data) => {
       this.updateAvailable$.next(false);
       this.downloading$.next(true);
       this.progress$.next(data.percent);
     });
 
-    window.updater.onDownloaded(() => {
+    updater.onDownloaded(() => {
       this.updateAvailable$.next(false);
       this.downloading$.next(false);
       this.downloaded$.next(true);
     });
 
-    window.updater.onError((message) => {
+    updater.onError((message) => {
       this.downloading$.next(false);
       this.error$.next(message);
     });
   }
 
   startUpdate() {
-    this.runUpdaterAction('Nao foi possivel iniciar o download da atualizacao.', () =>
-      window.updater.startDownload()
+    this.runUpdaterAction('Nao foi possivel iniciar o download da atualizacao.', (updater) =>
+      updater.startDownload()
     );
   }
 
   installUpdate() {
-    this.runUpdaterAction('Nao foi possivel instalar a atualizacao.', () =>
-      window.updater.installUpdate()
+    this.runUpdaterAction('Nao foi possivel instalar a atualizacao.', (updater) =>
+      updater.installUpdate()
     );
   }
 
   openLatestRelease() {
-    this.runUpdaterAction('Nao foi possivel abrir a pagina da ultima release.', () =>
-      window.updater.openLatestRelease()
+    this.runUpdaterAction('Nao foi possivel abrir a pagina da ultima release.', (updater) =>
+      updater.openLatestRelease()
     );
   }
 
   checkForUpdates() {
     this.resetState();
-    this.runUpdaterAction('Nao foi possivel verificar atualizacoes.', () =>
-      window.updater.checkForUpdates()
+    this.runUpdaterAction('Nao foi possivel verificar atualizacoes.', (updater) =>
+      updater.checkForUpdates()
     );
   }
 
@@ -96,14 +101,18 @@ export class UpdateService {
     this.error$.next(null);
   }
 
-  private runUpdaterAction(message: string, action: () => void | Promise<void>) {
-    if (!window.updater) {
+  private runUpdaterAction(
+    message: string,
+    action: (updater: NonNullable<Window['updater']>) => void | Promise<void>
+  ) {
+    const updater = window.updater;
+    if (!updater) {
       this.error$.next('Atualizador indisponivel nesta execucao do aplicativo.');
       return;
     }
 
     try {
-      const result = action();
+      const result = action(updater);
 
       if (result instanceof Promise) {
         result.catch((error) => this.error$.next(this.normalizeError(error, message)));
