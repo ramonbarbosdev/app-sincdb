@@ -5,15 +5,15 @@
   --sync-diagram-chrome-radius: 12px;
   --sync-diagram-palette-width: 52px;
 
-  --sync-diagram-data-accent: color-mix(in srgb, var(--p-primary-color) 55%, #2dd4bf);
+  --sync-diagram-data-accent: color-mix(in srgb, var(--p-primary-color) 55%, var(--sincdb-diagram-data-teal));
   --sync-diagram-data-glow: 0 0 0 4px color-mix(in srgb, var(--sync-diagram-data-accent) 18%, transparent);
   --sync-diagram-glow: 0 0 0 4px color-mix(in srgb, var(--p-primary-color) 18%, transparent);
 
-  --sync-diagram-status-created: #22c55e;
-  --sync-diagram-status-altered: #f59e0b;
-  --sync-diagram-status-linked: #6366f1;
-  --sync-diagram-status-done: #16a34a;
-  --sync-diagram-status-error: #ef4444;
+  --sync-diagram-status-created: var(--sincdb-diagram-status-created);
+  --sync-diagram-status-altered: var(--sincdb-diagram-status-altered);
+  --sync-diagram-status-linked: var(--sincdb-diagram-status-linked);
+  --sync-diagram-status-done: var(--sincdb-diagram-status-done);
+  --sync-diagram-status-error: var(--sincdb-diagram-status-error);
 
   --sync-diagram-zone-border: color-mix(in srgb, var(--p-primary-color) 35%, var(--p-content-border-color));
   --sync-diagram-zone-bg: color-mix(in srgb, var(--p-primary-color) 5%, var(--p-content-background));

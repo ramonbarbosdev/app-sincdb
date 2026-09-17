@@ -11,9 +11,9 @@ html[data-season-ambient='flags'] .layout-topbar::before {
     90deg,
     var(--season-accent) 0 10px,
     transparent 10px 14px,
-    #7f5af0 14px 24px,
+    var(--sincdb-brand) 14px 24px,
     transparent 24px 28px,
-    #2cb67d 28px 38px,
+    var(--sincdb-local) 28px 38px,
     transparent 38px 42px
   );
   opacity: 0.55;

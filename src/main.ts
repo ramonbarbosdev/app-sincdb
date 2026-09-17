@@ -1,4 +1,7 @@
+import { applySincdbCssTokens } from './app/theme/apply-sincdb-css-tokens';
 import { bootstrapApplication } from '@angular/platform-browser';
+
+applySincdbCssTokens();
 import { appConfig } from './app/app.config';
 import { App } from './app/app';
 import { ConfirmationService, MessageService } from 'primeng/api';

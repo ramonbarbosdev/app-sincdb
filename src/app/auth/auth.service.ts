@@ -147,6 +147,11 @@ export class AuthService {
     this.router.navigate(['/auth/login']);
   }
 
+  /** Limpa sessão sem navegar (ex.: voltar no fluxo de login). */
+  clearSession(): void {
+    this.limparSessao();
+  }
+
   cadastrar(data: any): Observable<any> {
     const url = `${this.apiUrl}/auth/register`;
 

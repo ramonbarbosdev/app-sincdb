@@ -1,12 +1,183 @@
 .login-page {
   position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  color: var(--p-text-color);
+}
+
+.login-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, color-mix(in srgb, var(--sincdb-brand) 35%, transparent), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 100% 100%, color-mix(in srgb, var(--sincdb-accent) 12%, transparent), transparent 50%),
+    var(--sincdb-surface-0, #16161a);
+}
+
+.login-backdrop::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--sincdb-accent) 35%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+  opacity: 0.35;
+  animation: loginGridDrift 48s linear infinite;
+}
+
+@keyframes loginGridDrift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 22px 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-backdrop::before {
+    animation: none;
+  }
+}
+
+.login-main {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem 3.5rem;
+  gap: 1.75rem;
+}
+
+.login-hero {
+  text-align: center;
+  max-width: 28rem;
+}
+
+.login-logo {
+  display: block;
+  margin: 0 auto 0.75rem;
+}
+
+.login-brand {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--sincdb-text-primary, var(--p-text-color));
+}
+
+.login-tagline {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--sincdb-text-secondary, var(--p-text-muted-color));
+  line-height: 1.45;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 26.25rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--sincdb-accent) 28%, transparent);
+  background: color-mix(in srgb, var(--p-content-background, #1f1f23) 82%, transparent);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 24px 48px color-mix(in srgb, #000 45%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--sincdb-brand) 12%, transparent) inset;
+}
+
+.login-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--sincdb-accent) 15%, transparent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--p-text-muted-color);
+}
+
+.login-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  opacity: 0.55;
+
+  &--active {
+    opacity: 1;
+    color: var(--sincdb-accent);
+  }
+}
+
+.login-step__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  background: color-mix(in srgb, var(--sincdb-brand) 25%, transparent);
+  color: var(--p-text-color);
+}
+
+.login-step--active .login-step__num {
+  background: color-mix(in srgb, var(--sincdb-accent) 35%, transparent);
+}
+
+.login-step__sep {
+  opacity: 0.4;
+}
+
+.login-card__body {
+  padding: 1.25rem 1.25rem 1.5rem;
+}
+
+.login-card__title {
+  margin: 0 0 0.25rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.login-card__subtitle {
+  margin: 0 0 1.25rem;
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.login-submit {
+  margin-top: 0.75rem;
+}
+
+:host ::ng-deep .login-api-error {
+  margin-bottom: 1rem;
 }
 
 .login-author-footer {
   position: fixed;
   bottom: 0.75rem;
   left: 1rem;
-  z-index: 1;
+  z-index: 2;
   font-size: 0.6875rem;
   font-weight: 400;
   letter-spacing: 0.02em;
@@ -28,4 +199,26 @@
 .login-author-link:focus-visible {
   color: color-mix(in srgb, var(--text-color-secondary, #94a3b8) 72%, transparent);
   outline: none;
+}
+
+@media (max-height: 700px) {
+  .login-main {
+    justify-content: flex-start;
+    padding-top: 1.25rem;
+  }
+
+  .login-hero {
+    .login-logo {
+      width: 56px;
+      height: 56px;
+    }
+
+    .login-brand {
+      font-size: 1.5rem;
+    }
+
+    .login-tagline {
+      font-size: 0.8125rem;
+    }
+  }
 }

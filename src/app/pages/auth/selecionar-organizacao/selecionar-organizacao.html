@@ -1,34 +1,81 @@
-<p-dialog
-  header="Selecione"
-  [modal]="true"
-  [(visible)]="visible"
-  [style]="{ width: '25rem' }"
-  (onHide)="hideDialog()"
-  (onShow)="showDialog()"
->
-  <div class="flex-row-responsive">
-    <app-layout-campo
-      [label]="'Organizacao:'"
-      [width]="'w-full'"
-      [sublabel]="'Selecione a organizacao'"
-      [describedby]="'idOrganizacao'"
-      [error]="errorValidacao['idOrganizacao']"
-    >
-      <p-select
-        [checkmark]="true"
-        [showClear]="true"
-        name="idOrganizacao"
-        [options]="listaEmpresa"
-        optionLabel="name"
-        optionValue="code"
-        placeholder="Organizacoes"
-        class="w-full"
-        [(ngModel)]="objeto.idOrganizacao"
-      />
-    </app-layout-campo>
+@if (variant === 'dialog') {
+  <p-dialog
+    header="Selecione"
+    [modal]="true"
+    [(visible)]="visible"
+    [style]="{ width: '25rem' }"
+    (onHide)="hideDialog()"
+    (onShow)="showDialog()"
+  >
+    <ng-container *ngTemplateOutlet="orgBody"></ng-container>
+  </p-dialog>
+} @else {
+  <div class="org-inline" role="region" aria-label="Seleção de organização">
+    <ng-container *ngTemplateOutlet="orgBody"></ng-container>
   </div>
+}
 
-  <div class="flex justify-end gap-2">
-    <p-button label="Continuar" (click)="selecionar()" [loading]="loading" />
-  </div>
-</p-dialog>
+<ng-template #orgBody>
+  @if (variant === 'inline') {
+    <p class="org-inline-hint text-muted-color text-sm mb-3">
+      Selecione a organização para continuar.
+    </p>
+    <ul class="org-list" role="listbox" aria-label="Organizações">
+      @for (item of listaEmpresa; track item.code) {
+        <li>
+          <button
+            type="button"
+            class="org-card"
+            role="option"
+            [attr.aria-selected]="objeto.idOrganizacao === item.code"
+            [class.org-card--selected]="objeto.idOrganizacao === item.code"
+            (click)="selectOrganization(item.code)"
+          >
+            <span class="org-card__icon pi pi-building" aria-hidden="true"></span>
+            <span class="org-card__name">{{ item.name }}</span>
+          </button>
+        </li>
+      }
+    </ul>
+    @if (errorValidacao['idOrganizacao']) {
+      <small class="org-inline-error" role="alert">{{ errorValidacao['idOrganizacao'] }}</small>
+    }
+    <div class="org-inline-actions">
+      <p-button
+        type="button"
+        label="Voltar"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="onBack()"
+        [disabled]="loading"
+      />
+      <p-button type="button" label="Continuar" (onClick)="selecionar()" [loading]="loading" />
+    </div>
+  } @else {
+    <div class="flex-row-responsive">
+      <app-layout-campo
+        [label]="'Organização:'"
+        [width]="'w-full'"
+        [sublabel]="'Selecione a organização'"
+        [describedby]="'idOrganizacao'"
+        [error]="errorValidacao['idOrganizacao']"
+      >
+        <p-select
+          [checkmark]="true"
+          [showClear]="true"
+          name="idOrganizacao"
+          [options]="listaEmpresa"
+          optionLabel="name"
+          optionValue="code"
+          placeholder="Organizações"
+          class="w-full"
+          [(ngModel)]="objeto.idOrganizacao"
+        />
+      </app-layout-campo>
+    </div>
+
+    <div class="flex justify-end gap-2">
+      <p-button label="Continuar" (click)="selecionar()" [loading]="loading" />
+    </div>
+  }
+</ng-template>

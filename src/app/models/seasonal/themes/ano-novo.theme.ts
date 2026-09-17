@@ -1,11 +1,12 @@
 import { createSlots, SeasonalThemeDefinition } from '../seasonal.types';
+import { sincdbBrandColor, sincdbPalette } from '../../../theme/sincdb-palette';
 
 export const ANO_NOVO_THEME: SeasonalThemeDefinition = {
   id: 'ano-novo',
   label: 'Ano Novo',
   description: 'Mensagem de boas-vindas e brilho suave.',
-  accent: '#7f5af0',
-  glow: 'rgba(127, 90, 240, 0.28)',
+  accent: sincdbBrandColor(),
+  glow: sincdbPalette.seasonal.defaultGlow,
   greeting: 'Bom ano novo — que as sincronizações fluam.',
   windows: [
     { startMonth: 12, startDay: 27, endMonth: 12, endDay: 31 },
@@ -13,7 +14,7 @@ export const ANO_NOVO_THEME: SeasonalThemeDefinition = {
   ],
   slots: createSlots({
     logo: { enabled: true, overlay: 'badge' },
-    topbar: { enabled: true, accent: '#7f5af0' },
+    topbar: { enabled: true, accent: sincdbBrandColor() },
     ambient: { enabled: true, effect: 'sparkle' },
     greeting: {
       enabled: true,

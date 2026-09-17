@@ -67,8 +67,8 @@
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  color: var(--sincdb-cloud, #7f5af0);
-  background: color-mix(in srgb, var(--sincdb-cloud, #7f5af0) 14%, transparent);
+  color: var(--sincdb-cloud);
+  background: color-mix(in srgb, var(--sincdb-cloud) 14%, transparent);
 }
 
 .sync-connection-body {

@@ -78,39 +78,9 @@ export class AppMenu {
               routerLink: ['/client/sincronizacao-diagrama'],
             },
             {
-              label: 'Painel Principal',
-              icon: 'pi pi-fw pi-home',
-              routerLink: ['/client/home'],
-            },
-          ],
-        },
-        {
-          label: 'Operações',
-          items: [
-            // {
-            //   label: 'Explorador Visual',
-            //   icon: 'pi pi-share-alt',
-            //   routerLink: ['/client/explorador'],
-            // },
-            {
               label: 'Conexão',
               icon: 'pi pi-wifi',
               routerLink: ['/client/conexao'],
-            },
-            {
-              label: 'Estruturas',
-              icon: 'pi pi-sitemap',
-              routerLink: ['/client/estrutura'],
-            },
-            {
-              label: 'Dados',
-              icon: 'pi pi-database',
-              routerLink: ['/client/dados'],
-            },
-            {
-              label: 'SQL Editor',
-              icon: 'pi pi-code',
-              routerLink: ['/client/sql-editor'],
             },
           ],
         },

@@ -5,13 +5,13 @@
   margin: 0.5rem 1rem 0;
   padding: 0.55rem 0.75rem;
   border-radius: 0.65rem;
-  background: color-mix(in srgb, var(--p-primary-color, #7f5af0) 8%, transparent);
-  border: 1px solid color-mix(in srgb, var(--p-primary-color, #7f5af0) 22%, transparent);
+  background: color-mix(in srgb, var(--p-primary-color) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--p-primary-color) 22%, transparent);
   animation: tipIn 200ms ease;
 }
 
 .tip-icon {
-  color: var(--p-primary-color, #7f5af0);
+  color: var(--p-primary-color);
   flex-shrink: 0;
 }
 
@@ -32,7 +32,7 @@
 .tip-cta {
   border: 0;
   background: transparent;
-  color: var(--p-primary-color, #7f5af0);
+  color: var(--p-primary-color);
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;

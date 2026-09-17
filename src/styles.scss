@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "primeicons/primeicons.css";
 @import '../src/assets/layout/layout.scss';
+@import './app/theme/sincdb-tokens.scss';
 @import './app/theme/seasonal-theme.scss';
 @import './app/features/sync-diagram/sync-diagram-chrome.global.scss';
 // @import '../src/assets/demo/demo.scss';
@@ -18,7 +19,8 @@
 }
 
 #splash-screen {
-  
+    background: var(--sincdb-brand) !important;
+
     .splash-content {
         display: flex;
         flex-direction: column;
@@ -66,11 +68,7 @@ button.action-press:not(:disabled):active {
   }
 }
 
-/* P1 — assinatura visual Cloud / Local */
-:root {
-  --sincdb-cloud: #7f5af0;
-  --sincdb-local: #2cb67d;
-}
+/* P1 — assinatura visual Cloud / Local (tokens em sincdb-palette.ts) */
 
 .env-hosts {
   display: inline-flex;

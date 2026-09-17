@@ -1,6 +1,6 @@
 .cloud-local-pulse {
-  --cloud-color: var(--sincdb-cloud, #7f5af0);
-  --local-color: var(--sincdb-local, #2cb67d);
+  --cloud-color: var(--sincdb-cloud);
+  --local-color: var(--sincdb-local);
 
   display: inline-flex;
   align-items: center;

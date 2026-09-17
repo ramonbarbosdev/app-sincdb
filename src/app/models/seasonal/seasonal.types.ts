@@ -1,3 +1,5 @@
+import { sincdbSeasonalDefaultAccent } from '../../theme/sincdb-palette';
+
 export type SeasonalThemeId =
   | 'none'
   | 'natal'
@@ -96,7 +98,7 @@ export function createSlots(partial: {
     },
     topbar: {
       enabled: partial.topbar?.enabled ?? true,
-      accent: partial.topbar?.accent ?? '#7f5af0',
+      accent: partial.topbar?.accent ?? sincdbSeasonalDefaultAccent(),
     },
     ambient: {
       enabled: partial.ambient?.enabled ?? true,

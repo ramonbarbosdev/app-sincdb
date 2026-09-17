@@ -7,17 +7,17 @@
   display: flex;
   flex-direction: column;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
-  border: 1px solid color-mix(in srgb, #7f5af0 18%, #2a2a3d);
+  border: 1px solid color-mix(in srgb, var(--sincdb-brand) 18%, var(--sincdb-console-border-mix));
   transition: border-color 0.2s ease;
 
   &.is-live {
-    border-color: color-mix(in srgb, #7f5af0 55%, #2a2a3d);
+    border-color: color-mix(in srgb, var(--sincdb-brand) 55%, var(--sincdb-console-border-mix));
   }
 }
 
 .terminal-header {
   height: 34px;
-  background: color-mix(in srgb, #282c34 88%, #7f5af0);
+  background: color-mix(in srgb, var(--sincdb-console-header-base) 88%, var(--sincdb-brand));
   display: flex;
   align-items: center;
   padding: 0 12px;
@@ -87,7 +87,7 @@
   transition: background-color 0.3s ease;
 
   &.is-latest {
-    background: color-mix(in srgb, #7f5af0 14%, transparent);
+    background: color-mix(in srgb, var(--sincdb-brand) 14%, transparent);
   }
 }
 

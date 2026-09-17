@@ -5,24 +5,22 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { PasswordModule } from 'primeng/password';
 import { InputTextModule } from 'primeng/inputtext';
-import { CheckboxModule } from 'primeng/checkbox';
 import { MessageModule } from 'primeng/message';
 import { CommonModule } from '@angular/common';
 import { LoginSchema } from '../../../schema/login-schema';
 import { ZodError } from 'zod';
 import { NgxMaskDirective } from 'ngx-mask';
 import { AuthService } from '../../../auth/auth.service';
-import { MessageService } from 'primeng/api';
 import { LayoutCampo } from '../../../components/layout-campo/layout-campo';
-import { SelectModule } from 'primeng/select';
-import { FlagOption } from '../../../models/flag-option';
 import { SelecionarOrganizacao } from '../selecionar-organizacao/selecionar-organizacao';
+import { FlagOption } from '../../../models/flag-option';
+
+export type LoginStep = 'credentials' | 'organization';
 
 @Component({
   selector: 'app-login',
   imports: [
     ButtonModule,
-    CheckboxModule,
     InputTextModule,
     PasswordModule,
     FormsModule,
@@ -33,7 +31,6 @@ import { SelecionarOrganizacao } from '../selecionar-organizacao/selecionar-orga
     MessageModule,
     NgxMaskDirective,
     LayoutCampo,
-    SelectModule,
     SelecionarOrganizacao,
   ],
   templateUrl: './login.html',
@@ -44,14 +41,14 @@ export class Login {
     nuCpf: '',
     dsSenha: '',
   };
-  checked: boolean = false;
-  loading: boolean = false;
-  visibleOrganizacao: boolean = false;
+
+  loginStep: LoginStep = 'credentials';
+  loading = false;
+  apiError: string | null = null;
 
   private auth = inject(AuthService);
   private router = inject(Router);
   public errorValidacao: Record<string, string> = {};
-  private messageService = inject(MessageService);
   private cd = inject(ChangeDetectorRef);
 
   public listaEmpresa: FlagOption[] = [];
@@ -60,24 +57,37 @@ export class Login {
     this.verificarUsuarioLogado();
   }
 
-  hideDialog() {
-    this.visibleOrganizacao = false;
+  get showOrgStepper(): boolean {
+    return this.loginStep === 'organization';
+  }
+
+  voltarParaCredenciais(): void {
+    this.loginStep = 'credentials';
+    this.apiError = null;
+    this.objeto.idOrganizacao = undefined;
+    this.listaEmpresa = [];
+    this.auth.clearSession();
+    this.cd.markForCheck();
   }
 
   entrar() {
     if (!this.validarItens()) return;
 
     this.loading = true;
+    this.apiError = null;
     this.auth.login(this.objeto).subscribe({
       next: (res: any) => {
         if (res.precisaSelecionarOrganizacao) {
-          this.visibleOrganizacao = true;
           this.listaEmpresa = (res.organizacoes as any[]).map((index: any) => {
             const item = new FlagOption();
             item.code = String(index.idOrganizacao);
             item.name = index.nmOrganizacao;
             return item;
           });
+          this.loginStep = 'organization';
+          if (this.listaEmpresa.length === 1) {
+            this.objeto.idOrganizacao = String(this.listaEmpresa[0].code);
+          }
         } else {
           this.redirecionarPorOrganizacaoAtiva();
         }
@@ -85,17 +95,20 @@ export class Login {
         this.loading = false;
         this.cd.markForCheck();
       },
-      error: () => {
-        this.visibleOrganizacao = false;
+      error: (err) => {
+        this.apiError =
+          err?.error?.message ?? 'Não foi possível entrar. Verifique CPF e senha.';
+        this.loginStep = 'credentials';
         this.loading = false;
         this.cd.markForCheck();
       },
     });
   }
 
-  validarItens(): any {
+  validarItens(): boolean {
     try {
       LoginSchema.parse([this.objeto]);
+      this.errorValidacao = {};
       return true;
     } catch (error) {
       if (error instanceof ZodError) {
@@ -104,9 +117,9 @@ export class Login {
           const value = e.path[1];
           this.errorValidacao[String(value)] = e.message;
         });
-
         return false;
       }
+      return false;
     }
   }
 

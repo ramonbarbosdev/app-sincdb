@@ -37,7 +37,7 @@ html[data-season-logo='badge'] .seasonal-logo-wrap::after {
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  background: var(--season-accent, #7f5af0);
+  background: var(--season-accent, var(--sincdb-brand));
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--season-accent) 35%, transparent);
   z-index: 2;
   pointer-events: none;
