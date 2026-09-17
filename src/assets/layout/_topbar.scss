@@ -32,6 +32,12 @@
             width: 3rem;
         }
 
+        .layout-topbar-logo-img {
+            height: 2rem;
+            width: auto;
+            object-fit: contain;
+        }
+
         &:focus-visible {
             @include focused();
         }
