@@ -5,28 +5,28 @@
  * (`apply-sincdb-css-tokens.ts`) são derivados deste arquivo.
  */
 const brand = {
-  /** Azul petróleo — botões, links, marca */
-  primary: '#155E75',
+  /** Azul marca — botões, links, ícone */
+  primary: '#2B55FF',
   /** Hover de ações primárias */
-  primaryHover: '#0E7490',
-  /** Ciano elétrico — destaques, cloud, ênfase visual */
-  accent: '#22D3EE',
+  primaryHover: '#2348E0',
+  /** Azul mais claro — destaques e ênfase em fundos escuros */
+  accent: '#5C7AFF',
 } as const;
 
 export const sincdbPalette = {
   brand,
   /** Escala PrimeNG derivada da marca */
   primary: {
-    50: '#ecfeff',
-    100: '#cffafe',
-    200: '#a5f3fc',
-    300: '#67e8f9',
+    50: '#eef2ff',
+    100: '#dde6ff',
+    200: '#b8c9ff',
+    300: '#8aa6ff',
     400: brand.accent,
     500: brand.primary,
     600: brand.primaryHover,
-    700: '#0c5a6e',
-    800: '#094555',
-    900: '#063544',
+    700: '#1c3ab8',
+    800: '#152d8f',
+    900: '#0f2169',
   },
   surface: {
     0: '#16161a',
@@ -48,12 +48,12 @@ export const sincdbPalette = {
     danger: '#ef3e36',
   },
   environments: {
-    /** Cloud na UI usa o destaque ciano; local permanece verde */
-    cloud: brand.accent,
+    /** Cloud na UI usa a cor de marca */
+    cloud: brand.primary,
     local: '#2cb67d',
   },
   seasonal: {
-    defaultGlow: 'rgba(34, 211, 238, 0.28)',
+    defaultGlow: 'rgba(43, 85, 255, 0.28)',
   },
   diagram: {
     dataTeal: brand.accent,
@@ -65,8 +65,8 @@ export const sincdbPalette = {
       error: '#ef4444',
     },
     console: {
-      borderMix: '#1a2830',
-      headerBase: '#1e2a32',
+      borderMix: '#1a2238',
+      headerBase: '#1e2438',
     },
   },
 } as const;
