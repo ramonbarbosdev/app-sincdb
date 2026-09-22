@@ -1,7 +1,8 @@
 export const AUTH_USER_STORAGE_KEY = 'user';
 
+/** Electron expõe `platform` no preload; não depender só do updater. */
 export function isDesktopApp(): boolean {
-  return typeof window !== 'undefined' && !!window.updater;
+  return typeof window !== 'undefined' && typeof window.platform === 'string';
 }
 
 /** No Electron persiste entre reinícios; na web mantém sessionStorage. */
@@ -16,6 +17,7 @@ export function migrateAuthUserToPersistentStorage(): void {
   }
 
   if (localStorage.getItem(AUTH_USER_STORAGE_KEY)) {
+    sessionStorage.removeItem(AUTH_USER_STORAGE_KEY);
     return;
   }
 

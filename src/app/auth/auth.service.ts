@@ -9,6 +9,7 @@ import { criarAuthHeader } from './auth-header';
 import {
   AUTH_USER_STORAGE_KEY,
   authStorage,
+  isDesktopApp,
   migrateAuthUserToPersistentStorage,
 } from '../utils/platform-storage';
 
@@ -139,7 +140,10 @@ export class AuthService {
         });
       }),
       catchError((error) => {
-        this.limparSessao();
+        const status = error?.status;
+        if (status === 401 || status === 403) {
+          this.limparSessao();
+        }
         return throwError(() => error);
       })
     );
@@ -268,13 +272,18 @@ export class AuthService {
 
   private salvarSessao(user: any) {
     this.userSubject.next(user);
-    authStorage().setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(user));
+    const serialized = JSON.stringify(user);
+    authStorage().setItem(AUTH_USER_STORAGE_KEY, serialized);
+    if (isDesktopApp()) {
+      localStorage.setItem(AUTH_USER_STORAGE_KEY, serialized);
+    }
   }
 
   private limparSessao() {
     this.userSubject.next(null);
     authStorage().removeItem(AUTH_USER_STORAGE_KEY);
     sessionStorage.removeItem(AUTH_USER_STORAGE_KEY);
+    localStorage.removeItem(AUTH_USER_STORAGE_KEY);
   }
 
   private extrairRole(data: any): string | undefined {

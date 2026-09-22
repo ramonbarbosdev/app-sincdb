@@ -124,9 +124,14 @@ export class Login {
   }
 
   verificarUsuarioLogado() {
+    if (!this.auth.temOrganizacaoSelecionada()) {
+      return;
+    }
+
     this.auth.checkAuth().subscribe({
-      next: (res: any) => {
-        if (res) {
+      next: () => this.redirecionarPorOrganizacaoAtiva(),
+      error: () => {
+        if (this.auth.temOrganizacaoSelecionada()) {
           this.redirecionarPorOrganizacaoAtiva();
         }
       },
