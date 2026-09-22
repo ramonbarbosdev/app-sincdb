@@ -1,8 +1,11 @@
 <div class="sync-diagram-canvas">
   <div class="canvas-workspace">
-    <div class="canvas-loading" *ngIf="state.loadingInitial()">
-      <span class="loading-spinner" aria-hidden="true"></span>
-      <!-- <span>Carregando bases...</span> -->
+    <div class="canvas-loading" *ngIf="state.loadingInitial()" role="status" aria-live="polite">
+      <div class="canvas-loading__panel">
+        <span class="loading-spinner" aria-hidden="true"></span>
+        <span class="canvas-loading__title">SyncDB</span>
+        <span class="canvas-loading__text">Preparando diagrama de sincronização</span>
+      </div>
     </div>
 
     <f-flow

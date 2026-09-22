@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
-    <title>SyncDb</title>
+    <title>SyncDB</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="favicon.png" type="image/png" />
@@ -13,27 +13,90 @@
     </script>
 
     <style>
-  #splash-screen {
-    position: fixed;
-    inset: 0;
-    /* Pré-bootstrap: igual a sincdbPalette.surface[0] */
-    background: #16161a !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    z-index: 99999;
-    font-size: 1.2rem;
-  }
-</style>
+      #splash-screen {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background:
+          radial-gradient(
+            120% 80% at 50% -20%,
+            rgba(43, 85, 255, 0.22) 0%,
+            transparent 55%
+          ),
+          #16161a;
+        color: #fff;
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+      }
+
+      #splash-screen .splash-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.25rem;
+        text-align: center;
+        padding: 1.5rem;
+      }
+
+      #splash-screen .splash-logo {
+        width: min(9rem, 42vw);
+        height: auto;
+        display: block;
+        opacity: 0.96;
+      }
+
+      #splash-screen .splash-loader {
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 999px;
+        border: 2px solid rgba(255, 255, 255, 0.12);
+        border-top-color: #5c7aff;
+        animation: splash-spin 0.75s linear infinite;
+      }
+
+      #splash-screen .splash-label {
+        margin: 0;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.48);
+      }
+
+      @keyframes splash-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        #splash-screen .splash-loader {
+          animation: none;
+          border-top-color: rgba(255, 255, 255, 0.35);
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="splash-screen">
+    <div id="splash-screen" role="status" aria-live="polite" aria-busy="true">
       <div class="splash-content">
-        <div class="logo">
-          <span>SyncDB</span>
-        </div>
-        <p>Carregando sistema, aguarde...</p>
+        <img
+          class="splash-logo"
+          src="/logo-light.png"
+          alt="SyncDB"
+          width="144"
+          height="40"
+          decoding="async"
+        />
+        <div class="splash-loader" aria-hidden="true"></div>
+        <p class="splash-label">Inicializando</p>
       </div>
     </div>
 

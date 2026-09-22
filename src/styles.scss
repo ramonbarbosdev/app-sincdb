@@ -20,21 +20,33 @@
 }
 
 #splash-screen {
-    background: var(--sincdb-brand) !important;
+    background:
+        radial-gradient(
+            120% 80% at 50% -20%,
+            color-mix(in srgb, var(--sincdb-brand, #2b55ff) 22%, transparent) 0%,
+            transparent 55%
+        ),
+        #16161a !important;
 
     .splash-content {
         display: flex;
         flex-direction: column;
         align-items: center;
+        gap: 1.25rem;
     }
 
-    .logo {
-        margin-bottom: 10px
+    .splash-logo {
+        width: min(9rem, 42vw);
+        height: auto;
     }
 
-    img {
-        width: 100px;
-        margin-bottom: 1rem;
+    .splash-label {
+        margin: 0;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.48);
     }
 }
 
