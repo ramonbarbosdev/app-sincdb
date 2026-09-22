@@ -12,24 +12,6 @@
 
       </div>
 
-      @if (isDev) {
-
-        <p-button
-
-          label="Editar status"
-
-          icon="pi pi-cog"
-
-          severity="secondary"
-
-          [outlined]="true"
-
-          (click)="abrirStatusDialog()"
-
-        />
-
-      }
-
     </div>
 
   </header>
@@ -40,9 +22,25 @@
 
     <section class="status-grid" aria-label="Métricas do fórum">
 
-      <article class="status-card">
+      <article class="status-card status-card--sistema">
 
-        <span class="status-card__label">Sistema</span>
+        <div class="status-card__head">
+
+          <span class="status-card__label">Sistema</span>
+
+          @if (isDev) {
+
+            <button type="button" class="status-card__edit" (click)="abrirStatusDialog()">
+
+              <i class="pi pi-pencil"></i>
+
+              <span>Editar status</span>
+
+            </button>
+
+          }
+
+        </div>
 
         <div class="status-card__main">
 
@@ -416,6 +414,26 @@
                   (click)="marcarImplementado(item)"
                 >
                   <i class="pi pi-verified"></i> Implementado
+                </button>
+              }
+              @if (isDev && !item.emDestaque) {
+                <button
+                  type="button"
+                  class="status-action-btn status-action-btn--destaque"
+                  [disabled]="statusPostCarregando(item.id)"
+                  (click)="destacarPost(item)"
+                >
+                  <i class="pi pi-star"></i> Destacar
+                </button>
+              }
+              @if (isDev && item.emDestaque) {
+                <button
+                  type="button"
+                  class="status-action-btn status-action-btn--destaque-outline"
+                  [disabled]="statusPostCarregando(item.id)"
+                  (click)="removerDestaque(item)"
+                >
+                  <i class="pi pi-star-fill"></i> Remover destaque
                 </button>
               }
 

@@ -449,6 +449,41 @@ export class ForumPage {
     return this.statusPostEmProgresso.has(postId);
   }
 
+  destacarPost(post: ForumPost): void {
+    this.alterarDestaque(post, true);
+  }
+
+  removerDestaque(post: ForumPost): void {
+    this.alterarDestaque(post, false);
+  }
+
+  private alterarDestaque(post: ForumPost, destacar: boolean): void {
+    this.statusPostEmProgresso.add(post.id);
+    this.forum.patchDestaque(post.id, destacar).subscribe({
+      next: (updated) => {
+        this.statusPostEmProgresso.delete(post.id);
+        const idx = this.posts.findIndex((p) => p.id === updated.id);
+        if (idx >= 0) {
+          this.posts[idx] = updated;
+          this.aplicarOrdenacaoLocal();
+        }
+        this.messageService.add({
+          severity: 'success',
+          summary: destacar ? 'Em destaque' : 'Destaque removido',
+          detail: destacar
+            ? 'Publicação destacada manualmente.'
+            : 'Publicação removida dos destaques.',
+        });
+        this.cd.markForCheck();
+      },
+      error: (err) => {
+        this.statusPostEmProgresso.delete(post.id);
+        this.exibirErro(err);
+        this.cd.markForCheck();
+      },
+    });
+  }
+
   private postCombinaFiltro(post: ForumPost): boolean {
     if (this.filtroFeed === 'bug') return post.tipo === 'BUG';
     if (this.filtroFeed === 'sugestao') return post.tipo === 'SUGESTAO';
@@ -467,11 +502,17 @@ export class ForumPage {
   private recalcularDestaques(posts: ForumPost[]): void {
     const destaqueIds = new Set<string>();
     for (const p of posts) {
+      if (p.destaqueManual) {
+        destaqueIds.add(p.id);
+      }
+    }
+    const auto = posts.filter((p) => !p.destaqueExcluido);
+    for (const p of auto) {
       if (p.curtidasCount >= this.destaqueMinCurtidas) {
         destaqueIds.add(p.id);
       }
     }
-    [...posts]
+    [...auto]
       .sort((a, b) => this.compareDestaque(a, b))
       .slice(0, this.destaqueTopN)
       .forEach((p) => destaqueIds.add(p.id));

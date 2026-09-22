@@ -1,6 +1,7 @@
 :root {
-    --layout-topbar-float-top: 1.5rem;
+    --layout-topbar-float-top: 1.25rem;
     --layout-topbar-float-x: 1.5rem;
+    --layout-glass-radius: 16px;
     --layout-topbar-height: 3.75rem;
     --layout-float-gap: 1.25rem;
     --layout-content-top: calc(
@@ -8,6 +9,11 @@
     );
     --layout-sidebar-width: 20rem;
     --layout-sidebar-left: 1.5rem;
+    --layout-glass-bg-dark: rgba(15, 15, 15, 0.55);
+    --layout-glass-border: rgba(255, 255, 255, 0.08);
+    --layout-topbar-max-width: 72rem;
+    --layout-main-offset: calc(var(--layout-sidebar-left) + var(--layout-sidebar-width) + var(--layout-float-gap));
+    --layout-content-band-width: calc(100vw - var(--layout-main-offset) - var(--layout-topbar-float-x));
 }
 
 html {

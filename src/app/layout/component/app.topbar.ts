@@ -97,7 +97,7 @@ import { UpdateService } from '../../services/update.service';
         <div class="layout-topbar-menu-content">
 
           <div>
-            <p-menu #menu [popup]="true" [model]="menuPerfil"></p-menu>
+            <p-menu #menu [popup]="true" [model]="menuPerfil" appendTo="body"></p-menu>
             <button
               type="button"
               class="flex items-center gap-2 p-1 rounded  hover:bg-[var(--surface-hover)]"

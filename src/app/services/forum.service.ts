@@ -19,6 +19,8 @@ export interface ForumPost {
   curtidasCount: number;
   curtidoPorMim: boolean;
   emDestaque: boolean;
+  destaqueManual?: boolean;
+  destaqueExcluido?: boolean;
   podeEditar: boolean;
   podeExcluir: boolean;
   createdAt?: string;
@@ -88,5 +90,9 @@ export class ForumService {
 
   patchPostStatus(id: string, statusPost: 'RESOLVIDO' | 'IMPLEMENTADO' | 'ABERTO'): Observable<ForumPost> {
     return this.http.patch<ForumPost>(`${this.base}/posts/${id}/status`, { statusPost });
+  }
+
+  patchDestaque(id: string, destacar: boolean): Observable<ForumPost> {
+    return this.http.patch<ForumPost>(`${this.base}/posts/${id}/destaque`, { destacar });
   }
 }

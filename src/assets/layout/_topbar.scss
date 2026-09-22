@@ -5,25 +5,26 @@
     height: var(--layout-topbar-height);
     z-index: 997;
     top: var(--layout-topbar-float-top);
-    left: var(--layout-topbar-float-x);
-    right: var(--layout-topbar-float-x);
-    width: auto;
+    left: 50%;
+    right: auto;
+    width: min(var(--layout-topbar-max-width), calc(100vw - (var(--layout-topbar-float-x) * 2)));
+    max-width: calc(100vw - (var(--layout-topbar-float-x) * 2));
+    transform: translateX(-50%);
     padding: 0 1.25rem;
-    border-radius: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.55);
-    backdrop-filter: blur(12px) saturate(1.15);
-    -webkit-backdrop-filter: blur(12px) saturate(1.15);
+    border-radius: var(--layout-glass-radius);
+    border: 1px solid var(--layout-glass-border, rgba(255, 255, 255, 0.08));
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(12px) saturate(1.2);
+    -webkit-backdrop-filter: blur(12px) saturate(1.2);
     box-shadow:
-        0 12px 40px rgba(0, 0, 0, 0.14),
-        0 1px 0 rgba(255, 255, 255, 0.08) inset;
+        0 20px 50px rgba(0, 0, 0, 0.18),
+        0 1px 0 rgba(255, 255, 255, 0.06) inset;
     transition:
-        left var(--layout-section-transition-duration),
-        right var(--layout-section-transition-duration);
+        width var(--layout-section-transition-duration),
+        transform var(--layout-section-transition-duration);
     display: flex;
     align-items: center;
-    isolation: isolate;
-    overflow: hidden;
+    overflow: visible;
 
     .layout-topbar-logo-container {
         width: auto;
@@ -41,6 +42,8 @@
         color: var(--text-color);
         font-weight: 500;
         gap: 0.5rem;
+        position: relative;
+        z-index: 2;
 
         svg {
             width: 3rem;
@@ -122,11 +125,11 @@
 }
 
 :root[class*='app-dark'] .layout-topbar {
-    background: rgba(10, 10, 10, 0.5);
-    border-color: rgba(255, 255, 255, 0.08);
+    background: var(--layout-glass-bg-dark);
+    border-color: var(--layout-glass-border);
     box-shadow:
-        0 16px 48px rgba(0, 0, 0, 0.55),
-        0 1px 0 rgba(255, 255, 255, 0.05) inset;
+        0 24px 56px rgba(0, 0, 0, 0.55),
+        0 1px 0 rgba(255, 255, 255, 0.04) inset;
 }
 
 .layout-topbar-logo,
@@ -137,20 +140,27 @@
 }
 
 @media (min-width: 992px) {
-    .layout-wrapper.layout-static .layout-topbar {
-        left: calc(var(--layout-sidebar-left) + var(--layout-sidebar-width) + var(--layout-float-gap));
+    :root {
+        --layout-topbar-float-x: 1.75rem;
     }
 
-    .layout-wrapper.layout-static.layout-static-inactive .layout-topbar {
-        left: var(--layout-topbar-float-x);
+    /* Sidebar aberta: navbar centralizada só na faixa de conteúdo */
+    .layout-wrapper.layout-static:not(.layout-static-inactive) .layout-topbar {
+        left: calc(var(--layout-main-offset) + (var(--layout-content-band-width) / 2));
+        width: min(var(--layout-topbar-max-width), var(--layout-content-band-width));
+        max-width: var(--layout-content-band-width);
+        transform: translateX(-50%);
     }
 }
 
 @media (max-width: 991px) {
     .layout-topbar {
-        left: 1rem;
-        right: 1rem;
+        left: 50%;
+        right: auto;
         top: 1rem;
+        width: calc(100vw - 2rem);
+        max-width: calc(100vw - 2rem);
+        transform: translateX(-50%);
         padding: 0 1rem;
     }
 
@@ -170,17 +180,17 @@
 
         .layout-topbar-menu {
             position: absolute;
-            background: rgba(10, 10, 10, 0.92);
+            background: rgba(15, 15, 15, 0.92);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             transform-origin: top;
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
-            border-radius: var(--content-border-radius);
+            border-radius: var(--layout-glass-radius);
             padding: 1rem;
             right: 0;
             top: calc(var(--layout-topbar-height) + 0.5rem);
             min-width: 15rem;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--layout-glass-border);
 
             .layout-topbar-menu-content {
                 gap: 0.5rem;

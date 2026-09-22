@@ -1,6 +1,6 @@
 /* Efeito ambient: chuva leve/moderada, restrita à faixa da topbar */
 html[data-season-ambient='rain'] .layout-topbar {
-  overflow: hidden;
+  overflow: visible;
 }
   
   html[data-season-ambient='rain'] .layout-topbar::before {
