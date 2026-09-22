@@ -6,7 +6,11 @@
   width: 100%;
   border: 1px solid var(--sync-diagram-border);
   border-radius: 10px;
-  background: var(--sync-diagram-surface-card);
+  background: var(--sync-diagram-frost-bg, rgba(255, 255, 255, 0));
+  background-color: var(--sync-diagram-frost-bg, rgba(255, 255, 255, 0));
+  background-image: none;
+  backdrop-filter: var(--sync-diagram-frost-blur, blur(10px));
+  -webkit-backdrop-filter: var(--sync-diagram-frost-blur, blur(10px));
   box-shadow: var(--sync-diagram-shadow);
   overflow: hidden;
   transition: box-shadow 160ms ease, border-color 160ms ease;

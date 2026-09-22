@@ -13,10 +13,8 @@
     padding: 0 1.25rem;
     border-radius: var(--layout-glass-radius);
     border: 1px solid var(--layout-topbar-border);
-    background: var(--layout-topbar-bg);
-    backdrop-filter: blur(14px) saturate(1.12);
-    -webkit-backdrop-filter: blur(14px) saturate(1.12);
     box-shadow: var(--layout-topbar-shadow);
+    /* fundo/blur em _glass-frost.scss */
     transition:
         width var(--layout-section-transition-duration),
         transform var(--layout-section-transition-duration);
@@ -123,18 +121,14 @@
 }
 
 :root[class*='app-dark'] .layout-topbar {
-    background: var(--layout-topbar-bg);
     border-color: var(--layout-topbar-border);
     box-shadow: var(--layout-topbar-shadow);
-    backdrop-filter: blur(14px) saturate(1.12);
-    -webkit-backdrop-filter: blur(14px) saturate(1.12);
 }
 
 .layout-topbar-logo,
 .layout-topbar-action,
 .layout-topbar-menu-content {
     -webkit-font-smoothing: antialiased;
-    transform: translateZ(0);
 }
 
 @media (min-width: 992px) {

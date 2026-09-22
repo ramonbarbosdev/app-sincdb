@@ -12,6 +12,12 @@
   display: flex;
   flex-direction: column;
   background: transparent;
+  --sync-diagram-frost-bg: rgba(255, 255, 255, 0);
+  --sync-diagram-frost-blur: blur(10px);
+}
+
+.sync-diagram-page.sync-diagram-canvas-theme-dark {
+  --sync-diagram-frost-bg: rgba(0, 0, 0, 0);
 }
 
 @media (min-width: 992px) {
@@ -44,7 +50,11 @@
   gap: 0.25rem;
   padding: 0.35rem 0.4rem 0.4rem;
   border-radius: var(--sync-diagram-chrome-radius, 12px);
-  background: var(--sync-diagram-rail-bg);
+  background: var(--sync-diagram-frost-bg, rgba(255, 255, 255, 0));
+  background-color: var(--sync-diagram-frost-bg, rgba(255, 255, 255, 0));
+  background-image: none;
+  backdrop-filter: var(--sync-diagram-frost-blur, blur(10px));
+  -webkit-backdrop-filter: var(--sync-diagram-frost-blur, blur(10px));
   border: 1px solid var(--sync-diagram-rail-border);
   box-shadow: var(--sync-diagram-rail-shadow);
 }
@@ -78,6 +88,11 @@
   max-width: calc(100% - 1.5rem);
   margin-inline: auto;
   transform: none;
+  background: var(--sync-diagram-frost-bg, rgba(255, 255, 255, 0)) !important;
+  background-color: var(--sync-diagram-frost-bg, rgba(255, 255, 255, 0)) !important;
+  background-image: none !important;
+  backdrop-filter: var(--sync-diagram-frost-blur, blur(10px));
+  -webkit-backdrop-filter: var(--sync-diagram-frost-blur, blur(10px));
 }
 
 :host ::ng-deep .canvas-breadcrumb {
@@ -92,7 +107,11 @@
   max-width: min(42vw, 28rem);
   padding: 0.35rem 0.55rem;
   border-radius: var(--sync-diagram-chrome-radius, 12px);
-  background: var(--sync-diagram-rail-bg);
+  background: var(--sync-diagram-frost-bg, rgba(255, 255, 255, 0));
+  background-color: var(--sync-diagram-frost-bg, rgba(255, 255, 255, 0));
+  background-image: none;
+  backdrop-filter: var(--sync-diagram-frost-blur, blur(10px));
+  -webkit-backdrop-filter: var(--sync-diagram-frost-blur, blur(10px));
   border: 1px solid var(--sync-diagram-rail-border);
   box-shadow: var(--sync-diagram-rail-shadow);
   pointer-events: auto;

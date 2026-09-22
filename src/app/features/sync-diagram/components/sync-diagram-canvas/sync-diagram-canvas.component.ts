@@ -74,7 +74,7 @@ export class SyncDiagramCanvasComponent {
   readonly canvasDotColor = computed(() =>
     this.themeService.isDark()
       ? 'rgba(160, 166, 194, 0.14)'
-      : 'rgba(72, 68, 96, 0.16)'
+      : 'rgba(15, 23, 42, 0.055)'
   );
   readonly blockFlowWheelZoom = (): boolean => false;
 

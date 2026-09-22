@@ -1,0 +1,13 @@
+/* Painel flutuante: só blur, sem cor opaca (Safari exige alpha 0 explícito). */
+
+@mixin sincdb-frosted-panel {
+    background: var(--sincdb-frost-bg) !important;
+    background-color: var(--sincdb-frost-bg) !important;
+    background-image: none !important;
+    backdrop-filter: var(--sincdb-frost-blur);
+    -webkit-backdrop-filter: var(--sincdb-frost-blur);
+}
+
+.layout-topbar {
+    @include sincdb-frosted-panel;
+}

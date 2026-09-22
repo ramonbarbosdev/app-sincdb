@@ -10,7 +10,7 @@
   min-height: 0;
   height: 100%;
   overflow: hidden;
-  background-color: var(--sync-diagram-canvas-bg);
+  background-color: transparent;
 
   --ff-minimap-background-color: color-mix(in srgb, var(--sync-diagram-canvas-bg) 55%, var(--sync-diagram-rail-bg));
   --ff-minimap-border-color: var(--sync-diagram-rail-border);
@@ -98,7 +98,11 @@
   gap: 0.2rem;
   padding: 0.35rem 0.55rem;
   border-radius: var(--sync-diagram-chrome-radius, 12px);
-  background: var(--sync-diagram-rail-bg);
+  background: var(--sync-diagram-frost-bg, rgba(255, 255, 255, 0));
+  background-color: var(--sync-diagram-frost-bg, rgba(255, 255, 255, 0));
+  background-image: none;
+  backdrop-filter: var(--sync-diagram-frost-blur, blur(10px));
+  -webkit-backdrop-filter: var(--sync-diagram-frost-blur, blur(10px));
   border: 1px solid var(--sync-diagram-rail-border);
   box-shadow: var(--sync-diagram-rail-shadow);
   pointer-events: auto;
@@ -216,7 +220,11 @@
   padding: 0.12rem 0.45rem;
   border-radius: 999px;
   border: 1px solid var(--sync-diagram-rail-border);
-  background: var(--sync-diagram-rail-bg);
+  background: var(--sync-diagram-frost-bg, rgba(255, 255, 255, 0));
+  background-color: var(--sync-diagram-frost-bg, rgba(255, 255, 255, 0));
+  background-image: none;
+  backdrop-filter: var(--sync-diagram-frost-blur, blur(10px));
+  -webkit-backdrop-filter: var(--sync-diagram-frost-blur, blur(10px));
   box-shadow: var(--sync-diagram-rail-shadow);
   font-size: 0.62rem;
   font-weight: 600;

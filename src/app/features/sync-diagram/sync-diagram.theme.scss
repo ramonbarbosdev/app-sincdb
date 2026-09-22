@@ -27,13 +27,15 @@
   --sync-diagram-canvas-bg: var(--sincdb-app-canvas-bg, #0c0e17);
   --sync-diagram-canvas-dot-rgb: 160, 166, 194;
   --sync-diagram-canvas-dot-alpha: 0.14;
-  --sync-diagram-rail-bg: #15172a;
+  --sync-diagram-rail-bg: rgba(0, 0, 0, 0);
+  --sync-diagram-frost-bg: rgba(0, 0, 0, 0);
+  --sync-diagram-frost-blur: blur(10px);
   --sync-diagram-rail-border: rgba(255, 255, 255, 0.1);
   --sync-diagram-rail-divider: rgba(255, 255, 255, 0.12);
   --sync-diagram-rail-shadow: 0 10px 40px rgba(0, 0, 0, 0.55);
 
-  --sync-diagram-surface: #141825;
-  --sync-diagram-surface-card: #1a1d2e;
+  --sync-diagram-surface: rgba(20, 24, 37, 0);
+  --sync-diagram-surface-card: rgba(0, 0, 0, 0);
   --sync-diagram-border: rgba(255, 255, 255, 0.1);
   --sync-diagram-text: rgba(255, 255, 255, 0.92);
   --sync-diagram-text-muted: rgba(255, 255, 255, 0.48);
@@ -49,16 +51,18 @@
 
 /* Light — Foblex / IDE claro */
 :host-context(.sync-diagram-canvas-theme-light) {
-  --sync-diagram-canvas-bg: var(--sincdb-app-canvas-bg, #e4e7f0);
-  --sync-diagram-canvas-dot-rgb: 72, 68, 96;
-  --sync-diagram-canvas-dot-alpha: 0.16;
-  --sync-diagram-rail-bg: #ffffff;
+  --sync-diagram-canvas-bg: var(--sincdb-app-canvas-bg, #f7f7f9);
+  --sync-diagram-canvas-dot-rgb: 15, 23, 42;
+  --sync-diagram-canvas-dot-alpha: 0.055;
+  --sync-diagram-rail-bg: rgba(255, 255, 255, 0);
+  --sync-diagram-frost-bg: rgba(255, 255, 255, 0);
+  --sync-diagram-frost-blur: blur(10px);
   --sync-diagram-rail-border: rgba(15, 23, 42, 0.1);
   --sync-diagram-rail-divider: rgba(15, 23, 42, 0.1);
   --sync-diagram-rail-shadow: 0 8px 32px rgba(15, 23, 42, 0.12);
 
-  --sync-diagram-surface: #f4f6fa;
-  --sync-diagram-surface-card: #ffffff;
+  --sync-diagram-surface: rgba(255, 255, 255, 0);
+  --sync-diagram-surface-card: rgba(255, 255, 255, 0);
   --sync-diagram-border: rgba(15, 23, 42, 0.1);
   --sync-diagram-text: rgba(15, 23, 42, 0.92);
   --sync-diagram-text-muted: rgba(15, 23, 42, 0.5);

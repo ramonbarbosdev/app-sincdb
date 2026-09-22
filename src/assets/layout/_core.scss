@@ -1,7 +1,7 @@
 :root {
-    /* Canvas shell (mesmos valores do sync-diagram — tema claro) */
-    --sincdb-app-canvas-bg: #e4e7f0;
-    --sincdb-app-canvas-dot-color: rgba(72, 68, 96, 0.16);
+    /* Canvas shell — tema claro (neutro, sem cinza-azulado) */
+    --sincdb-app-canvas-bg: #f7f7f9;
+    --sincdb-app-canvas-dot-color: rgba(15, 23, 42, 0.055);
     --sincdb-app-canvas-dot-gap: 22px;
     --sincdb-app-canvas-dot-size: 1px;
 
@@ -17,10 +17,15 @@
     --layout-sidebar-left: 1.5rem;
     --layout-glass-bg-dark: rgba(15, 15, 15, 0.55);
     --layout-glass-border: rgba(255, 255, 255, 0.08);
-    /* Topbar: vidro leve sobre o canvas (não opaco, não 100% transparente) */
-    --layout-topbar-bg: color-mix(in srgb, var(--sincdb-app-canvas-bg) 40%, rgba(255, 255, 255, 0.55));
-    --layout-topbar-border: rgba(15, 23, 42, 0.1);
-    --layout-topbar-shadow: 0 10px 36px rgba(15, 23, 42, 0.08);
+    --layout-glass-bg-light: rgba(255, 255, 255, 0.78);
+    --layout-glass-border-light: rgba(15, 23, 42, 0.1);
+    /* Topbar: vidro fosco puro (sem cor de fundo — só blur + borda + sombra) */
+    --layout-topbar-bg: transparent;
+    --sincdb-frost-bg: rgba(255, 255, 255, 0);
+    --sincdb-frost-blur: blur(10px);
+    --layout-topbar-blur: var(--sincdb-frost-blur);
+    --layout-topbar-border: rgba(0, 0, 0, 0.06);
+    --layout-topbar-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
     --layout-topbar-max-width: 72rem;
     --layout-main-offset: calc(var(--layout-sidebar-left) + var(--layout-sidebar-width) + var(--layout-float-gap));
     --layout-content-band-width: calc(100vw - var(--layout-main-offset) - var(--layout-topbar-float-x));
@@ -33,9 +38,10 @@
 :root[class*='app-dark'] {
     --sincdb-app-canvas-bg: #0c0e17;
     --sincdb-app-canvas-dot-color: rgba(160, 166, 194, 0.14);
-    --layout-topbar-bg: color-mix(in srgb, var(--sincdb-app-canvas-bg) 75%, rgba(0, 0, 0, 0.35));
-    --layout-topbar-border: rgba(255, 255, 255, 0.1);
-    --layout-topbar-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+    --sincdb-frost-bg: rgba(0, 0, 0, 0);
+    --layout-topbar-bg: transparent;
+    --layout-topbar-border: rgba(255, 255, 255, 0.08);
+    --layout-topbar-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
 }
 
 html {

@@ -1,3 +1,21 @@
+/* Vidro fosco nos painéis flutuantes do diagrama (vars em .sync-diagram-page) */
+@mixin sync-diagram-frost-panel {
+  background: var(--sync-diagram-frost-bg, rgba(255, 255, 255, 0));
+  background-color: var(--sync-diagram-frost-bg, rgba(255, 255, 255, 0));
+  background-image: none;
+  backdrop-filter: var(--sync-diagram-frost-blur, blur(10px));
+  -webkit-backdrop-filter: var(--sync-diagram-frost-blur, blur(10px));
+}
+
+.sync-diagram-page {
+  --sync-diagram-frost-bg: rgba(255, 255, 255, 0);
+  --sync-diagram-frost-blur: blur(10px);
+}
+
+.sync-diagram-page.sync-diagram-canvas-theme-dark {
+  --sync-diagram-frost-bg: rgba(0, 0, 0, 0);
+}
+
 /* Tooltips do diagrama (appendTo body — importar em styles.scss). */
 .p-tooltip.sync-diagram-tooltip {
   max-width: 15rem;
@@ -53,7 +71,7 @@
   padding: 0.4rem 0.5rem;
   border: 1px solid var(--sync-diagram-rail-border);
   border-radius: var(--sync-diagram-chrome-radius, 12px);
-  background: var(--sync-diagram-rail-bg);
+  @include sync-diagram-frost-panel;
   box-shadow: var(--sync-diagram-rail-shadow);
   cursor: pointer;
   font-size: 0.62rem;
@@ -95,7 +113,7 @@
   padding: 0.55rem 0.85rem 0.55rem 0.65rem;
   border: 1px solid var(--sync-diagram-rail-border);
   border-radius: var(--sync-diagram-chrome-radius, 12px);
-  background: var(--sync-diagram-rail-bg);
+  @include sync-diagram-frost-panel;
   box-shadow: var(--sync-diagram-rail-shadow);
   cursor: pointer;
   text-align: left;
@@ -185,7 +203,7 @@
 .queue-card {
   border: 1px solid var(--sync-diagram-rail-border);
   border-radius: var(--sync-diagram-chrome-radius, 12px);
-  background: var(--sync-diagram-rail-bg);
+  @include sync-diagram-frost-panel;
   box-shadow: var(--sync-diagram-rail-shadow);
   padding: 0.5rem 0.55rem;
   min-width: 0;

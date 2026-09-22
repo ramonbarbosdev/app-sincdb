@@ -6,7 +6,11 @@
   width: var(--sync-diagram-palette-width, 52px);
   padding: 0.55rem 0.4rem;
   border-radius: var(--sync-diagram-chrome-radius, 12px);
-  background: var(--sync-diagram-rail-bg);
+  background: var(--sync-diagram-frost-bg, rgba(255, 255, 255, 0));
+  background-color: var(--sync-diagram-frost-bg, rgba(255, 255, 255, 0));
+  background-image: none;
+  backdrop-filter: var(--sync-diagram-frost-blur, blur(10px));
+  -webkit-backdrop-filter: var(--sync-diagram-frost-blur, blur(10px));
   border: 1px solid var(--sync-diagram-rail-border);
   box-shadow: var(--sync-diagram-rail-shadow);
 }
