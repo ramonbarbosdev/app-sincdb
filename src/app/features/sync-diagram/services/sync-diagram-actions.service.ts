@@ -222,7 +222,12 @@ export class SyncDiagramActionsService {
     if (this.queue.runnerActive()) return;
     this.queueRunActive = true;
     this.queue.startRunner().subscribe({
-      next: () => {
+      next: (started) => {
+        if (!started) {
+          this.queueRunActive = false;
+          this.queue.refresh().subscribe((items) => this.applyQueueItemsToDiagram(items));
+          return;
+        }
         this.queue.pollUntilIdle().subscribe({
           next: ({ items, currentItemId }) =>
             this.applyQueueItemsToDiagram(items, currentItemId),
@@ -260,7 +265,7 @@ export class SyncDiagramActionsService {
     currentItemId?: string | null
   ): void {
     for (const item of items) {
-      if (item.status === 'PENDING') {
+      if (item.status === 'PENDING' || item.status === 'RUNNING') {
         const existing = this.state.findOperationByQueueItemId(item.id);
         if (!existing) {
           this.state.spawnQueuedOperation(item.id, item.mode, item.context);

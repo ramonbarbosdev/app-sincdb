@@ -1,83 +1,104 @@
-<div class="login-page flex min-h-screen overflow-hidden">
-  <div class="flex flex-col items-center justify-center w-full md:w-1/2 px-8 py-12">
-    <div class="w-full max-w-md">
-      <div class="text-center mb-8">
-        <div class="flex justify-center items-center mb-4"></div>
-        <div class="text-surface-900 text-2xl sm:text-3xl font-medium mb-2">Bem-vindo</div>
-        <span class="text-muted-color text-sm sm:text-base font-medium">
-          Faca login para continuar
+<div class="login-page">
+  <div class="login-backdrop" aria-hidden="true"></div>
+
+  <main class="login-main">
+    <header class="login-hero">
+      <h1 class="login-brand">SyncDB</h1>
+      <p class="login-tagline">Sincronização cloud ↔ local com segurança</p>
+    </header>
+
+    <section class="login-card" aria-labelledby="login-card-title">
+      <nav class="login-stepper" aria-label="Progresso do login">
+        <span class="login-step" [class.login-step--active]="loginStep === 'credentials'">
+          Acesso
         </span>
+        @if (showOrgStepper) {
+          <span class="login-step__sep" aria-hidden="true">→</span>
+          <span class="login-step" [class.login-step--active]="loginStep === 'organization'">
+            <span class="login-step__num">2</span>
+            Organização
+          </span>
+        }
+      </nav>
+
+      <div class="login-card__body" aria-live="polite">
+        @if (apiError) {
+          <p-message severity="error" [text]="apiError" styleClass="login-api-error w-full" />
+        }
+
+        @switch (loginStep) {
+          @case ('credentials') {
+            <h2 id="login-card-title" class="login-card__title">Bem-vindo</h2>
+            <p class="login-card__subtitle">Faça login para continuar</p>
+
+            <form #f="ngForm" class="login-form" (ngSubmit)="entrar()">
+              <app-layout-campo
+                [error]="errorValidacao['nuCpf']"
+                [label]="'CPF'"
+                [width]="'w-full'"
+                [sublabel]="errorValidacao['nuCpf'] ? '' : 'Informe o seu CPF'"
+                [describedby]="'nuCpf'"
+              >
+                <input
+                  title="CPF"
+                  name="nuCpf"
+                  pInputText
+                  id="nuCpf"
+                  type="text"
+                  placeholder="000.000.000-00"
+                  class="w-full"
+                  [(ngModel)]="objeto.nuCpf"
+                  [disabled]="loading"
+                  autofocus
+                  [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['nuCpf'] }"
+                  mask="000.000.000-00"
+                />
+              </app-layout-campo>
+
+              <app-layout-campo
+                [error]="errorValidacao['dsSenha']"
+                [label]="'Senha'"
+                [width]="'w-full'"
+                [sublabel]="errorValidacao['dsSenha'] ? '' : 'Sua senha de acesso'"
+                [describedby]="'dsSenha'"
+              >
+                <p-password
+                  name="dsSenha"
+                  id="dsSenha"
+                  [(ngModel)]="objeto.dsSenha"
+                  placeholder="Senha"
+                  [toggleMask]="true"
+                  [disabled]="loading"
+                  [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['dsSenha'] }"
+                  [fluid]="true"
+                  [feedback]="false"
+                ></p-password>
+              </app-layout-campo>
+
+              <p-button
+                type="submit"
+                label="Entrar"
+                styleClass="w-full login-submit"
+                [loading]="loading"
+                [disabled]="loading"
+              />
+            </form>
+          }
+          @case ('organization') {
+            <h2 id="login-card-title" class="login-card__title">Escolha a organização</h2>
+            <p class="login-card__subtitle">Conta autenticada com sucesso</p>
+
+            <app-selecionar-organizacao
+              variant="inline"
+              [objeto]="objeto"
+              [listaEmpresa]="listaEmpresa"
+              (back)="voltarParaCredenciais()"
+            />
+          }
+        }
       </div>
-
-      @if (apiError) {
-        <p-message severity="error" [text]="apiError" styleClass="w-full mb-2" />
-      }
-
-      @if (loginStep === 'credentials') {
-      <form #f="ngForm" class="flex flex-col gap-4" (ngSubmit)="entrar()">
-        <app-layout-campo
-          [error]="errorValidacao['nuCpf']"
-          [label]="'CPF:'"
-          [width]="'w-full'"
-          [sublabel]="'Informe o seu CPF'"
-          [describedby]="'nuCpf'"
-        >
-          <input
-            title="CPF"
-            name="nuCpf"
-            pInputText
-            id="nuCpf"
-            type="text"
-            placeholder="000.000.000-00"
-            class="w-full"
-            [(ngModel)]="objeto.nuCpf"
-            [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['nuCpf'] }"
-            mask="000.000.000-00"
-          />
-        </app-layout-campo>
-
-        <app-layout-campo
-          [error]="errorValidacao['dsSenha']"
-          [label]="'Senha:'"
-          [width]="'w-full'"
-          [sublabel]="'Informe a sua senha para autenticar'"
-          [describedby]="'dsSenha'"
-        >
-          <p-password
-            name="dsSenha"
-            id="dsSenha"
-            [(ngModel)]="objeto.dsSenha"
-            placeholder="Senha"
-            [toggleMask]="true"
-            [ngClass]="{ 'ng-dirty ng-invalid': errorValidacao['dsSenha'] }"
-            [fluid]="true"
-            [feedback]="false"
-          ></p-password>
-        </app-layout-campo>
-
-        <div class="flex items-center justify-between mt-2 mb-6"></div>
-
-        <p-button type="submit" label="Entrar" styleClass="w-full mt-4" [loading]="loading" />
-      </form>
-      } @else {
-        <app-selecionar-organizacao
-          variant="inline"
-          [listaEmpresa]="listaEmpresa"
-          [objeto]="objeto"
-          (back)="voltarParaCredenciais()"
-        />
-      }
-    </div>
-  </div>
-
-  <div
-    class="hidden md:flex w-1/2 items-center justify-center"
-    style="background: linear-gradient(135deg, #8E44AD 0%, #6C63FF 100%)"
-  >
-    <div class="flex flex-col items-center">
-      <img src="new-logo.png" alt="SyncDB Logo" class="w-100 h-auto mb-4" />
-    </div>
-  </div>
+    </section>
+  </main>
 
   <footer class="login-author-footer" aria-label="Créditos do desenvolvedor">
     criado por

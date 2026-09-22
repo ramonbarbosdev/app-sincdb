@@ -48,9 +48,22 @@ export class SyncDiagramQueueService {
     return this.items().filter((item) => item.status === 'PENDING' || !item.status);
   }
 
+  /** Escopos ainda na fila ou em execução no servidor (alinha com ACTIVE_STATUSES da API). */
   hasScope(context: SyncDiagramContext, mode: SyncDiagramMode): boolean {
     const key = queueScopeKey(context, mode);
-    return this.pendingItems().some((item) => queueScopeKey(item.context, item.mode) === key);
+    return this.items().some(
+      (item) => this.isActiveQueueItem(item) && queueScopeKey(item.context, item.mode) === key
+    );
+  }
+
+  private isActiveQueueItem(item: SyncQueueItem): boolean {
+    return item.status === 'PENDING' || item.status === 'RUNNING' || !item.status;
+  }
+
+  private hasActiveServerWork(items: SyncQueueItem[], status: BackendSyncQueueStatus): boolean {
+    if (status.running) return true;
+    if (status.pendingCount > 0) return true;
+    return items.some((item) => item.status === 'PENDING' || item.status === 'RUNNING');
   }
 
   refresh(): Observable<SyncQueueItem[]> {
@@ -120,6 +133,7 @@ export class SyncDiagramQueueService {
             summary: 'Já na fila',
             detail: `${formatQueueItemLabel(context)} já está na fila de sincronização.`,
           });
+          this.refresh().subscribe();
           return of(null);
         }
         console.error(error);
@@ -128,10 +142,10 @@ export class SyncDiagramQueueService {
     );
   }
 
-  startRunner(): Observable<void> {
+  startRunner(): Observable<boolean> {
     return this.http.post<{ started: boolean }>(`${this.apiUrl}/sync-queue/run`, {}).pipe(
-      tap(() => this.runnerActive.set(true)),
-      map(() => void 0)
+      tap((res) => this.runnerActive.set(!!res.started)),
+      map((res) => !!res.started)
     );
   }
 
@@ -153,7 +167,7 @@ export class SyncDiagramQueueService {
             this.refresh().subscribe({
               next: (items) => {
                 subscriber.next({ items, currentItemId: status.currentItemId });
-                if (!status.running && status.pendingCount === 0) {
+                if (!this.hasActiveServerWork(items, status)) {
                   this.runnerActive.set(false);
                   subscriber.complete();
                 } else {
