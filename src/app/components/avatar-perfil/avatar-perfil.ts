@@ -1,58 +1,76 @@
 import { CommonModule } from '@angular/common';
-import {
-  ChangeDetectorRef,
-  Component,
-  EventEmitter,
-  inject,
-  Input,
-  Output,
-  ViewChild,
-} from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AvatarModule } from 'primeng/avatar';
-import { FileUpload } from 'primeng/fileupload';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-avatar-perfil',
-  imports: [AvatarModule, CommonModule, FormsModule],
+  imports: [
+    AvatarModule,
+    CommonModule,
+    FormsModule,
+    DialogModule,
+    InputTextModule,
+    ButtonModule,
+  ],
   templateUrl: './avatar-perfil.html',
   styleUrl: './avatar-perfil.scss',
 })
 export class AvatarPerfil {
   @Input() imagem: string = '';
-  @Output() imagemChange = new EventEmitter<string>(); 
-  @Output() fileChange = new EventEmitter<File | null>();
-  @Output() removerChange = new EventEmitter<void>(); 
+  @Output() imagemChange = new EventEmitter<string>();
+  @Output() removerChange = new EventEmitter<void>();
 
-  private cd = inject(ChangeDetectorRef);
-  selectedFile: File | null = null;
+  private messageService = inject(MessageService);
 
-  onFileSelect(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (file) {
-      this.selectedFile = file;
+  dialogVisible = false;
+  linkInput = '';
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.imagem = reader.result as string;
-
-        // this.imagemChange.emit(this.imagem);
-        this.fileChange.emit(this.selectedFile);
-      };
-      reader.readAsDataURL(file);
-    }
-    setTimeout(() => input.value = '', 0);
+  abrirDialogLink(): void {
+    this.linkInput = this.imagem?.startsWith('http') ? this.imagem : '';
+    this.dialogVisible = true;
   }
 
-  removerFoto(event: Event) {
+  confirmarLink(): void {
+    const link = this.linkInput.trim();
+    if (!link) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Link vazio',
+        detail: 'Informe o link da imagem.',
+      });
+      return;
+    }
+
+    try {
+      const parsed = new URL(link);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        throw new Error('protocolo inválido');
+      }
+    } catch {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Link inválido',
+        detail: 'Use um endereço começando com http:// ou https://',
+      });
+      return;
+    }
+
+    this.imagem = link;
+    this.imagemChange.emit(link);
+    this.dialogVisible = false;
+  }
+
+  removerFoto(event: Event): void {
     event.stopPropagation();
 
-    this.selectedFile = null;
     this.imagem = '';
-
-    this.imagemChange.emit(this.imagem);
-    this.fileChange.emit(this.selectedFile);
+    this.linkInput = '';
+    this.imagemChange.emit('');
     this.removerChange.emit();
   }
 }

@@ -100,7 +100,7 @@
 
         </div>
 
-        <p class="status-card__hint">{{ metricas.status?.previsaoRelease || 'Sem previsão informada' }}</p>
+        <p class="status-card__hint">{{ metricas.status.previsaoRelease || 'Sem previsão informada' }}</p>
 
       </article>
 
@@ -115,17 +115,16 @@
     <div class="feed-composer__head">
 
       <div
-
         class="feed-avatar"
-
-        [style.background]="avatarGradient(nomeUsuario())"
-
+        [class.feed-avatar--photo]="fotoUsuarioAtual()"
+        [style.background]="fotoUsuarioAtual() ? null : avatarGradient(nomeUsuario())"
         aria-hidden="true"
-
       >
-
-        {{ iniciais(nomeUsuario()) }}
-
+        @if (fotoUsuarioAtual(); as foto) {
+          <img class="feed-avatar__img" [src]="foto" alt="" />
+        } @else {
+          {{ iniciais(nomeUsuario()) }}
+        }
       </div>
 
       <div class="feed-composer__meta">
@@ -299,17 +298,16 @@
             <header class="feed-card__header">
 
               <div
-
                 class="feed-avatar feed-avatar--sm"
-
-                [style.background]="avatarGradient(avatarSeedPost(item))"
-
+                [class.feed-avatar--photo]="fotoPost(item)"
+                [style.background]="fotoPost(item) ? null : avatarGradient(avatarSeedPost(item))"
                 aria-hidden="true"
-
               >
-
-                {{ iniciais(item.nomeUsuario) }}
-
+                @if (fotoPost(item); as foto) {
+                  <img class="feed-avatar__img" [src]="foto" alt="" />
+                } @else {
+                  {{ iniciais(item.nomeUsuario) }}
+                }
               </div>
 
               <div class="feed-card__who">

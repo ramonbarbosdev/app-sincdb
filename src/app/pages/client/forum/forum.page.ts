@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -42,6 +43,10 @@ export class ForumPage {
   private confirmationService = inject(ConfirmationService);
   private auth = inject(AuthService);
   private cd = inject(ChangeDetectorRef);
+  private destroyRef = inject(DestroyRef);
+
+  /** Foto do usuário logado (atualiza ao salvar o perfil). */
+  fotoPerfilSessao = '';
 
   metricas?: ForumMetricas;
   posts: ForumPost[] = [];
@@ -88,6 +93,14 @@ export class ForumPage {
 
   ngOnInit(): void {
     this.isDev = this.auth.getRoleOrganizacaoAtiva() === 'ROLE_DEV';
+    this.fotoPerfilSessao = this.normalizarUrlFoto(this.auth.getUser()?.img);
+    this.auth.user$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((user) => {
+        this.fotoPerfilSessao = this.normalizarUrlFoto(user?.img);
+        this.atualizarFotosPostsDoUsuarioAtual();
+        this.cd.markForCheck();
+      });
     this.recarregar();
   }
 
@@ -122,6 +135,7 @@ export class ForumPage {
     this.forum.getPosts(this.filtroFeed, this.ordenacao).subscribe({
       next: (posts) => {
         this.posts = posts;
+        this.atualizarFotosPostsDoUsuarioAtual();
         this.carregandoInicial = false;
         this.carregandoFeed = false;
         this.cd.markForCheck();
@@ -340,6 +354,19 @@ export class ForumPage {
     return user?.nmUsuario || user?.nome || 'Você';
   }
 
+  fotoUsuarioAtual(): string | undefined {
+    return this.fotoPerfilSessao || undefined;
+  }
+
+  fotoPost(post: ForumPost): string | undefined {
+    const daApi = this.normalizarUrlFoto(post.imgUsuario);
+    if (daApi) return daApi;
+    if (this.isPostDoUsuarioAtual(post)) {
+      return this.fotoUsuarioAtual();
+    }
+    return undefined;
+  }
+
   iniciais(nome?: string): string {
     const texto = (nome || 'U').trim();
     const partes = texto.split(/\s+/).filter(Boolean);
@@ -358,6 +385,31 @@ export class ForumPage {
 
   avatarSeedPost(post: ForumPost): string {
     return post.idUsuario || post.nomeUsuario || post.id;
+  }
+
+  private isPostDoUsuarioAtual(post: ForumPost): boolean {
+    const user = this.auth.getUser();
+    if (!post.idUsuario || !user) return false;
+    const chaves = new Set(
+      [user.idUsuario, user.login, user.nuCpf, this.auth.getUsuarioLogin()].filter(
+        (v): v is string => typeof v === 'string' && v.length > 0
+      )
+    );
+    return chaves.has(post.idUsuario);
+  }
+
+  private atualizarFotosPostsDoUsuarioAtual(): void {
+    const img = this.fotoPerfilSessao || undefined;
+    for (const post of this.posts) {
+      if (this.isPostDoUsuarioAtual(post)) {
+        post.imgUsuario = img;
+      }
+    }
+  }
+
+  private normalizarUrlFoto(url?: string | null): string {
+    const trimmed = url?.trim();
+    return trimmed || '';
   }
 
   private avatarHue(seed?: string | null): number {

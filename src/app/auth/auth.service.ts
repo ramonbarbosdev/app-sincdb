@@ -62,6 +62,8 @@ export class AuthService {
           nmUsuario: res.nmUsuario,
           nmEmail: res.nmEmail,
           permissoes: res.permissoes ?? [],
+          nuCpf: this.removerMascaraCpf(credenciais.nuCpf),
+          login: this.removerMascaraCpf(credenciais.nuCpf),
         };
 
         this.salvarSessao(userInfo);
@@ -133,6 +135,7 @@ export class AuthService {
           nmUsuario: res.nmUsuario,
           nmEmail: res.nmEmail,
           permissoes: res.permissoes ?? [],
+          login: res.nmEmail ? this.removerMascaraCpf(res.nmEmail) : this.getUserSubbject()?.login,
         });
       }),
       catchError((error) => {
@@ -200,6 +203,27 @@ export class AuthService {
 
   getUserSubbject() {
     return this.userSubject.value;
+  }
+
+  /** CPF/login (11 dígitos) para chamadas que usam login do usuário. */
+  getUsuarioLogin(): string | undefined {
+    const user = this.userSubject.value;
+    if (!user) return undefined;
+
+    for (const candidato of [user.login, user.nuCpf, user.nmEmail]) {
+      if (typeof candidato !== 'string' || !candidato.trim()) continue;
+      const digits = this.removerMascaraCpf(candidato);
+      if (digits.length === 11) return digits;
+    }
+
+    const sub = this.extrairSubjectDoToken(user.token ?? user.accessToken);
+    if (sub) {
+      const digits = this.removerMascaraCpf(sub);
+      if (digits.length === 11) return digits;
+      return sub.replace(/\D/g, '') || sub;
+    }
+
+    return undefined;
   }
 
   isAuthenticated(): boolean {
@@ -286,15 +310,42 @@ export class AuthService {
     if (!token) return undefined;
 
     try {
-      const payload = token.split('.')[1];
-      if (!payload) return undefined;
-
-      const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-      const decoded = JSON.parse(atob(base64));
-      return decoded?.dsRole ?? decoded?.role ?? decoded?.authority;
+      const decoded = this.decodificarPayloadJwt(token);
+      return this.extrairClaimString(decoded, 'dsRole', 'role', 'authority');
     } catch {
       return undefined;
     }
+  }
+
+  private extrairSubjectDoToken(token?: string): string | undefined {
+    if (!token) return undefined;
+    try {
+      const decoded = this.decodificarPayloadJwt(token);
+      return this.extrairClaimString(decoded, 'sub');
+    } catch {
+      return undefined;
+    }
+  }
+
+  private extrairClaimString(
+    payload: Record<string, unknown> | undefined,
+    ...keys: string[]
+  ): string | undefined {
+    if (!payload) return undefined;
+    for (const key of keys) {
+      const value = payload[key];
+      if (typeof value === 'string' && value.trim()) {
+        return value.trim();
+      }
+    }
+    return undefined;
+  }
+
+  private decodificarPayloadJwt(token: string): Record<string, unknown> | undefined {
+    const payload = token.split('.')[1];
+    if (!payload) return undefined;
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(base64)) as Record<string, unknown>;
   }
 
   private removerMascaraCpf(cpf: string): string {

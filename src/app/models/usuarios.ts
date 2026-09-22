@@ -8,6 +8,7 @@ export class Usuarios {
   public img: string = '';
   public role: string = '';
   public cargo: string = '';
+  public empresa: string = '';
   public roles!: any;
 
   public itensUsuarioEmpresa: Usuarioempresa[] = [];

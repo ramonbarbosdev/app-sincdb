@@ -15,6 +15,7 @@ export interface ForumPost {
   descricao: string;
   idUsuario?: string;
   nomeUsuario?: string;
+  imgUsuario?: string;
   statusPost?: string;
   curtidasCount: number;
   curtidoPorMim: boolean;

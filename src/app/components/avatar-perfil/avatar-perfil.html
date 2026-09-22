@@ -1,14 +1,6 @@
 <!-- AVATAR -->
 <div class="flex flex-col items-center justify-center my-6">
-  <input
-    type="file"
-    #fileInput
-    accept="image/*"
-    hidden
-    (change)="onFileSelect($event)"
-  />
-
-  <div class="relative inline-block cursor-pointer" (click)="fileInput.click()">
+  <div class="relative inline-block cursor-pointer" (click)="abrirDialogLink()">
     <p-avatar
       [image]="imagem"
       [icon]="imagem ? '' : 'pi pi-user'"
@@ -20,15 +12,16 @@
       [style.height]="'8rem'"
     ></p-avatar>
 
-    <!-- ÍCONE DE LÁPIS -->
     <div
       class="absolute bottom-2 right-2 bg-blue-400 text-white flex items-center justify-center rounded-full p-1 shadow-md edit-icon"
+      aria-hidden="true"
     >
       <i class="pi pi-pencil text-sm"></i>
     </div>
 
     <button
-      title="remover"
+      type="button"
+      title="Remover foto"
       *ngIf="imagem"
       (click)="removerFoto($event)"
       class="absolute top-2 right-2 bg-red-600 text-white flex items-center justify-center rounded-full p-1 shadow-md hover:bg-red-700 transition-colors"
@@ -37,4 +30,28 @@
     </button>
   </div>
 </div>
-<!-- AVATAR -->
+
+<p-dialog
+  header="Link da foto de perfil"
+  [(visible)]="dialogVisible"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: 'min(24rem, 92vw)' }"
+  (onHide)="linkInput = linkInput.trim()"
+>
+  <p class="text-sm text-muted-color mb-3">
+    Cole o endereço (URL) de uma imagem hospedada na internet.
+  </p>
+  <input
+    pInputText
+    type="url"
+    class="w-full"
+    placeholder="https://..."
+    [(ngModel)]="linkInput"
+    (keyup.enter)="confirmarLink()"
+  />
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="dialogVisible = false" />
+    <p-button label="Usar link" (onClick)="confirmarLink()" />
+  </ng-template>
+</p-dialog>
