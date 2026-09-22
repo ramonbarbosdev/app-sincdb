@@ -67,6 +67,7 @@ export class SyncDiagramCanvasComponent {
   @Output() runQueue = new EventEmitter<void>();
   @Output() removeFromQueue = new EventEmitter<string>();
   @Output() clearQueue = new EventEmitter<void>();
+  @Output() reorderQueue = new EventEmitter<string[]>();
 
   readonly connectionType = EFConnectionType.SEGMENT;
   readonly zoomLevel = signal(100);

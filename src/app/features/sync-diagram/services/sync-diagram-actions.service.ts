@@ -252,6 +252,12 @@ export class SyncDiagramActionsService {
     });
   }
 
+  reorderQueue(orderedIds: string[]): void {
+    this.queue.reorderPending(orderedIds).subscribe((items) => {
+      this.applyQueueItemsToDiagram(items);
+    });
+  }
+
   clearQueue(): void {
     for (const item of this.queue.pendingItems()) {
       this.state.removeOperationByQueueItemId(item.id);

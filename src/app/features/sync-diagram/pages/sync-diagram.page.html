@@ -18,6 +18,7 @@
       (runQueue)="executarFila()"
       (removeFromQueue)="removerDaFila($event)"
       (clearQueue)="limparFila()"
+      (reorderQueue)="reordenarFila($event)"
     >
       <app-sync-diagram-actions-panel
         [mode]="state.syncMode()"

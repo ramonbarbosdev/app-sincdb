@@ -110,6 +110,10 @@ export class SyncDiagramPage implements OnInit, OnDestroy {
     this.actions.clearQueue();
   }
 
+  reordenarFila(orderedIds: string[]): void {
+    this.actions.reorderQueue(orderedIds);
+  }
+
   hasRunningOperation(): boolean {
     return this.operations.hasRunningOperation();
   }

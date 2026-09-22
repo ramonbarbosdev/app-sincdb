@@ -1,12 +1,40 @@
 <div class="queue-card" *ngIf="queue.pendingItems().length || queue.runnerActive()">
   <div class="queue-header">
     <span class="queue-title">Fila ({{ queue.pendingItems().length }})</span>
-    <button type="button" class="queue-clear" (click)="clearQueue.emit()">Limpar</button>
+    <button
+      type="button"
+      class="queue-clear"
+      aria-label="Limpar fila"
+      title="Limpar fila"
+      (click)="clearQueue.emit()"
+    >
+      <i class="pi pi-trash" aria-hidden="true"></i>
+    </button>
   </div>
 
-  <ul class="queue-list" aria-label="Itens na fila de sincronização">
-    <li class="queue-item" *ngFor="let item of queue.pendingItems()">
-      <span class="queue-item-label">{{ item.label }}</span>
+  <ul
+    class="queue-list"
+    cdkDropList
+    cdkDropListOrientation="vertical"
+    [cdkDropListData]="queue.pendingItems()"
+    (cdkDropListDropped)="onQueueDrop($event)"
+    aria-label="Itens na fila de sincronização"
+  >
+    <li class="queue-item" *ngFor="let item of queue.pendingItems()" cdkDrag>
+      <button
+        type="button"
+        class="queue-item-grip"
+        cdkDragHandle
+        aria-label="Arrastar para reordenar"
+      >
+        <i class="pi pi-ellipsis-v" aria-hidden="true"></i>
+      </button>
+      <span class="queue-item-label" [title]="item.label">
+        @if (labelParts(item.label).prefix) {
+          <span class="queue-item-label__prefix">{{ labelParts(item.label).prefix }}</span>
+        }
+        <span class="queue-item-label__suffix">{{ labelParts(item.label).suffix }}</span>
+      </span>
       <span
         class="queue-item-mode"
         [class.mode-estrutura]="item.mode === 'estrutura'"
@@ -18,7 +46,7 @@
         type="button"
         class="queue-item-remove"
         aria-label="Remover da fila"
-        (click)="removeItem.emit(item.id)"
+        (click)="removeItem.emit(item.id); $event.stopPropagation()"
       >
         <i class="pi pi-times" aria-hidden="true"></i>
       </button>

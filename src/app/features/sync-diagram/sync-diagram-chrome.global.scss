@@ -212,8 +212,7 @@
 .queue-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.35rem;
   margin-bottom: 0.35rem;
 }
 
@@ -224,15 +223,27 @@
 }
 
 .queue-clear {
+  flex-shrink: 0;
+  width: 1.65rem;
+  height: 1.65rem;
+  margin: 0;
+  padding: 0;
   border: none;
+  border-radius: 7px;
   background: transparent;
   color: var(--sync-diagram-text-muted);
-  font-size: 0.68rem;
   cursor: pointer;
-  padding: 0.1rem 0.25rem;
+  display: grid;
+  place-items: center;
+  transition: color 0.12s ease, background 0.12s ease;
+
+  i {
+    font-size: 0.72rem;
+  }
 
   &:hover {
-    color: var(--sync-diagram-primary);
+    color: var(--sync-diagram-text);
+    background: var(--sync-diagram-toolbar-hover-bg);
   }
 }
 
@@ -248,20 +259,84 @@
 .queue-item {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
   padding: 0.3rem 0.35rem;
   border-radius: 8px;
   background: color-mix(in srgb, var(--sync-diagram-text) 4%, transparent);
 }
 
+.queue-item-grip {
+  flex-shrink: 0;
+  width: 1.35rem;
+  height: 1.75rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--sync-diagram-text-muted);
+  cursor: grab;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  touch-action: none;
+
+  i {
+    font-size: 0.55rem;
+  }
+
+  &:hover {
+    color: var(--sync-diagram-text);
+    background: color-mix(in srgb, var(--sync-diagram-text) 8%, transparent);
+  }
+
+  &:active {
+    cursor: grabbing;
+    background: color-mix(in srgb, var(--sync-diagram-primary) 10%, transparent);
+  }
+}
+
+.queue-list.cdk-drop-list-dragging .queue-item:not(.cdk-drag-placeholder) {
+  transition: transform 180ms ease;
+}
+
+.queue-item.cdk-drag-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.35rem;
+  border-radius: 8px;
+  border: 1px solid var(--sync-diagram-rail-border);
+  box-shadow: var(--sync-diagram-rail-shadow);
+  @include sync-diagram-frost-panel;
+}
+
+.queue-item.cdk-drag-placeholder {
+  min-height: 2rem;
+  border-radius: 8px;
+  border: 1px dashed color-mix(in srgb, var(--sync-diagram-primary) 40%, transparent);
+  background: color-mix(in srgb, var(--sync-diagram-primary) 8%, transparent);
+  opacity: 0.55;
+}
+
 .queue-item-label {
   flex: 1;
   min-width: 0;
+  font-family: var(--sync-diagram-mono);
   font-size: 0.72rem;
-  color: var(--sync-diagram-text);
+  line-height: 1.3;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.queue-item-label__prefix {
+  color: var(--sync-diagram-text-muted);
+  opacity: 0.65;
+  font-weight: 400;
+}
+
+.queue-item-label__suffix {
+  color: var(--sync-diagram-text);
+  font-weight: 700;
 }
 
 .queue-item-mode {

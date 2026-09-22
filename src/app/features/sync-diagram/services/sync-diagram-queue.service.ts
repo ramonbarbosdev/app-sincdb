@@ -159,6 +159,51 @@ export class SyncDiagramQueueService {
     return this.http.delete<void>(`${this.apiUrl}/sync-queue`).pipe(tap(() => this.items.set([])));
   }
 
+  reorderPending(orderedIds: string[]): Observable<SyncQueueItem[]> {
+    this.applyPendingOrder(orderedIds);
+    return this.http
+      .put<BackendSyncQueueItem[]>(`${this.apiUrl}/sync-queue/reorder`, { orderedIds })
+      .pipe(
+        map((rows) => rows.map((row) => this.mapBackendItem(row))),
+        tap((items) => this.items.set(items)),
+        catchError((error) => {
+          console.error(error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Não foi possível reordenar',
+            detail: 'Atualize a fila e tente novamente.',
+          });
+          this.refresh().subscribe();
+          return throwError(() => error);
+        })
+      );
+  }
+
+  movePendingItem(id: string, delta: -1 | 1): Observable<SyncQueueItem[] | null> {
+    const pending = this.pendingItems();
+    const index = pending.findIndex((item) => item.id === id);
+    const target = index + delta;
+    if (index < 0 || target < 0 || target >= pending.length) {
+      return of(null);
+    }
+    const reordered = [...pending];
+    [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
+    return this.reorderPending(reordered.map((item) => item.id));
+  }
+
+  applyPendingOrder(orderedIds: string[]): void {
+    if (!orderedIds.length) return;
+    const pendingSet = new Set(orderedIds);
+    this.items.update((list) => {
+      const byId = new Map(list.map((item) => [item.id, item]));
+      const reordered = orderedIds
+        .map((id) => byId.get(id))
+        .filter((item): item is SyncQueueItem => !!item);
+      const rest = list.filter((item) => !pendingSet.has(item.id));
+      return [...reordered, ...rest];
+    });
+  }
+
   pollUntilIdle(): Observable<{ items: SyncQueueItem[]; currentItemId?: string | null }> {
     return new Observable((subscriber) => {
       const tick = () => {
