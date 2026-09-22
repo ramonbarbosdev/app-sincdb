@@ -25,9 +25,20 @@ export class AppMenu {
     const role = this.auth.getRoleOrganizacaoAtiva();
 
     if (role === 'ROLE_DEV') {
-      this.model.push({
-        label: 'Administração',
-        items: [
+      this.model.push(
+        {
+          label: 'Início',
+          items: [
+            {
+              label: 'Fórum',
+              icon: 'pi pi-fw pi-megaphone',
+              routerLink: ['/client/forum'],
+            },
+          ],
+        },
+        {
+          label: 'Administração',
+          items: [
           {
             label: 'Painel',
             icon: 'pi pi-fw pi-bookmark',
@@ -64,7 +75,8 @@ export class AppMenu {
             routerLink: ['/dev/sazonal'],
           },
         ],
-      });
+      },
+      );
     } else {
 
 
@@ -81,6 +93,11 @@ export class AppMenu {
               label: 'Conexão',
               icon: 'pi pi-wifi',
               routerLink: ['/client/conexao'],
+            },
+            {
+              label: 'Fórum',
+              icon: 'pi pi-megaphone',
+              routerLink: ['/client/forum'],
             },
           ],
         },

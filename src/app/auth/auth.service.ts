@@ -186,6 +186,14 @@ export class AuthService {
     return this.extrairRole(user);
   }
 
+  /** Rota inicial após login ou ao acessar /client sem path. */
+  getDefaultAppRoute(): string[] {
+    if (this.getRoleOrganizacaoAtiva() === 'ROLE_DEV') {
+      return ['/client/forum'];
+    }
+    return ['/client/sincronizacao-diagrama'];
+  }
+
   getUser() {
     return this.userSubject.value;
   }

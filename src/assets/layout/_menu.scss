@@ -2,19 +2,31 @@
 
 .layout-sidebar {
     position: fixed;
-    width: 20rem;
-    height: calc(100vh - 8rem);
+    width: var(--layout-sidebar-width);
+    height: calc(100vh - var(--layout-content-top) - var(--layout-float-gap));
     z-index: 999;
     overflow-y: auto;
     user-select: none;
-    top: 6rem;
-    left: 2rem;
+    top: var(--layout-content-top);
+    left: var(--layout-sidebar-left);
     transition:
         transform var(--layout-section-transition-duration),
         left var(--layout-section-transition-duration);
-    background-color: var(--surface-overlay);
+    background-color: color-mix(in srgb, var(--surface-overlay) 88%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid color-mix(in srgb, var(--surface-border) 70%, transparent);
     border-radius: var(--content-border-radius);
-    padding: 0.5rem 1.5rem;
+    padding: 0.75rem 1.5rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+:root[class*='app-dark'] .layout-sidebar {
+    background-color: rgba(10, 10, 10, 0.62);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
 }
 
 .layout-menu {

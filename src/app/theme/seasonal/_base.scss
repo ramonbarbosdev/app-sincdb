@@ -1,8 +1,5 @@
 /* Base compartilhada — slots via data-season-* no <html> */
-
-.layout-topbar {
-  position: relative;
-}
+/* Não alterar position da topbar — layout usa position: fixed (barra flutuante). */
 
 html[data-season-topbar='on'] .layout-topbar::after {
   content: '';

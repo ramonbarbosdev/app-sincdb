@@ -1,0 +1,307 @@
+.feedback-page {
+  --feed-bug: var(--sincdb-feedback-danger, #ef4444);
+  --feed-sugestao: var(--primary-color, #3b82f6);
+  --feed-surface: color-mix(in srgb, var(--surface-card) 92%, var(--surface-ground));
+  --feed-border: color-mix(in srgb, var(--surface-border) 80%, transparent);
+}
+
+.feedback-header {
+  text-align: center;
+}
+
+.feedback-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.feedback-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-color-secondary);
+}
+
+.feed-composer {
+  background: var(--feed-surface);
+  border: 1px solid var(--feed-border);
+  border-radius: 1rem;
+  padding: 1rem 1.1rem 1.1rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--surface-ground) 40%, transparent);
+}
+
+.feed-composer__head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.feed-composer__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.feed-hint {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+}
+
+.feed-avatar {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 60%, #6366f1));
+  flex-shrink: 0;
+
+  &[data-kind='bug'] {
+    background: linear-gradient(135deg, var(--feed-bug), #f97316);
+  }
+
+  &[data-kind='sugestao'] {
+    background: linear-gradient(135deg, var(--feed-sugestao), #06b6d4);
+  }
+
+  &--sm {
+    width: 2.25rem;
+    height: 2.25rem;
+    font-size: 0.72rem;
+  }
+}
+
+.feed-compose-types {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.feed-type-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--feed-border);
+  background: var(--surface-card);
+  color: var(--text-color-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+
+  &--active {
+    border-color: var(--feed-bug);
+    background: color-mix(in srgb, var(--feed-bug) 12%, var(--surface-card));
+    color: var(--feed-bug);
+  }
+
+  &--sugestao.feed-type-btn--active {
+    border-color: var(--feed-sugestao);
+    background: color-mix(in srgb, var(--feed-sugestao) 12%, var(--surface-card));
+    color: var(--feed-sugestao);
+  }
+}
+
+.feed-composer__title {
+  margin-bottom: 0.65rem;
+  font-weight: 600;
+}
+
+.feed-composer__body {
+  margin-bottom: 0.85rem;
+  resize: vertical;
+  min-height: 5.5rem;
+}
+
+.feed-composer__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.feed-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.feed-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.feed-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--feed-border);
+  background: var(--surface-card);
+  color: var(--text-color-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &--active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+  }
+
+  &--bug.feed-filter--active {
+    background: var(--feed-bug);
+    border-color: var(--feed-bug);
+  }
+
+  &--sugestao.feed-filter--active {
+    background: var(--feed-sugestao);
+    border-color: var(--feed-sugestao);
+  }
+}
+
+.feed-scope-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px dashed var(--feed-border);
+  background: transparent;
+  color: var(--text-color-secondary);
+  font-size: 0.78rem;
+  cursor: pointer;
+
+  &--global {
+    border-style: solid;
+    border-color: color-mix(in srgb, var(--primary-color) 40%, transparent);
+    color: var(--primary-color);
+    background: color-mix(in srgb, var(--primary-color) 8%, transparent);
+  }
+}
+
+.feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.feed-card {
+  position: relative;
+  border-radius: 1rem;
+  border: 1px solid var(--feed-border);
+  background: var(--surface-card);
+  overflow: hidden;
+  transition: box-shadow 0.15s ease;
+
+  &:hover {
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--surface-ground) 35%, transparent);
+  }
+}
+
+.feed-card__accent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--primary-color);
+}
+
+.feed-card--bug .feed-card__accent {
+  background: var(--feed-bug);
+}
+
+.feed-card--sugestao .feed-card__accent {
+  background: var(--feed-sugestao);
+}
+
+.feed-card__inner {
+  padding: 1rem 1rem 1rem 1.15rem;
+}
+
+.feed-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.65rem;
+}
+
+.feed-card__who {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.feed-author {
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.feed-time {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+}
+
+.feed-card__title {
+  margin: 0 0 0.45rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.feed-card__body {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--text-color);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.feed-loading,
+.feed-empty {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--text-color-secondary);
+  border: 1px dashed var(--feed-border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--surface-ground) 50%, transparent);
+
+  i {
+    font-size: 1.75rem;
+    margin-bottom: 0.65rem;
+    display: block;
+    opacity: 0.7;
+  }
+
+  p {
+    margin: 0 0 0.35rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  span {
+    font-size: 0.85rem;
+  }
+}

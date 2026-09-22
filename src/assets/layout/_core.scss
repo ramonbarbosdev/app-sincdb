@@ -1,3 +1,15 @@
+:root {
+    --layout-topbar-float-top: 1.5rem;
+    --layout-topbar-float-x: 1.5rem;
+    --layout-topbar-height: 3.75rem;
+    --layout-float-gap: 1.25rem;
+    --layout-content-top: calc(
+        var(--layout-topbar-float-top) + var(--layout-topbar-height) + var(--layout-float-gap)
+    );
+    --layout-sidebar-width: 20rem;
+    --layout-sidebar-left: 1.5rem;
+}
+
 html {
     height: 100%;
     font-size: 14px;

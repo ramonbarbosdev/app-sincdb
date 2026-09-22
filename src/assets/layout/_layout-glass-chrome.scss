@@ -1,0 +1,31 @@
+/**
+ * Glass chrome — carregado por último para vencer overrides sazonais/legados.
+ */
+
+.layout-topbar {
+  position: fixed !important;
+  z-index: 997;
+}
+
+:root:not([class*='app-dark']) .layout-topbar {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.1),
+    0 1px 0 rgba(255, 255, 255, 0.9) inset;
+}
+
+:root[class*='app-dark'] {
+  --surface-ground: #0a0a0a;
+}
+
+:root[class*='app-dark'] body {
+  background-color: #0a0a0a;
+}
+
+@media (min-width: 992px) {
+  .layout-wrapper.layout-static .layout-topbar {
+    left: calc(var(--layout-sidebar-left) + var(--layout-sidebar-width) + var(--layout-float-gap)) !important;
+    right: var(--layout-topbar-float-x) !important;
+  }
+}

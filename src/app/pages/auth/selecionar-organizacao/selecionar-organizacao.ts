@@ -107,11 +107,7 @@ export class SelecionarOrganizacao implements OnChanges {
   }
 
   gerenciarRotaUsuario() {
-    if (this.auth.getRoleOrganizacaoAtiva() === 'ROLE_DEV') {
-      this.router.navigate(['dev/home']);
-      return;
-    }
-    this.router.navigate(['client/sincronizacao-diagrama']);
+    this.router.navigate(this.auth.getDefaultAppRoute());
   }
 
   validarItens(): boolean {

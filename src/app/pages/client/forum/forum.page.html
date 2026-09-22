@@ -1,0 +1,552 @@
+<div class="forum-page w-full mx-auto">
+
+  <header class="forum-header">
+
+    <div class="forum-header__row">
+
+      <div>
+
+        <h1 class="forum-title">Fórum SyncDB</h1>
+
+        <p class="forum-subtitle">Status do produto, bugs e sugestões da comunidade.</p>
+
+      </div>
+
+      @if (isDev) {
+
+        <p-button
+
+          label="Editar status"
+
+          icon="pi pi-cog"
+
+          severity="secondary"
+
+          [outlined]="true"
+
+          (click)="abrirStatusDialog()"
+
+        />
+
+      }
+
+    </div>
+
+  </header>
+
+
+
+  @if (metricas) {
+
+    <section class="status-grid" aria-label="Métricas do fórum">
+
+      <article class="status-card">
+
+        <span class="status-card__label">Sistema</span>
+
+        <div class="status-card__main">
+
+          <p-tag
+
+            [value]="labelEstado(metricas.status?.estadoGeral)"
+
+            [severity]="severityEstado(metricas.status?.estadoGeral)"
+
+            [rounded]="true"
+
+          />
+
+          <p class="status-card__text">{{ metricas.status?.titulo || '—' }}</p>
+
+        </div>
+
+        <p class="status-card__hint">{{ metricas.status?.mensagem || 'Sem mensagem de status.' }}</p>
+
+      </article>
+
+      <article class="status-card status-card--metric">
+
+        <span class="status-card__label">Bugs abertos</span>
+
+        <div class="status-card__main">
+
+          <strong class="status-card__metric">{{ metricas.bugsAbertos }}</strong>
+
+        </div>
+
+      </article>
+
+      <article class="status-card status-card--metric">
+
+        <span class="status-card__label">Sugestões abertas</span>
+
+        <div class="status-card__main">
+
+          <strong class="status-card__metric">{{ metricas.sugestoesAbertas }}</strong>
+
+        </div>
+
+      </article>
+
+      <article class="status-card status-card--metric">
+
+        <span class="status-card__label">Próxima release</span>
+
+        <div class="status-card__main">
+
+          <strong class="status-card__metric status-card__metric--sm">
+
+            {{ metricas.status?.proximaVersao || '—' }}
+
+          </strong>
+
+        </div>
+
+        <p class="status-card__hint">{{ metricas.status?.previsaoRelease || 'Sem previsão informada' }}</p>
+
+      </article>
+
+    </section>
+
+  }
+
+
+
+  <article class="feed-composer">
+
+    <div class="feed-composer__head">
+
+      <div
+
+        class="feed-avatar"
+
+        [style.background]="avatarGradient(nomeUsuario())"
+
+        aria-hidden="true"
+
+      >
+
+        {{ iniciais(nomeUsuario()) }}
+
+      </div>
+
+      <div class="feed-composer__meta">
+
+        <span class="feed-author">{{ nomeUsuario() }}</span>
+
+        <span class="feed-hint">Nova publicação</span>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="segmented" role="group" aria-label="Tipo de publicação">
+
+      <button
+
+        type="button"
+
+        class="segmented__option segmented__option--bug"
+
+        [class.segmented__option--active]="tipoCompose === 'bug'"
+
+        [attr.aria-pressed]="tipoCompose === 'bug'"
+
+        (click)="tipoCompose = 'bug'"
+
+      >
+
+        <i class="pi pi-bug" aria-hidden="true"></i> Bug
+
+      </button>
+
+      <button
+
+        type="button"
+
+        class="segmented__option segmented__option--sugestao"
+
+        [class.segmented__option--active]="tipoCompose === 'sugestao'"
+
+        [attr.aria-pressed]="tipoCompose === 'sugestao'"
+
+        (click)="tipoCompose = 'sugestao'"
+
+      >
+
+        <i class="pi pi-lightbulb" aria-hidden="true"></i> Sugestão
+
+      </button>
+
+    </div>
+
+
+
+    <input
+
+      pInputText
+
+      class="feed-composer__title w-full"
+
+      [(ngModel)]="titulo"
+
+      placeholder="Título da publicação"
+
+    />
+
+    <textarea
+
+      pTextarea
+
+      class="feed-composer__body w-full"
+
+      rows="3"
+
+      [(ngModel)]="descricao"
+
+      placeholder="Descreva o bug ou a sugestão..."
+
+    ></textarea>
+
+
+
+    <div class="feed-composer__actions">
+
+      <p-button
+
+        label="Publicar"
+
+        icon="pi pi-send"
+
+        (click)="enviar()"
+
+        [loading]="enviando"
+
+        styleClass="action-press"
+
+      />
+
+    </div>
+
+  </article>
+
+
+
+  <div class="feed-toolbar">
+
+    <div class="feed-toolbar__group">
+
+      <span class="feed-toolbar__label">Filtrar por tipo</span>
+
+      <div class="feed-filters" role="group" aria-label="Filtrar por tipo">
+
+        <button type="button" class="feed-filter" [class.feed-filter--active]="filtroFeed === 'todos'" (click)="aplicarFiltro('todos')">Todos</button>
+
+        <button type="button" class="feed-filter feed-filter--bug" [class.feed-filter--active]="filtroFeed === 'bug'" (click)="aplicarFiltro('bug')"><i class="pi pi-bug"></i> Bugs</button>
+
+        <button type="button" class="feed-filter feed-filter--sugestao" [class.feed-filter--active]="filtroFeed === 'sugestao'" (click)="aplicarFiltro('sugestao')"><i class="pi pi-lightbulb"></i> Sugestões</button>
+
+      </div>
+
+    </div>
+
+    <div class="feed-toolbar__divider" aria-hidden="true"></div>
+
+    <div class="feed-toolbar__group">
+
+      <span class="feed-toolbar__label">Ordenar</span>
+
+      <div class="feed-sort" role="group" aria-label="Ordenação">
+
+        <button type="button" class="feed-sort-btn" [class.feed-sort-btn--active]="ordenacao === 'destaque'" (click)="aplicarOrdenacao('destaque')">Destaques</button>
+
+        <button type="button" class="feed-sort-btn" [class.feed-sort-btn--active]="ordenacao === 'recente'" (click)="aplicarOrdenacao('recente')">Recentes</button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  @if (carregandoInicial) {
+
+    <div class="feed-loading"><i class="pi pi-spin pi-spinner"></i> Carregando fórum...</div>
+
+  } @else if (posts.length === 0 && !carregandoFeed) {
+
+    <div class="feed-empty">
+
+      <i class="pi pi-inbox"></i>
+
+      <p>Nenhuma publicação ainda.</p>
+
+      <span>Seja o primeiro a contribuir.</span>
+
+    </div>
+
+  } @else {
+
+    <div class="feed-list" [class.feed-list--busy]="carregandoFeed">
+
+      @for (item of posts; track item.id) {
+
+        <article class="feed-card" [class.feed-card--destaque]="item.emDestaque" [class.feed-card--fechado]="postFechado(item)">
+
+          <div class="feed-card__inner">
+
+            <header class="feed-card__header">
+
+              <div
+
+                class="feed-avatar feed-avatar--sm"
+
+                [style.background]="avatarGradient(avatarSeedPost(item))"
+
+                aria-hidden="true"
+
+              >
+
+                {{ iniciais(item.nomeUsuario) }}
+
+              </div>
+
+              <div class="feed-card__who">
+
+                <span class="feed-author">{{ item.nomeUsuario || 'Usuário' }}</span>
+
+                <time class="feed-time">{{ item.createdAt || '—' }}</time>
+
+              </div>
+
+              <p-tag
+
+                class="feed-card__type"
+
+                [value]="labelTipo(item.tipo)"
+
+                [severity]="severityTipo(item.tipo)"
+
+                [rounded]="true"
+
+              />
+
+              @if (labelStatusPost(item); as statusLabel) {
+                <p-tag [value]="statusLabel" severity="success" [rounded]="true" />
+              }
+
+              @if (item.podeEditar || item.podeExcluir) {
+
+                <div class="feed-card__actions">
+
+                  @if (item.podeEditar) {
+
+                    <button type="button" class="icon-btn" (click)="abrirEditar(item)" title="Editar">
+
+                      <i class="pi pi-pencil"></i>
+
+                    </button>
+
+                  }
+
+                  @if (item.podeExcluir) {
+
+                    <button type="button" class="icon-btn icon-btn--danger" (click)="excluir(item)" title="Excluir">
+
+                      <i class="pi pi-trash"></i>
+
+                    </button>
+
+                  }
+
+                </div>
+
+              }
+
+            </header>
+
+            <h2 class="feed-card__title">{{ item.titulo }}</h2>
+
+            <p class="feed-card__body">{{ item.descricao }}</p>
+
+            <footer class="feed-card__footer">
+
+              <button
+
+                type="button"
+
+                class="like-btn"
+
+                [class.like-btn--active]="item.curtidoPorMim"
+
+                (click)="curtir(item)"
+
+              >
+
+                <i class="pi" [ngClass]="item.curtidoPorMim ? 'pi-heart-fill' : 'pi-heart'"></i>
+
+                {{ item.curtidasCount }}
+
+              </button>
+
+              @if (item.emDestaque) {
+
+                <span class="destaque-badge"><i class="pi pi-star-fill"></i> Em destaque</span>
+
+              }
+
+              @if (podeMarcarResolvido(item)) {
+                <button
+                  type="button"
+                  class="status-action-btn status-action-btn--bug"
+                  [disabled]="statusPostCarregando(item.id)"
+                  (click)="marcarResolvido(item)"
+                >
+                  <i class="pi pi-check-circle"></i> Resolvido
+                </button>
+              }
+              @if (podeMarcarImplementado(item)) {
+                <button
+                  type="button"
+                  class="status-action-btn status-action-btn--sugestao"
+                  [disabled]="statusPostCarregando(item.id)"
+                  (click)="marcarImplementado(item)"
+                >
+                  <i class="pi pi-verified"></i> Implementado
+                </button>
+              }
+
+            </footer>
+
+          </div>
+
+        </article>
+
+      }
+
+    </div>
+
+  }
+
+</div>
+
+
+
+<p-dialog
+
+  header="Editar status do sistema"
+
+  [(visible)]="statusDialogVisible"
+
+  [modal]="true"
+
+  [style]="{ width: 'min(520px, 94vw)' }"
+
+>
+
+  <div class="flex flex-col gap-3">
+
+    <label class="text-sm font-semibold">Estado geral</label>
+
+    <p-select
+
+      [options]="estadoOptions"
+
+      [(ngModel)]="statusForm.estadoGeral"
+
+      optionLabel="label"
+
+      optionValue="value"
+
+      class="w-full"
+
+    />
+
+    <input pInputText class="w-full" [(ngModel)]="statusForm.titulo" placeholder="Título curto" />
+
+    <textarea pTextarea class="w-full" rows="3" [(ngModel)]="statusForm.mensagem" placeholder="Mensagem"></textarea>
+
+    <input pInputText class="w-full" [(ngModel)]="statusForm.proximaVersao" placeholder="Próxima versão (ex.: 1.4.0)" />
+
+    <input pInputText class="w-full" [(ngModel)]="statusForm.previsaoRelease" placeholder="Previsão (ex.: Março 2026)" />
+
+  </div>
+
+  <ng-template pTemplate="footer">
+
+    <p-button label="Cancelar" [text]="true" (click)="statusDialogVisible = false" />
+
+    <p-button label="Salvar" icon="pi pi-check" (click)="salvarStatus()" [loading]="salvandoStatus" />
+
+  </ng-template>
+
+</p-dialog>
+
+
+
+<p-dialog
+
+  header="Editar publicação"
+
+  [(visible)]="editDialogVisible"
+
+  [modal]="true"
+
+  [style]="{ width: 'min(520px, 94vw)' }"
+
+>
+
+  <div class="segmented mb-3" role="group" aria-label="Tipo de publicação">
+
+    <button
+
+      type="button"
+
+      class="segmented__option segmented__option--bug"
+
+      [class.segmented__option--active]="editTipo === 'bug'"
+
+      (click)="editTipo = 'bug'"
+
+    >
+
+      <i class="pi pi-bug"></i> Bug
+
+    </button>
+
+    <button
+
+      type="button"
+
+      class="segmented__option segmented__option--sugestao"
+
+      [class.segmented__option--active]="editTipo === 'sugestao'"
+
+      (click)="editTipo = 'sugestao'"
+
+    >
+
+      <i class="pi pi-lightbulb"></i> Sugestão
+
+    </button>
+
+  </div>
+
+  <input pInputText class="w-full mb-3" [(ngModel)]="editTitulo" placeholder="Título" />
+
+  <textarea pTextarea class="w-full" rows="5" [(ngModel)]="editDescricao" placeholder="Descrição"></textarea>
+
+  <ng-template pTemplate="footer">
+
+    <p-button label="Cancelar" [text]="true" (click)="editDialogVisible = false" />
+
+    <p-button label="Salvar" icon="pi pi-check" (click)="salvarEdicao()" [loading]="editando" />
+
+  </ng-template>
+
+</p-dialog>
+
+

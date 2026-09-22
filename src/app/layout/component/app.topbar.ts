@@ -28,7 +28,7 @@ import { UpdateService } from '../../services/update.service';
       >
         <i class="pi pi-bars"></i>
       </button>
-      <a class="layout-topbar-logo" routerLink="/client/sincronizacao-diagrama">
+      <a class="layout-topbar-logo" [routerLink]="homeLink">
         <span class="ml-10 seasonal-logo-wrap">
           <img
             *ngIf="!layoutService.isDarkTheme()"
@@ -132,6 +132,10 @@ export class AppTopbar {
 
   public avatarImg: string = '';
   public avatarNome: string = '';
+
+  get homeLink(): string[] {
+    return this.auth.getDefaultAppRoute();
+  }
 
   ngOnInit(): void {
     this.auth.user$.subscribe((user) => {

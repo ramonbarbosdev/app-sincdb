@@ -41,7 +41,7 @@
 
         &.layout-static {
             .layout-main-container {
-                margin-left: 22rem;
+                margin-left: calc(var(--layout-sidebar-left) + var(--layout-sidebar-width) + var(--layout-float-gap));
             }
 
             &.layout-static-inactive {

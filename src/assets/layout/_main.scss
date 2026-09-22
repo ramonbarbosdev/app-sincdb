@@ -3,13 +3,13 @@
     flex-direction: column;
     min-height: 100vh;
     justify-content: space-between;
-    padding: 6rem 2rem 0 2rem;
+    padding: var(--layout-content-top) clamp(1.25rem, 3vw, 3rem) 0 clamp(1.25rem, 3vw, 3rem);
     transition: margin-left var(--layout-section-transition-duration);
 }
 
 .layout-main {
     flex: 1 1 auto;
-    padding-bottom: 2rem;
+    padding-bottom: 2.5rem;
 }
 
 img {

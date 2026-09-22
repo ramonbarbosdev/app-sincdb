@@ -1,0 +1,160 @@
+<div class="feedback-page w-full max-w-2xl mx-auto my-6 px-3 sm:px-4">
+  <header class="feedback-header mb-4">
+    <h1 class="feedback-title">Feed de bugs e sugestões</h1>
+    <p class="feedback-subtitle">
+      Compartilhe problemas e ideias com a equipe do SyncDB.
+    </p>
+  </header>
+
+  <article class="feed-composer">
+    <div class="feed-composer__head">
+      <div class="feed-avatar" [attr.data-kind]="tipoCompose">
+        {{ iniciaisUsuario() }}
+      </div>
+      <div class="feed-composer__meta">
+        <span class="feed-author">{{ nomeUsuario() }}</span>
+        <span class="feed-hint">Publicar como</span>
+      </div>
+    </div>
+
+    <div class="feed-compose-types" role="tablist">
+      <button
+        type="button"
+        class="feed-type-btn"
+        [class.feed-type-btn--active]="tipoCompose === 'bug'"
+        (click)="tipoCompose = 'bug'"
+      >
+        <i class="pi pi-bug"></i>
+        Bug
+      </button>
+      <button
+        type="button"
+        class="feed-type-btn feed-type-btn--sugestao"
+        [class.feed-type-btn--active]="tipoCompose === 'sugestao'"
+        (click)="tipoCompose = 'sugestao'"
+      >
+        <i class="pi pi-lightbulb"></i>
+        Sugestão
+      </button>
+    </div>
+
+    <input
+      pInputText
+      class="feed-composer__title w-full"
+      [(ngModel)]="titulo"
+      [placeholder]="
+        tipoCompose === 'bug'
+          ? 'Título do bug (ex.: erro na conexão SSH)'
+          : 'Título da sugestão (ex.: atalho no diagrama)'
+      "
+    />
+
+    <textarea
+      pTextarea
+      class="feed-composer__body w-full"
+      rows="4"
+      [(ngModel)]="descricao"
+      [placeholder]="
+        tipoCompose === 'bug'
+          ? 'O que aconteceu? Passos para reproduzir, mensagens de erro...'
+          : 'Descreva a ideia e como ela ajudaria no dia a dia...'
+      "
+    ></textarea>
+
+    <div class="feed-composer__actions">
+      <p-button
+        [label]="tipoCompose === 'bug' ? 'Publicar bug' : 'Publicar sugestão'"
+        icon="pi pi-send"
+        (click)="enviar()"
+        [loading]="enviando"
+        styleClass="action-press"
+      />
+    </div>
+  </article>
+
+  <div class="feed-toolbar">
+    <div class="feed-filters">
+      <button
+        type="button"
+        class="feed-filter"
+        [class.feed-filter--active]="filtroFeed === 'todos'"
+        (click)="filtroFeed = 'todos'"
+      >
+        Todos
+      </button>
+      <button
+        type="button"
+        class="feed-filter feed-filter--bug"
+        [class.feed-filter--active]="filtroFeed === 'bug'"
+        (click)="filtroFeed = 'bug'"
+      >
+        <i class="pi pi-bug"></i>
+        Bugs
+      </button>
+      <button
+        type="button"
+        class="feed-filter feed-filter--sugestao"
+        [class.feed-filter--active]="filtroFeed === 'sugestao'"
+        (click)="filtroFeed = 'sugestao'"
+      >
+        <i class="pi pi-lightbulb"></i>
+        Sugestões
+      </button>
+    </div>
+
+    @if (isDev) {
+      <button
+        type="button"
+        class="feed-scope-toggle"
+        [class.feed-scope-toggle--global]="verFeedGlobal"
+        (click)="verFeedGlobal = !verFeedGlobal"
+      >
+        <i class="pi" [ngClass]="verFeedGlobal ? 'pi-globe' : 'pi-user'"></i>
+        {{ verFeedGlobal ? 'Feed global' : 'Só meus' }}
+      </button>
+    }
+  </div>
+
+  @if (carregando) {
+    <div class="feed-loading">
+      <i class="pi pi-spin pi-spinner"></i>
+      Carregando feed...
+    </div>
+  } @else if (feedItens().length === 0) {
+    <div class="feed-empty">
+      <i class="pi pi-inbox"></i>
+      <p>Nenhuma publicação neste filtro ainda.</p>
+      <span>Seja o primeiro a enviar um bug ou uma sugestão.</span>
+    </div>
+  } @else {
+    <div class="feed-list">
+      @for (item of feedItens(); track item.id) {
+        <article
+          class="feed-card"
+          [class.feed-card--bug]="item.tipo === 'BUG'"
+          [class.feed-card--sugestao]="item.tipo === 'SUGESTAO'"
+        >
+          <div class="feed-card__accent"></div>
+          <div class="feed-card__inner">
+            <header class="feed-card__header">
+              <div class="feed-avatar feed-avatar--sm" [attr.data-kind]="item.tipo === 'BUG' ? 'bug' : 'sugestao'">
+                {{ iniciais(nomeExibicao(item)) }}
+              </div>
+              <div class="feed-card__who">
+                <span class="feed-author">{{ nomeExibicao(item) }}</span>
+                <time class="feed-time">{{ item.createdAt || 'Agora' }}</time>
+              </div>
+              <p-tag
+                [value]="labelTipo(item.tipo)"
+                [severity]="severityTipo(item.tipo)"
+                [rounded]="true"
+              />
+            </header>
+            <h2 class="feed-card__title">{{ item.titulo }}</h2>
+            <p class="feed-card__body">{{ item.descricao }}</p>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</div>

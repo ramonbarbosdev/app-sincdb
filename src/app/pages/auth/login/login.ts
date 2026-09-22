@@ -134,13 +134,6 @@ export class Login {
   }
 
   redirecionarPorOrganizacaoAtiva() {
-    const role = this.auth.getRoleOrganizacaoAtiva();
-
-    if (role === 'ROLE_DEV') {
-      this.router.navigate(['dev/home']);
-      return;
-    }
-
-    this.router.navigate(['client/sincronizacao-diagrama']);
+    this.router.navigate(this.auth.getDefaultAppRoute());
   }
 }
