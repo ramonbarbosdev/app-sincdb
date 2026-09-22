@@ -140,12 +140,55 @@ export class AppTopbar {
     return this.auth.getDefaultAppRoute();
   }
 
+  menuPerfil: MenuItem[] = [];
+
   ngOnInit(): void {
     this.auth.user$.subscribe((user) => {
       this.avatarImg = user?.img || '';
-      this.avatarNome = user?.nome || '';
+      this.avatarNome = user?.nome || user?.nmUsuario || '';
+      this.menuPerfil = this.buildMenuPerfil();
       this.cd.markForCheck();
     });
+  }
+
+  private buildMenuPerfil(): MenuItem[] {
+    const items: MenuItem[] = [
+      {
+        label: 'Perfil',
+        icon: 'pi pi-fw pi-user',
+        command: () => {
+          this.router.navigate(['client/perfil']);
+        },
+      },
+    ];
+
+    if (this.auth.isDevRole()) {
+      items.push({
+        label: 'Notificações desktop',
+        icon: 'pi pi-fw pi-bell',
+        command: () => {
+          this.router.navigate(['/dev/desktop-notificacoes']);
+        },
+      });
+    }
+
+    items.push(
+      {
+        label: 'Verificar atualizações',
+        icon: 'pi pi-refresh',
+        command: () => this.checkUpdates(),
+      },
+      { separator: true },
+      {
+        label: 'Sair',
+        icon: 'pi pi-fw pi-sign-out',
+        command: () => {
+          this.logout();
+        },
+      }
+    );
+
+    return items;
   }
 
   checkUpdates() {
@@ -174,32 +217,4 @@ export class AppTopbar {
   logout() {
     this.auth.logout();
   }
-  menuPerfil = [
-    {
-      label: 'Perfil',
-      icon: 'pi pi-fw pi-user',
-      command: () => {
-        this.router.navigate(['client/perfil']);
-      },
-    },
-     {
-        label: 'Verificar atualizações',
-        icon: 'pi pi-refresh',
-        command: () => this.checkUpdates()
-      },
-    // {
-    //   label: 'Configuração',
-    //   icon: 'pi pi-fw pi-cog',
-    // },
-    {
-      separator: true,
-    },
-    {
-      label: 'Sair',
-      icon: 'pi pi-fw pi-sign-out',
-      command: () => {
-        this.logout();
-      },
-    },
-  ];
 }

@@ -1,0 +1,140 @@
+<div class="desktop-notifications-page">
+  <div class="dn-layout">
+    <header class="dn-context">
+      <h1 class="dn-title">Notificações do desktop</h1>
+      <p class="dn-lead text-muted-color">
+        Preferências para o SyncDB Desktop (perfil dev). Ajuste aqui no navegador ou no app
+        instalado.
+      </p>
+
+      @if (!isDesktop) {
+        <div class="dn-banner" role="note">
+          <span class="dn-banner__icon" aria-hidden="true">
+            <i class="pi pi-info-circle"></i>
+          </span>
+          <p class="dn-banner__text">
+            No navegador você pode configurar as opções ao lado. O alerta na bandeja do sistema e
+            o botão de teste só funcionam com
+            <strong>SyncDB Desktop instalado</strong>.
+          </p>
+        </div>
+      } @else {
+        <ul class="dn-hints text-muted-color">
+          <li>Alertas nativos na bandeja do sistema operacional.</li>
+          <li>Respeita foco da janela quando “somente em segundo plano” estiver ativo.</li>
+          <li>Use o teste no rodapé do card para validar permissões do SO.</li>
+        </ul>
+      }
+    </header>
+
+    <section class="dn-panel" aria-labelledby="dn-prefs-heading">
+      <div class="dn-card">
+        <div class="dn-card__header">
+          <h2 id="dn-prefs-heading" class="dn-card__title">Preferências</h2>
+          <p class="dn-card__subtitle text-muted-color">
+            Categorias exibidas quando as notificações estão ativas.
+          </p>
+        </div>
+
+        <div class="dn-master">
+          <div class="dn-toggle-row dn-toggle-row--master">
+            <span class="dn-toggle-icon dn-toggle-icon--master" aria-hidden="true">
+              <i class="pi pi-bell"></i>
+            </span>
+            <div class="dn-toggle-copy">
+              <div class="dn-toggle-label">Ativar notificações do sistema</div>
+              <div class="dn-toggle-hint text-muted-color">
+                Interruptor geral para todas as categorias abaixo.
+              </div>
+            </div>
+            <p-toggleswitch
+              [(ngModel)]="prefs.enabled"
+              (ngModelChange)="onMasterChange()"
+              ariaLabel="Ativar notificações do sistema"
+            />
+          </div>
+        </div>
+
+        <div class="dn-children" [class.dn-children--off]="!prefs.enabled">
+          <div class="dn-toggle-row">
+            <span class="dn-toggle-icon" aria-hidden="true">
+              <i class="pi pi-check-circle"></i>
+            </span>
+            <div class="dn-toggle-copy">
+              <div class="dn-toggle-label">Sincronização concluída</div>
+            </div>
+            <p-toggleswitch
+              [(ngModel)]="prefs.syncSuccess"
+              [disabled]="!prefs.enabled"
+              (ngModelChange)="onPrefChange()"
+              ariaLabel="Notificar quando a sincronização concluir"
+            />
+          </div>
+
+          <div class="dn-toggle-row">
+            <span class="dn-toggle-icon" aria-hidden="true">
+              <i class="pi pi-exclamation-triangle"></i>
+            </span>
+            <div class="dn-toggle-copy">
+              <div class="dn-toggle-label">Erro na sincronização</div>
+            </div>
+            <p-toggleswitch
+              [(ngModel)]="prefs.syncError"
+              [disabled]="!prefs.enabled"
+              (ngModelChange)="onPrefChange()"
+              ariaLabel="Notificar erro na sincronização"
+            />
+          </div>
+
+          <div class="dn-toggle-row">
+            <span class="dn-toggle-icon" aria-hidden="true">
+              <i class="pi pi-download"></i>
+            </span>
+            <div class="dn-toggle-copy">
+              <div class="dn-toggle-label">Atualização pronta para instalar</div>
+            </div>
+            <p-toggleswitch
+              [(ngModel)]="prefs.updateReady"
+              [disabled]="!prefs.enabled"
+              (ngModelChange)="onPrefChange()"
+              ariaLabel="Notificar quando houver atualização pronta"
+            />
+          </div>
+
+          <div class="dn-toggle-row">
+            <span class="dn-toggle-icon" aria-hidden="true">
+              <i class="pi pi-moon"></i>
+            </span>
+            <div class="dn-toggle-copy">
+              <div class="dn-toggle-label">Somente em segundo plano</div>
+              <div class="dn-toggle-hint text-muted-color">
+                Não notificar quando a janela do SyncDB estiver em foco.
+              </div>
+            </div>
+            <p-toggleswitch
+              [(ngModel)]="prefs.onlyWhenUnfocused"
+              [disabled]="!prefs.enabled"
+              (ngModelChange)="onPrefChange()"
+              ariaLabel="Notificar somente em segundo plano"
+            />
+          </div>
+        </div>
+
+        <footer class="dn-card__footer">
+          <p-button
+            label="Enviar notificação de teste"
+            icon="pi pi-bell"
+            styleClass="w-full sm:w-auto"
+            [disabled]="!prefs.enabled || !isDesktop"
+            (onClick)="sendTestNotification()"
+          />
+          @if (!isDesktop) {
+            <span class="dn-footer-hint text-muted-color">
+              Disponível apenas no app desktop.
+            </span>
+          }
+        </footer>
+      </div>
+    </section>
+  </div>
+</div>

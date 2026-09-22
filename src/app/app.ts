@@ -7,6 +7,7 @@ import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { UpdateSystem } from "./components/update-system/update-system";
 import { SeasonalThemeService } from './services/seasonal-theme.service';
+import { DesktopNotificationEventsService } from './services/desktop-notification-events.service';
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, ButtonModule, ToastModule, ConfirmDialogModule, UpdateSystem],
@@ -18,6 +19,7 @@ export class App {
 
   baseService = inject(BaseService);
   private seasonal = inject(SeasonalThemeService);
+  private desktopNotificationEvents = inject(DesktopNotificationEventsService);
 
   waitForBackend() {
     const checkInterval = 1000; // 1 segundo

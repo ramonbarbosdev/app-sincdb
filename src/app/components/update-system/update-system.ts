@@ -5,17 +5,33 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { ProgressBarModule } from 'primeng/progressbar';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { environment } from '../../../environments/environment';
+import { UpdateUiPreviewScenario } from '../../services/update.service';
 
 @Component({
   selector: 'app-update-system',
-  imports: [CommonModule, FormsModule, ButtonModule, DialogModule, ProgressBarModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ButtonModule,
+    DialogModule,
+    ProgressBarModule,
+    ToggleSwitchModule,
+  ],
   templateUrl: './update-system.html',
   styleUrl: './update-system.scss',
 })
 export class UpdateSystem {
+  updateService = inject(UpdateService);
 
-  private updateService = inject(UpdateService);
-  isMacOS = this.detectMacOS();
+  readonly showDevPreview = !environment.production;
+  readonly dialogStyle = { width: 'min(460px, calc(100vw - 2rem))' };
+  previewAsMacOS = false;
+
+  get isMacOS(): boolean {
+    return this.previewAsMacOS || window.platform === 'darwin';
+  }
 
   updateAvailable$ = this.updateService.updateAvailable;
   versionInfo$ = this.updateService.versionInfo;
@@ -23,31 +39,52 @@ export class UpdateSystem {
   progress$ = this.updateService.progress;
   downloaded$ = this.updateService.downloaded;
   error$ = this.updateService.error;
+  updateNotAvailable$ = this.updateService.updateNotAvailable;
+  installFailed$ = this.updateService.installFailed;
+  fallbackUrl$ = this.updateService.fallbackUrl;
+  checking$ = this.updateService.checking;
+
   showUpdateDialog = false;
 
-
   ngOnInit() {
-    
-    this.updateAvailable$.subscribe(avail => {
+    this.updateAvailable$.subscribe((avail) => {
       if (avail) {
         this.showUpdateDialog = true;
       }
     });
 
-    this.error$.subscribe(error => {
+    this.updateNotAvailable$.subscribe((notAvailable) => {
+      if (notAvailable) {
+        this.showUpdateDialog = true;
+      }
+    });
+
+    this.error$.subscribe((error) => {
       if (error) {
         this.showUpdateDialog = true;
       }
     });
 
-    this.downloading$.subscribe(downloading => {
+    this.checking$.subscribe((checking) => {
+      if (checking) {
+        this.showUpdateDialog = true;
+      }
+    });
+
+    this.downloading$.subscribe((downloading) => {
       if (downloading) {
         this.showUpdateDialog = true;
       }
     });
 
-    this.downloaded$.subscribe(downloaded => {
+    this.downloaded$.subscribe((downloaded) => {
       if (downloaded) {
+        this.showUpdateDialog = true;
+      }
+    });
+
+    this.installFailed$.subscribe((failed) => {
+      if (failed) {
         this.showUpdateDialog = true;
       }
     });
@@ -58,6 +95,10 @@ export class UpdateSystem {
   }
 
   install() {
+    if (this.isMacOS) {
+      this.openLatestRelease();
+      return;
+    }
     this.updateService.installUpdate();
   }
 
@@ -69,10 +110,18 @@ export class UpdateSystem {
     this.showUpdateDialog = false;
   }
 
-  private detectMacOS(): boolean {
-    const platform = window.navigator.platform?.toLowerCase() || '';
-    const userAgent = window.navigator.userAgent?.toLowerCase() || '';
+  preview(scenario: UpdateUiPreviewScenario): void {
+    this.updateService.simulateUiPreview(scenario);
+    this.showUpdateDialog = true;
+  }
 
-    return platform.includes('mac') || userAgent.includes('mac os');
+  previewFlow(): void {
+    this.updateService.simulateUiPreviewFlow();
+    this.showUpdateDialog = true;
+  }
+
+  clearPreview(): void {
+    this.updateService.clearUiPreview();
+    this.showUpdateDialog = false;
   }
 }

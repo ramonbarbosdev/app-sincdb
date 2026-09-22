@@ -189,6 +189,10 @@ export class AuthService {
     return this.extrairRole(user);
   }
 
+  isDevRole(): boolean {
+    return this.getRoleOrganizacaoAtiva() === 'ROLE_DEV';
+  }
+
   /** Rota inicial após login ou ao acessar /client sem path. */
   getDefaultAppRoute(): string[] {
     if (this.getRoleOrganizacaoAtiva() === 'ROLE_DEV') {

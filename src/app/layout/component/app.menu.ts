@@ -5,7 +5,6 @@ import { MenuItem } from 'primeng/api';
 import { AppMenuitem } from './app.menuitem';
 import { LoadingService } from '../../services/loading.service';
 import { AuthService } from '../../auth/auth.service';
-
 @Component({
   selector: 'app-menu',
   standalone: true,
@@ -22,9 +21,13 @@ export class AppMenu {
   auth = inject(AuthService);
 
   ngOnInit() {
-    const role = this.auth.getRoleOrganizacaoAtiva();
+    if (this.auth.isDevRole()) {
+      const desktopNotificationItem: MenuItem = {
+        label: 'Notificações desktop',
+        icon: 'pi pi-fw pi-bell',
+        routerLink: ['/dev/desktop-notificacoes'],
+      };
 
-    if (role === 'ROLE_DEV') {
       this.model.push(
         {
           label: 'Início',

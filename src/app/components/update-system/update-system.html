@@ -1,132 +1,226 @@
 <p-dialog
-  header="Atualizacao disponivel"
+  header="Atualizações"
   [(visible)]="showUpdateDialog"
   [modal]="true"
   [closable]="true"
   [draggable]="false"
   styleClass="update-dialog"
-  [style]="{ width: '460px' }">
+  [style]="dialogStyle">
 
-  <ng-container *ngIf="error$ | async as error">
-    <div class="update-alert update-alert-error">
-      <i class="pi pi-exclamation-triangle"></i>
-      <div>
-        <strong>Nao foi possivel atualizar</strong>
-        <span>{{ error }}</span>
-      </div>
-    </div>
-  </ng-container>
-
-  <ng-container *ngIf="downloading$ | async">
-    <section class="update-hero">
+  <ng-container *ngIf="checking$ | async">
+    <section class="update-hero" role="status" aria-live="polite">
       <div class="update-icon">
-        <i class="pi pi-cloud-download"></i>
+        <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
       </div>
-
       <div>
-        <h2>Baixando atualizacao</h2>
-        <p>Aguarde enquanto a nova versao e baixada.</p>
+        <h2>Verificando atualizações</h2>
+        <p>Aguarde enquanto consultamos o GitHub Releases.</p>
       </div>
     </section>
-
-    <div class="update-progress">
-      <p-progressBar [value]="(progress$ | async) || 0"></p-progressBar>
-    </div>
   </ng-container>
 
-  <ng-container *ngIf="downloaded$ | async">
-    <section class="update-hero">
-      <div class="update-icon">
-        <i class="pi pi-check-circle"></i>
-      </div>
-
+  <ng-container *ngIf="(installFailed$ | async) && !(checking$ | async)">
+    <div class="update-alert update-alert-error" role="alert">
+      <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
       <div>
-        <h2>Atualizacao pronta para instalar</h2>
-        <p>O aplicativo sera reiniciado para concluir a instalacao.</p>
+        <strong>Não foi possível instalar automaticamente</strong>
+        <span>{{ error$ | async }}</span>
       </div>
-    </section>
-
+    </div>
     <div class="update-actions">
       <p-button
-        label="Agora Nao"
+        label="Agora não"
         icon="pi pi-times"
         severity="secondary"
         [outlined]="true"
         (onClick)="dismiss()">
       </p-button>
-
       <p-button
-        label="Instalar Agora"
-        icon="pi pi-refresh"
-        (onClick)="install()">
+        label="Baixar manualmente"
+        icon="pi pi-external-link"
+        (onClick)="openLatestRelease()">
       </p-button>
     </div>
   </ng-container>
 
-  <ng-container *ngIf="updateAvailable$ | async">
+  <ng-container
+    *ngIf="
+      (error$ | async) &&
+      !(installFailed$ | async) &&
+      !(checking$ | async) &&
+      !(downloading$ | async) &&
+      !(downloaded$ | async) &&
+      !(updateAvailable$ | async) &&
+      !(updateNotAvailable$ | async)
+    ">
+    <div class="update-alert update-alert-error" role="alert">
+      <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+      <div>
+        <strong>Não foi possível atualizar</strong>
+        <span>{{ error$ | async }}</span>
+      </div>
+    </div>
+    <div class="update-actions">
+      <p-button label="Fechar" severity="secondary" [outlined]="true" (onClick)="dismiss()" />
+    </div>
+  </ng-container>
+
+  <ng-container
+    *ngIf="
+      (updateNotAvailable$ | async) &&
+      !(checking$ | async) &&
+      !(downloading$ | async) &&
+      !(downloaded$ | async) &&
+      !(updateAvailable$ | async)
+    ">
+    <section class="update-hero">
+      <div class="update-icon update-icon--success">
+        <i class="pi pi-check-circle" aria-hidden="true"></i>
+      </div>
+      <div>
+        <h2>Você já está na versão mais recente</h2>
+        <p>Nenhuma atualização foi encontrada no momento.</p>
+      </div>
+    </section>
+    <div class="update-actions">
+      <p-button label="Fechar" (onClick)="dismiss()" />
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="downloading$ | async">
+    <section class="update-hero" role="status" aria-live="polite">
+      <div class="update-icon">
+        <i class="pi pi-cloud-download" aria-hidden="true"></i>
+      </div>
+      <div>
+        <h2>Baixando atualização</h2>
+        <p>Aguarde enquanto a nova versão é baixada.</p>
+      </div>
+    </section>
+    <div class="update-progress">
+      <div class="update-progress__header">
+        <span class="update-progress__label">Progresso</span>
+        <span class="update-progress__value">{{ (progress$ | async) ?? 0 }}%</span>
+      </div>
+      <p-progressBar [value]="(progress$ | async) ?? 0" [showValue]="false"></p-progressBar>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="downloaded$ | async">
+    <section class="update-hero">
+      <div class="update-icon update-icon--success">
+        <i class="pi pi-check-circle" aria-hidden="true"></i>
+      </div>
+      <div>
+        <h2>Atualização pronta para instalar</h2>
+        <p *ngIf="!isMacOS">O aplicativo será reiniciado para concluir a instalação.</p>
+        <p *ngIf="isMacOS">No macOS, baixe o instalador na página da release.</p>
+      </div>
+    </section>
+    <div class="update-actions">
+      <p-button
+        label="Agora não"
+        icon="pi pi-times"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="dismiss()">
+      </p-button>
+      <p-button
+        *ngIf="!isMacOS"
+        label="Instalar agora"
+        icon="pi pi-refresh"
+        (onClick)="install()">
+      </p-button>
+      <p-button
+        *ngIf="isMacOS"
+        label="Abrir release no GitHub"
+        icon="pi pi-external-link"
+        (onClick)="openLatestRelease()">
+      </p-button>
+    </div>
+  </ng-container>
+
+  <ng-container
+    *ngIf="
+      (updateAvailable$ | async) &&
+      !(downloading$ | async) &&
+      !(downloaded$ | async) &&
+      !(checking$ | async)
+    ">
     <section class="update-hero">
       <div class="update-icon">
-        <i class="pi pi-download"></i>
+        <i class="pi pi-download" aria-hidden="true"></i>
       </div>
-
       <div>
-        <h2>Nova versao do SyncDB Desktop</h2>
+        <h2>Nova versão do SyncDB Desktop</h2>
         <p *ngIf="!isMacOS">
-          Uma atualizacao esta disponivel. No Windows e Linux, o aplicativo pode baixar
-          e instalar automaticamente.
+          Uma atualização está disponível. Clique em <strong>Baixar atualização</strong> para iniciar o download.
         </p>
         <p *ngIf="isMacOS">
-          Uma atualizacao esta disponivel. No macOS, a instalacao e feita manualmente
-          pela pagina oficial da release.
+          Uma atualização está disponível. No macOS, a instalação é feita manualmente pela release no GitHub.
         </p>
       </div>
     </section>
 
     <dl class="update-versions" *ngIf="versionInfo$ | async as versionInfo">
       <div>
-        <dt>Versao atual</dt>
+        <dt>Versão atual</dt>
         <dd>{{ versionInfo.currentVersion }}</dd>
       </div>
-
       <div>
-        <dt>Versao disponivel</dt>
+        <dt>Versão disponível</dt>
         <dd>{{ versionInfo.availableVersion }}</dd>
       </div>
     </dl>
 
-    <div class="update-note" *ngIf="!isMacOS">
-      <i class="pi pi-info-circle"></i>
-      <span>Se o download automatico falhar, abra a pagina da release e baixe o instalador manualmente.</span>
-    </div>
-
-    <div class="update-note" *ngIf="isMacOS">
-      <i class="pi pi-apple"></i>
-      <span>Baixe o instalador mais recente, substitua o aplicativo atual e abra novamente.</span>
-    </div>
-
     <div class="update-actions">
       <p-button
-        label="Agora Nao"
+        label="Agora não"
         icon="pi pi-times"
         severity="secondary"
         [outlined]="true"
         (onClick)="dismiss()">
       </p-button>
-
       <p-button
-        [label]="isMacOS ? 'Baixar no macOS' : 'Abrir Release'"
+        *ngIf="isMacOS"
+        label="Abrir release no GitHub"
         icon="pi pi-external-link"
-        [severity]="isMacOS ? undefined : 'secondary'"
-        [outlined]="!isMacOS"
         (onClick)="openLatestRelease()">
       </p-button>
-
-      <p-button
-        *ngIf="!isMacOS"
-        label="Baixar Atualizacao"
-        icon="pi pi-download"
-        (onClick)="update()">
-      </p-button>
+      <ng-container *ngIf="!isMacOS">
+        <p-button
+          label="Ver release"
+          icon="pi pi-external-link"
+          severity="secondary"
+          [link]="true"
+          (onClick)="openLatestRelease()">
+        </p-button>
+        <p-button
+          label="Baixar atualização"
+          icon="pi pi-download"
+          (onClick)="update()">
+        </p-button>
+      </ng-container>
     </div>
   </ng-container>
 </p-dialog>
+
+@if (showDevPreview) {
+  <aside class="update-dev-preview" aria-label="Simulador de atualização (dev)">
+    <p class="update-dev-preview__title">Preview updater (dev)</p>
+    <div class="update-dev-preview__row">
+      <span>Layout macOS</span>
+      <p-toggleswitch [(ngModel)]="previewAsMacOS" />
+    </div>
+    <div class="update-dev-preview__actions">
+      <p-button size="small" label="Fluxo" (onClick)="previewFlow()" />
+      <p-button size="small" label="Disponivel" (onClick)="preview('available')" />
+      <p-button size="small" label="Baixando" (onClick)="preview('downloading')" />
+      <p-button size="small" label="Pronta" (onClick)="preview('downloaded')" />
+      <p-button size="small" label="Atualizado" (onClick)="preview('not-available')" />
+      <p-button size="small" label="Erro" severity="danger" (onClick)="preview('error')" />
+      <p-button size="small" label="Install fail" severity="warn" (onClick)="preview('install-failed')" />
+      <p-button size="small" label="Limpar" severity="secondary" [outlined]="true" (onClick)="clearPreview()" />
+    </div>
+  </aside>
+}

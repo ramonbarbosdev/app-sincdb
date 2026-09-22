@@ -18,6 +18,7 @@ import { SqlEditorPage } from './features/sql-editor/pages/sql-editor.page';
 import { SyncDiagramPage } from './features/sync-diagram/pages/sync-diagram.page';
 import { ForumPage } from './pages/client/forum/forum.page';
 import { ClientDefaultRedirect } from './pages/client/client-default-redirect';
+import { DesktopNotificationsPage } from './pages/dev/desktop-notifications/desktop-notifications.page';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
@@ -36,6 +37,7 @@ export const routes: Routes = [
       { path: 'empresa', component: Empresalist },
       { path: 'parametro', component: ParametroMasterList },
       { path: 'sazonal', component: SeasonalAdminPage },
+      { path: 'desktop-notificacoes', component: DesktopNotificationsPage },
     ],
   },
   {

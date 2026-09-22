@@ -1,0 +1,220 @@
+.desktop-notifications-page {
+  width: 100%;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 1.75rem 1.25rem 3rem;
+
+  @media (min-width: 768px) {
+    padding: 2.25rem 1.75rem 4rem;
+  }
+}
+
+.dn-layout {
+  display: grid;
+  gap: 2rem;
+  align-items: start;
+
+  @media (min-width: 992px) {
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 26rem);
+    gap: 2.5rem 3.5rem;
+  }
+}
+
+.dn-context {
+  min-width: 0;
+}
+
+.dn-title {
+  margin: 0 0 0.875rem;
+  font-size: clamp(1.5rem, 2.5vw, 1.75rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.dn-lead {
+  margin: 0 0 1.75rem;
+  max-width: 36rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.dn-banner {
+  display: flex;
+  gap: 0.875rem;
+  align-items: flex-start;
+  padding: 1rem 1.125rem;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--p-blue-500, #3b82f6) 28%, transparent);
+  background: color-mix(in srgb, var(--p-blue-500, #3b82f6) 10%, var(--surface-card, #fff));
+  max-width: 36rem;
+}
+
+.dn-banner__icon {
+  flex-shrink: 0;
+  width: 1.35rem;
+  height: 1.35rem;
+  display: grid;
+  place-items: center;
+  color: var(--p-blue-600, #2563eb);
+  font-size: 1.125rem;
+  margin-top: 0.1rem;
+}
+
+.dn-banner__text {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--text-color, #334155);
+
+  strong {
+    font-weight: 600;
+    color: var(--text-color, #0f172a);
+  }
+}
+
+.dn-hints {
+  margin: 0;
+  padding-left: 1.15rem;
+  max-width: 36rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+
+  li + li {
+    margin-top: 0.5rem;
+  }
+}
+
+.dn-panel {
+  min-width: 0;
+  width: 100%;
+
+  @media (min-width: 992px) {
+    position: sticky;
+    top: 5.5rem;
+  }
+}
+
+.dn-card {
+  border-radius: 0.875rem;
+  border: 1px solid var(--surface-border, rgb(0 0 0 / 8%));
+  background: var(--surface-card, #fff);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
+  overflow: hidden;
+}
+
+.dn-card__header {
+  padding: 1.25rem 1.35rem 1rem;
+  border-bottom: 1px solid var(--surface-border, rgb(0 0 0 / 6%));
+}
+
+.dn-card__title {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+.dn-card__subtitle {
+  margin: 0.35rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.dn-master {
+  padding: 0.35rem 0;
+  background: color-mix(in srgb, var(--surface-ground, #f8fafc) 65%, var(--surface-card, #fff));
+  border-bottom: 1px solid var(--surface-border, rgb(0 0 0 / 8%));
+}
+
+.dn-children {
+  display: flex;
+  flex-direction: column;
+  padding: 0.35rem 0 0.25rem;
+  transition: opacity 0.2s ease;
+
+  &--off {
+    opacity: 0.45;
+  }
+}
+
+.dn-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.35rem 0.85rem 1.15rem;
+
+  & + & {
+    border-top: 1px solid color-mix(in srgb, var(--surface-border, #e2e8f0) 70%, transparent);
+  }
+
+  &--master {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    border-top: none;
+  }
+}
+
+.dn-children .dn-toggle-row {
+  padding-left: 1.65rem;
+}
+
+.dn-toggle-icon {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  display: grid;
+  place-items: center;
+  font-size: 0.95rem;
+  color: var(--p-primary-color, #2b55ff);
+  background: color-mix(in srgb, var(--p-primary-color, #2b55ff) 12%, transparent);
+
+  &--master {
+    width: 2.25rem;
+    height: 2.25rem;
+    font-size: 1rem;
+  }
+}
+
+.dn-children--off .dn-toggle-icon {
+  color: var(--text-color-secondary, #64748b);
+  background: color-mix(in srgb, var(--surface-500, #64748b) 12%, transparent);
+}
+
+.dn-toggle-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.dn-toggle-label {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.dn-toggle-hint {
+  margin-top: 0.2rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.dn-card__footer {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.65rem;
+  padding: 1.1rem 1.35rem 1.25rem;
+  border-top: 1px solid var(--surface-border, rgb(0 0 0 / 8%));
+  background: color-mix(in srgb, var(--surface-ground, #f8fafc) 40%, var(--surface-card, #fff));
+
+  @media (min-width: 480px) {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+}
+
+.dn-footer-hint {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
