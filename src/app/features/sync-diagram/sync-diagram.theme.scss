@@ -24,7 +24,7 @@
 
 /* Dark — Foblex / IDE escuro */
 :host-context(.sync-diagram-canvas-theme-dark) {
-  --sync-diagram-canvas-bg: #0c0e17;
+  --sync-diagram-canvas-bg: var(--sincdb-app-canvas-bg, #0c0e17);
   --sync-diagram-canvas-dot-rgb: 160, 166, 194;
   --sync-diagram-canvas-dot-alpha: 0.14;
   --sync-diagram-rail-bg: #15172a;
@@ -49,7 +49,7 @@
 
 /* Light — Foblex / IDE claro */
 :host-context(.sync-diagram-canvas-theme-light) {
-  --sync-diagram-canvas-bg: #e4e7f0;
+  --sync-diagram-canvas-bg: var(--sincdb-app-canvas-bg, #e4e7f0);
   --sync-diagram-canvas-dot-rgb: 72, 68, 96;
   --sync-diagram-canvas-dot-alpha: 0.16;
   --sync-diagram-rail-bg: #ffffff;

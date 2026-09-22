@@ -78,6 +78,13 @@ export class LayoutService {
 
   isOverlay = computed(() => this.layoutConfig().menuMode === 'overlay');
 
+  /** Navbar alinhada à faixa à direita da sidebar (desktop, menu estático aberto). */
+  topbarAlignContentBand = computed(
+    () =>
+      this.layoutConfig().menuMode === 'static' &&
+      !this.layoutState().staticMenuDesktopInactive
+  );
+
   transitionComplete = signal<boolean>(false);
 
   private initialized = false;

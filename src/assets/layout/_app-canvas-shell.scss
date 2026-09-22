@@ -1,0 +1,30 @@
+/* Fundo global alinhado ao canvas do mapa de sincronização (cor + grid de pontos). */
+
+@mixin sincdb-app-canvas-background {
+    background-color: var(--sincdb-app-canvas-bg);
+    background-image: radial-gradient(
+        circle,
+        var(--sincdb-app-canvas-dot-color) var(--sincdb-app-canvas-dot-size),
+        transparent calc(var(--sincdb-app-canvas-dot-size) + 0.5px)
+    );
+    background-size: var(--sincdb-app-canvas-dot-gap) var(--sincdb-app-canvas-dot-gap);
+}
+
+html {
+    @include sincdb-app-canvas-background;
+    background-attachment: fixed;
+}
+
+body {
+    background: transparent;
+}
+
+.layout-wrapper {
+    min-height: 100vh;
+    background: transparent;
+}
+
+.layout-main-container,
+.layout-main {
+    background: transparent;
+}

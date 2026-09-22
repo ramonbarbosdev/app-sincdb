@@ -20,7 +20,10 @@ import { UpdateService } from '../../services/update.service';
     Menu,
     AvatarModule,
   ],
-  template: ` <div class="layout-topbar">
+  template: ` <div
+    class="layout-topbar"
+    [class.layout-topbar--content-band]="layoutService.topbarAlignContentBand()"
+  >
     <div class="layout-topbar-logo-container">
       <button
         class="layout-menu-button layout-topbar-action"

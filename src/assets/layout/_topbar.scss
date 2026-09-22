@@ -5,20 +5,18 @@
     height: var(--layout-topbar-height);
     z-index: 997;
     top: var(--layout-topbar-float-top);
-    left: 50%;
-    right: auto;
-    width: min(var(--layout-topbar-max-width), calc(100vw - (var(--layout-topbar-float-x) * 2)));
-    max-width: calc(100vw - (var(--layout-topbar-float-x) * 2));
-    transform: translateX(-50%);
+    left: var(--layout-topbar-float-x);
+    right: var(--layout-topbar-float-x);
+    width: auto;
+    max-width: none;
+    transform: none;
     padding: 0 1.25rem;
     border-radius: var(--layout-glass-radius);
-    border: 1px solid var(--layout-glass-border, rgba(255, 255, 255, 0.08));
-    background: rgba(255, 255, 255, 0.45);
-    backdrop-filter: blur(12px) saturate(1.2);
-    -webkit-backdrop-filter: blur(12px) saturate(1.2);
-    box-shadow:
-        0 20px 50px rgba(0, 0, 0, 0.18),
-        0 1px 0 rgba(255, 255, 255, 0.06) inset;
+    border: 1px solid var(--layout-topbar-border);
+    background: var(--layout-topbar-bg);
+    backdrop-filter: blur(14px) saturate(1.12);
+    -webkit-backdrop-filter: blur(14px) saturate(1.12);
+    box-shadow: var(--layout-topbar-shadow);
     transition:
         width var(--layout-section-transition-duration),
         transform var(--layout-section-transition-duration);
@@ -125,11 +123,11 @@
 }
 
 :root[class*='app-dark'] .layout-topbar {
-    background: var(--layout-glass-bg-dark);
-    border-color: var(--layout-glass-border);
-    box-shadow:
-        0 24px 56px rgba(0, 0, 0, 0.55),
-        0 1px 0 rgba(255, 255, 255, 0.04) inset;
+    background: var(--layout-topbar-bg);
+    border-color: var(--layout-topbar-border);
+    box-shadow: var(--layout-topbar-shadow);
+    backdrop-filter: blur(14px) saturate(1.12);
+    -webkit-backdrop-filter: blur(14px) saturate(1.12);
 }
 
 .layout-topbar-logo,
@@ -144,23 +142,33 @@
         --layout-topbar-float-x: 1.75rem;
     }
 
-    /* Sidebar aberta: navbar centralizada só na faixa de conteúdo */
+    /* Sidebar visível: mesma largura da área de conteúdo (main-container) */
+    .layout-topbar.layout-topbar--content-band,
     .layout-wrapper.layout-static:not(.layout-static-inactive) .layout-topbar {
-        left: calc(var(--layout-main-offset) + (var(--layout-content-band-width) / 2));
-        width: min(var(--layout-topbar-max-width), var(--layout-content-band-width));
-        max-width: var(--layout-content-band-width);
-        transform: translateX(-50%);
+        left: var(--layout-main-offset);
+        right: var(--layout-topbar-float-x);
+        width: auto;
+        max-width: none;
+        transform: none;
+    }
+
+    .layout-wrapper.layout-static.layout-static-inactive .layout-topbar {
+        left: var(--layout-topbar-float-x);
+        right: var(--layout-topbar-float-x);
+        width: auto;
+        max-width: none;
+        transform: none;
     }
 }
 
 @media (max-width: 991px) {
     .layout-topbar {
-        left: 50%;
-        right: auto;
+        left: 1rem;
+        right: 1rem;
         top: 1rem;
-        width: calc(100vw - 2rem);
-        max-width: calc(100vw - 2rem);
-        transform: translateX(-50%);
+        width: auto;
+        max-width: none;
+        transform: none;
         padding: 0 1rem;
     }
 

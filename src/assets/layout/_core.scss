@@ -1,4 +1,10 @@
 :root {
+    /* Canvas shell (mesmos valores do sync-diagram — tema claro) */
+    --sincdb-app-canvas-bg: #e4e7f0;
+    --sincdb-app-canvas-dot-color: rgba(72, 68, 96, 0.16);
+    --sincdb-app-canvas-dot-gap: 22px;
+    --sincdb-app-canvas-dot-size: 1px;
+
     --layout-topbar-float-top: 1.25rem;
     --layout-topbar-float-x: 1.5rem;
     --layout-glass-radius: 16px;
@@ -11,9 +17,25 @@
     --layout-sidebar-left: 1.5rem;
     --layout-glass-bg-dark: rgba(15, 15, 15, 0.55);
     --layout-glass-border: rgba(255, 255, 255, 0.08);
+    /* Topbar: vidro leve sobre o canvas (não opaco, não 100% transparente) */
+    --layout-topbar-bg: color-mix(in srgb, var(--sincdb-app-canvas-bg) 40%, rgba(255, 255, 255, 0.55));
+    --layout-topbar-border: rgba(15, 23, 42, 0.1);
+    --layout-topbar-shadow: 0 10px 36px rgba(15, 23, 42, 0.08);
     --layout-topbar-max-width: 72rem;
     --layout-main-offset: calc(var(--layout-sidebar-left) + var(--layout-sidebar-width) + var(--layout-float-gap));
     --layout-content-band-width: calc(100vw - var(--layout-main-offset) - var(--layout-topbar-float-x));
+    /* Centro horizontal da faixa à direita da sidebar */
+    --layout-topbar-content-center: calc(
+        (var(--layout-main-offset) + 100vw - var(--layout-topbar-float-x)) / 2
+    );
+}
+
+:root[class*='app-dark'] {
+    --sincdb-app-canvas-bg: #0c0e17;
+    --sincdb-app-canvas-dot-color: rgba(160, 166, 194, 0.14);
+    --layout-topbar-bg: color-mix(in srgb, var(--sincdb-app-canvas-bg) 75%, rgba(0, 0, 0, 0.35));
+    --layout-topbar-border: rgba(255, 255, 255, 0.1);
+    --layout-topbar-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
 }
 
 html {
@@ -24,7 +46,6 @@ html {
 body {
     font-family: 'Lato', sans-serif;
     color: var(--text-color);
-    background-color: var(--surface-ground);
     margin: 0;
     padding: 0;
     min-height: 100%;
@@ -35,8 +56,4 @@ body {
 
 a {
     text-decoration: none;
-}
-
-.layout-wrapper {
-    min-height: 100vh;
 }

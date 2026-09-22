@@ -86,9 +86,13 @@
 
 .canvas-toolbar {
   position: absolute;
-  left: 50%;
+  left: 0;
+  right: 0;
   top: 0.75rem;
-  transform: translateX(-50%);
+  width: fit-content;
+  max-width: calc(100% - 1.5rem);
+  margin-inline: auto;
+  transform: none;
   display: flex;
   align-items: center;
   gap: 0.2rem;
