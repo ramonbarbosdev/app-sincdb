@@ -1,7 +1,9 @@
 import { applySincdbCssTokens } from './app/theme/apply-sincdb-css-tokens';
+import { applyDesktopApiUrlFromPreload } from './app/utils/apply-desktop-api-url';
 import { bootstrapApplication } from '@angular/platform-browser';
 
 applySincdbCssTokens();
+applyDesktopApiUrlFromPreload();
 import { appConfig } from './app/app.config';
 import { App } from './app/app';
 import { ConfirmationService, MessageService } from 'primeng/api';

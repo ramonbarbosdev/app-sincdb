@@ -3,6 +3,9 @@ export {};
 declare global {
   interface Window {
     desktop?: {
+      backendPort?: number;
+      apiBaseUrl?: string;
+      apiWebSocketUrl?: string;
       showNotification: (payload: {
         title?: string;
         body: string;
