@@ -12,8 +12,11 @@ import {
 import {
   countOperationLogErrors,
   formatOperationScopeSubtitle,
+  formatTabelaAfetadaError,
   groupOperationLogs,
   isLikelyErrorMessage,
+  resolveOperationErrorSummary,
+  SyncErrorSummary,
   OperationLogGroup,
   OperationLogLevel,
   OperationPhase,
@@ -46,6 +49,14 @@ export class SyncOperationNodeCardComponent {
   readonly operation = computed(() => {
     this.state.operations();
     return this.state.getOperation(this.operationId);
+  });
+
+  readonly errorSummary = computed((): SyncErrorSummary => {
+    const op = this.operation();
+    if (!op) {
+      return { headline: 'A operação falhou. Tente novamente.' };
+    }
+    return resolveOperationErrorSummary(op);
   });
 
   displayTitle(phase: OperationPhase): string {
@@ -117,8 +128,7 @@ export class SyncOperationNodeCardComponent {
   }
 
   primaryError(): string {
-    const op = this.operation();
-    return op?.errors?.[0] ?? 'A operação falhou. Tente novamente.';
+    return this.errorSummary().headline;
   }
 
   hasDetailContent(operation: SyncOperation): boolean {
@@ -146,14 +156,11 @@ export class SyncOperationNodeCardComponent {
   }
 
   tableErrors(operation: SyncOperation): TabelaAfetadaDTO[] {
-    const loggedTables = new Set(
-      (operation.terminalLogs ?? [])
-        .filter((e) => e.level === 'table')
-        .map((e) => e.table ?? e.message)
-    );
-    return (operation.tabelasAfetadas ?? []).filter(
-      (row) => row.erro && row.tabela && !loggedTables.has(row.tabela)
-    );
+    return (operation.tabelasAfetadas ?? []).filter((row) => row.erro);
+  }
+
+  tableErrorMessage(row: TabelaAfetadaDTO): string {
+    return formatTabelaAfetadaError(row);
   }
 
   readonly isLikelyErrorMessage = isLikelyErrorMessage;

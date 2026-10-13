@@ -264,6 +264,78 @@ export function isLikelyErrorMessage(message: string): boolean {
   );
 }
 
+export interface SyncErrorSummary {
+  headline: string;
+  table?: string;
+  stage?: string;
+  detail?: string;
+}
+
+const SYNC_ERROR_LINE = /^Tabela (.+?) · Etapa (.+?): (.+)$/;
+
+export function formatTabelaAfetadaError(row: TabelaAfetadaDTO): string {
+  if (!row.erro) return '';
+  if (row.erro.includes('Etapa ') && row.erro.includes('Tabela ')) {
+    return row.erro;
+  }
+  if (row.tabela && row.acao) {
+    return `Tabela ${row.tabela} · Etapa ${row.acao}: ${row.erro}`;
+  }
+  return row.erro;
+}
+
+export function stripLegacySyncErrorPrefix(message: string): string {
+  return message
+    .replace(/^\[ERROR\]\s*/i, '')
+    .replace(/^Falha na transação geral:\s*/i, '')
+    .replace(/^Falha na sincronização:\s*/i, '')
+    .trim();
+}
+
+export function parseStructuredSyncErrorLine(message: string): SyncErrorSummary | null {
+  const text = stripLegacySyncErrorPrefix(message);
+  const match = text.match(SYNC_ERROR_LINE);
+  if (!match) return null;
+  const headline = match[3].split(' — ')[0]?.trim() || match[3];
+  return {
+    table: match[1],
+    stage: match[2],
+    headline,
+    detail: text,
+  };
+}
+
+export function resolveOperationErrorSummary(op: SyncOperation): SyncErrorSummary {
+  const row = (op.tabelasAfetadas ?? []).find((t) => t.erro);
+  if (row) {
+    const detail = formatTabelaAfetadaError(row);
+    const parsed = parseStructuredSyncErrorLine(detail);
+    if (parsed) return parsed;
+    return { headline: detail, detail };
+  }
+
+  for (const err of op.errors ?? []) {
+    const parsed = parseStructuredSyncErrorLine(err);
+    if (parsed) return parsed;
+  }
+
+  for (const entry of op.terminalLogs ?? []) {
+    if (entry.level === 'error') {
+      const parsed = parseStructuredSyncErrorLine(entry.message);
+      if (parsed) return parsed;
+    }
+  }
+
+  const fallback =
+    op.errors?.[0] ?? op.terminalLogs?.find((e) => e.level === 'error')?.message;
+  if (fallback) {
+    const cleaned = stripLegacySyncErrorPrefix(fallback);
+    return { headline: cleaned, detail: cleaned };
+  }
+
+  return { headline: 'A operação falhou. Abra o registro para ver o detalhe.' };
+}
+
 export function countOperationLogErrors(
   entries: OperationLogEntry[],
   errors?: string[],

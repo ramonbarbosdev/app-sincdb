@@ -12,6 +12,7 @@ import {
   formatOperationScopeSubtitle,
   OperationActionKind,
   parseTerminalLogLine,
+  resolveOperationErrorSummary,
   SyncDiagramContext,
   SyncDiagramMode,
   SyncOperation,
@@ -213,12 +214,18 @@ export class SyncDiagramOperationService implements OnDestroy {
     this.notifyOperationIdle();
   }
 
-  failOperation(operationId: string, errors?: string[]): void {
+  failOperation(
+    operationId: string,
+    errors?: string[],
+    tabelasAfetadas?: TabelaAfetadaDTO[]
+  ): void {
     if (this.isCancelled(operationId)) return;
+    const op = this.state.getOperation(operationId);
     this.state.patchOperation(operationId, {
       phase: 'erro',
       progress: 0,
       errors: errors?.length ? errors : ['A operação falhou. Tente novamente.'],
+      tabelasAfetadas: tabelasAfetadas ?? op?.tabelasAfetadas,
     });
     if (this.activeOperationId === operationId) {
       this.releaseOperationTracking();
@@ -502,7 +509,11 @@ export class SyncDiagramOperationService implements OnDestroy {
   }
 
   private isTerminalTransactionFailure(msg: string): boolean {
-    return /Falha na transação geral/i.test(msg);
+    const text = msg.replace(/^\[ERROR\]\s*/i, '').trim();
+    return (
+      /Falha na transação geral/i.test(text) ||
+      /^Tabela .+ · Etapa /i.test(text)
+    );
   }
 
   private failOperationFromTerminalLog(operationId: string, msg: string): void {
@@ -510,8 +521,13 @@ export class SyncDiagramOperationService implements OnDestroy {
     if (!op || this.state.isTerminalOperationPhase(op.phase)) return;
 
     const message = msg.replace(/^\[ERROR\]\s*/i, '').trim();
-    this.progressoSync.marcarErro(message || 'Falha na sincronização');
-    this.failOperation(operationId, [message || 'Falha na sincronização']);
+    const summary = resolveOperationErrorSummary({
+      ...op,
+      errors: [message],
+    });
+    const primary = summary.detail ?? summary.headline ?? message;
+    this.progressoSync.marcarErro(primary);
+    this.failOperation(operationId, [primary], op.tabelasAfetadas);
   }
 
   private isCancelled(operationId: string): boolean {

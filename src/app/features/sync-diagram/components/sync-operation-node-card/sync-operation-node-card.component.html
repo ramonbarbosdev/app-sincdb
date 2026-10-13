@@ -84,7 +84,27 @@
         </header>
 
         <div class="operation-detail-body">
-          <ul class="operation-api-errors" *ngIf="operation.errors?.length">
+          <div class="sync-error-hero" *ngIf="operation.phase === 'erro'">
+            <div class="sync-error-hero__meta" *ngIf="errorSummary().table || errorSummary().stage">
+              <span *ngIf="errorSummary().table">
+                <i class="pi pi-table" aria-hidden="true"></i>
+                {{ errorSummary().table }}
+              </span>
+              <span *ngIf="errorSummary().stage">
+                <i class="pi pi-cog" aria-hidden="true"></i>
+                {{ errorSummary().stage }}
+              </span>
+            </div>
+            <p class="sync-error-hero__headline">{{ errorSummary().headline }}</p>
+            <p
+              class="sync-error-hero__detail"
+              *ngIf="errorSummary().detail && errorSummary().detail !== errorSummary().headline"
+            >
+              {{ errorSummary().detail }}
+            </p>
+          </div>
+
+          <ul class="operation-api-errors" *ngIf="operation.errors?.length && tableErrors(operation).length === 0">
             <li *ngFor="let err of operation.errors" class="log-line log-error">
               <span class="log-tag" aria-hidden="true">
                 <i class="pi pi-times-circle"></i>
@@ -118,7 +138,7 @@
               <span class="log-tag" aria-hidden="true">
                 <i class="pi pi-times-circle"></i>
               </span>
-              <span class="log-text">{{ row.erro }}</span>
+              <span class="log-text">{{ tableErrorMessage(row) }}</span>
             </div>
           </div>
 

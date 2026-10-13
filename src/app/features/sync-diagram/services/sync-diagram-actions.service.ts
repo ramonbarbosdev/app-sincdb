@@ -505,13 +505,20 @@ export class SyncDiagramActionsService {
     return existing ? this.state.isOperationRunning(existing) : false;
   }
 
-  private failOp(opId: string, message: string, onFinished?: () => void): void {
+  private failOp(
+    opId: string,
+    message: string,
+    onFinished?: () => void,
+    extras?: { errors?: string[]; tabelas_afetadas?: TabelaAfetadaDTO[] }
+  ): void {
     if (this.isOperationCancelled(opId)) {
       onFinished?.();
       return;
     }
-    this.progressoSync.marcarErro(message);
-    this.operations.failOperation(opId, [message]);
+    const errors = extras?.errors?.length ? extras.errors : [message];
+    const primary = errors[0] ?? message;
+    this.progressoSync.marcarErro(primary);
+    this.operations.failOperation(opId, errors, extras?.tabelas_afetadas);
     onFinished?.();
   }
 
@@ -731,12 +738,16 @@ export class SyncDiagramActionsService {
       },
       error: (err) => {
         const body = err?.error;
+        const errors = this.extractErrorMessages(body);
+        const tabelas = Array.isArray(body?.tabelas_afetadas)
+          ? (body.tabelas_afetadas as TabelaAfetadaDTO[])
+          : undefined;
         const message =
+          errors?.[0] ||
           (typeof body?.detalhes === 'string' && body.detalhes) ||
           (typeof body?.error === 'string' && body.error) ||
-          (typeof body?.errors?.[0] === 'string' && body.errors[0]) ||
           'Falha na sincronização de estrutura';
-        this.failOp(opId!, message, onFinished);
+        this.failOp(opId!, message, onFinished, { errors, tabelas_afetadas: tabelas });
       },
     });
   }
@@ -889,13 +900,25 @@ export class SyncDiagramActionsService {
       },
       error: (err) => {
         const body = err?.error;
+        const errors = this.extractErrorMessages(body);
+        const tabelas = Array.isArray(body?.tabelas_afetadas)
+          ? (body.tabelas_afetadas as TabelaAfetadaDTO[])
+          : undefined;
         const message =
+          errors?.[0] ||
           (typeof body?.detalhes === 'string' && body.detalhes) ||
           (typeof body?.error === 'string' && body.error) ||
-          (typeof body?.errors?.[0] === 'string' && body.errors[0]) ||
           'Falha na sincronização de dados';
-        this.failOp(opId!, message, onFinished);
+        this.failOp(opId!, message, onFinished, { errors, tabelas_afetadas: tabelas });
       },
     });
+  }
+
+  private extractErrorMessages(body: unknown): string[] | undefined {
+    if (!body || typeof body !== 'object') return undefined;
+    const errors = (body as { errors?: unknown }).errors;
+    if (!Array.isArray(errors)) return undefined;
+    const list = errors.filter((e): e is string => typeof e === 'string' && e.trim().length > 0);
+    return list.length ? list : undefined;
   }
 }
