@@ -1,4 +1,5 @@
 import { EstruturaResponse } from '../../../components/estrutura-preview/estrutura-preview';
+import { humanizeBackendMessage, parseFriendlySyncError } from '../../../utils/api-error-message';
 
 export type SyncDiagramKind = 'bases' | 'schemas' | 'schema' | 'tables';
 export type SyncDiagramMode = 'estrutura' | 'dados';
@@ -266,9 +267,11 @@ export function isLikelyErrorMessage(message: string): boolean {
 
 export interface SyncErrorSummary {
   headline: string;
+  title?: string;
   table?: string;
   stage?: string;
   detail?: string;
+  technical?: string;
 }
 
 const SYNC_ERROR_LINE = /^Tabela (.+?) · Etapa (.+?): (.+)$/;
@@ -311,12 +314,26 @@ export function resolveOperationErrorSummary(op: SyncOperation): SyncErrorSummar
     const detail = formatTabelaAfetadaError(row);
     const parsed = parseStructuredSyncErrorLine(detail);
     if (parsed) return parsed;
-    return { headline: detail, detail };
+    const friendly = parseFriendlySyncError(row.erro ?? detail);
+    return {
+      title: friendly.title,
+      headline: friendly.description,
+      table: row.tabela,
+      detail: friendly.technical,
+      technical: friendly.technical,
+    };
   }
 
   for (const err of op.errors ?? []) {
     const parsed = parseStructuredSyncErrorLine(err);
     if (parsed) return parsed;
+    const friendly = parseFriendlySyncError(err);
+    return {
+      title: friendly.title,
+      headline: friendly.description,
+      detail: friendly.technical,
+      technical: friendly.technical,
+    };
   }
 
   for (const entry of op.terminalLogs ?? []) {
@@ -329,11 +346,39 @@ export function resolveOperationErrorSummary(op: SyncOperation): SyncErrorSummar
   const fallback =
     op.errors?.[0] ?? op.terminalLogs?.find((e) => e.level === 'error')?.message;
   if (fallback) {
-    const cleaned = stripLegacySyncErrorPrefix(fallback);
-    return { headline: cleaned, detail: cleaned };
+    const friendly = parseFriendlySyncError(stripLegacySyncErrorPrefix(fallback));
+    return {
+      title: friendly.title,
+      headline: friendly.description,
+      detail: friendly.technical,
+      technical: friendly.technical,
+    };
   }
 
   return { headline: 'A operação falhou. Abra o registro para ver o detalhe.' };
+}
+
+export function listVisibleOperationErrors(
+  op: SyncOperation,
+  headline: string
+): string[] {
+  const seen = new Set<string>();
+  const items: string[] = [];
+
+  const push = (value: string) => {
+    const humanized = humanizeBackendMessage(value);
+    if (!humanized || humanized === headline || seen.has(humanized)) {
+      return;
+    }
+    seen.add(humanized);
+    items.push(humanized);
+  };
+
+  for (const err of op.errors ?? []) {
+    push(err);
+  }
+
+  return items;
 }
 
 export function countOperationLogErrors(

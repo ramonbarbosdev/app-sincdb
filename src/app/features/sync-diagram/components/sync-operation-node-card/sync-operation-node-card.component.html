@@ -51,9 +51,16 @@
         <div class="operation-error-panel" *ngIf="operation.phase === 'erro' && !operation.detailOpen">
           <p class="operation-error-summary">
             <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
-            <span>{{ primaryError() }}</span>
+            <span class="operation-error-copy">
+              <strong class="operation-error-kind">{{ primaryError() }}</strong>
+              <span class="operation-error-text" *ngIf="primaryErrorDetail() as detail">{{ detail }}</span>
+            </span>
           </p>
           <div class="operation-error-actions">
+            <button type="button" class="op-action-btn op-action-copy" [class.is-copied]="copyFeedback()"
+              [title]="copyErrorTitle()" [attr.aria-label]="copyErrorTitle()" (click)="onCopyError($event)">
+              <i class="pi" [class.pi-copy]="!copyFeedback()" [class.pi-check]="copyFeedback()" aria-hidden="true"></i>
+            </button>
             <button type="button" class="op-action-btn op-action-retry" title="Repetir operação"
               aria-label="Repetir operação" (click)="onRetry($event)">
               <i class="pi pi-replay" aria-hidden="true"></i>
@@ -95,17 +102,19 @@
                 {{ errorSummary().stage }}
               </span>
             </div>
+            <p class="sync-error-hero__title" *ngIf="errorSummary().title">{{ errorSummary().title }}</p>
             <p class="sync-error-hero__headline">{{ errorSummary().headline }}</p>
-            <p
-              class="sync-error-hero__detail"
-              *ngIf="errorSummary().detail && errorSummary().detail !== errorSummary().headline"
-            >
-              {{ errorSummary().detail }}
+            <p class="sync-error-hero__technical" *ngIf="errorSummary().technical">
+              <span class="sync-error-hero__technical-label">Detalhe técnico</span>
+              <code>{{ errorSummary().technical }}</code>
             </p>
           </div>
 
-          <ul class="operation-api-errors" *ngIf="operation.errors?.length && tableErrors(operation).length === 0">
-            <li *ngFor="let err of operation.errors" class="log-line log-error">
+          <ul
+            class="operation-api-errors"
+            *ngIf="detailErrors(operation).length && tableErrors(operation).length === 0"
+          >
+            <li *ngFor="let err of detailErrors(operation)" class="log-line log-error">
               <span class="log-tag" aria-hidden="true">
                 <i class="pi pi-times-circle"></i>
               </span>
@@ -125,7 +134,11 @@
               <span class="log-tag" *ngIf="line.level !== 'text'" aria-hidden="true">
                 <i class="pi" [class]="logIcon(line.level)"></i>
               </span>
-              <span class="log-text">{{ line.message }}</span>
+              <span class="log-text">{{
+                line.level === 'error' || isLikelyErrorMessage(line.message)
+                  ? humanizeErrorLine(line.message)
+                  : line.message
+              }}</span>
             </div>
           </div>
 
@@ -148,6 +161,10 @@
         </div>
 
         <footer class="operation-detail-footer" *ngIf="operation.phase === 'erro'">
+          <button type="button" class="op-action-btn op-action-copy" [class.is-copied]="copyFeedback()"
+            [title]="copyErrorTitle()" [attr.aria-label]="copyErrorTitle()" (click)="onCopyError($event)">
+            <i class="pi" [class.pi-copy]="!copyFeedback()" [class.pi-check]="copyFeedback()" aria-hidden="true"></i>
+          </button>
           <button type="button" class="op-action-btn op-action-retry" title="Repetir operação"
             aria-label="Repetir operação" (click)="onRetry($event)">
             <i class="pi pi-replay" aria-hidden="true"></i>

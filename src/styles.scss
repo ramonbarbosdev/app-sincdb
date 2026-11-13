@@ -1,10 +1,11 @@
+@use './assets/layout/layout.scss';
+@use './app/theme/sincdb-tokens.scss';
+@use './app/theme/seasonal-theme.scss';
+@use './assets/layout/_layout-glass-chrome.scss';
+@use './app/features/sync-diagram/sync-diagram-chrome.global.scss';
+
 @import "tailwindcss";
 @import "primeicons/primeicons.css";
-@import '../src/assets/layout/layout.scss';
-@import './app/theme/sincdb-tokens.scss';
-@import './app/theme/seasonal-theme.scss';
-@import '../src/assets/layout/_layout-glass-chrome.scss';
-@import './app/features/sync-diagram/sync-diagram-chrome.global.scss';
 // @import '../src/assets/demo/demo.scss';
 
 .flex-row-responsive {

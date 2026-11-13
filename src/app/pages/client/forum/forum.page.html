@@ -46,19 +46,19 @@
 
           <p-tag
 
-            [value]="labelEstado(metricas.status?.estadoGeral)"
+            [value]="labelEstado(metricas.status.estadoGeral)"
 
-            [severity]="severityEstado(metricas.status?.estadoGeral)"
+            [severity]="severityEstado(metricas.status.estadoGeral)"
 
             [rounded]="true"
 
           />
 
-          <p class="status-card__text">{{ metricas.status?.titulo || '—' }}</p>
+          <p class="status-card__text">{{ metricas.status.titulo || '—' }}</p>
 
         </div>
 
-        <p class="status-card__hint">{{ metricas.status?.mensagem || 'Sem mensagem de status.' }}</p>
+        <p class="status-card__hint">{{ metricas.status.mensagem || 'Sem mensagem de status.' }}</p>
 
       </article>
 
@@ -94,7 +94,7 @@
 
           <strong class="status-card__metric status-card__metric--sm">
 
-            {{ metricas.status?.proximaVersao || '—' }}
+            {{ metricas.status.proximaVersao || '—' }}
 
           </strong>
 

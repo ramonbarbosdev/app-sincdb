@@ -299,19 +299,47 @@
   }
 }
 
+.sync-error-hero__title {
+  margin: 0 0 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 650;
+  line-height: 1.35;
+  color: var(--sync-diagram-text);
+}
+
 .sync-error-hero__headline {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   line-height: 1.45;
-  font-weight: 600;
   color: var(--sync-diagram-status-error);
 }
 
-.sync-error-hero__detail {
-  margin: 0.35rem 0 0;
-  font-size: 0.68rem;
-  line-height: 1.45;
+.sync-error-hero__technical {
+  margin: 0.5rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.64rem;
   color: var(--sync-diagram-text-muted);
+
+  code {
+    display: block;
+    padding: 0.35rem 0.45rem;
+    border-radius: 6px;
+    border: 1px solid color-mix(in srgb, var(--sync-diagram-border) 90%, transparent);
+    background: color-mix(in srgb, var(--sync-diagram-text-muted) 8%, var(--sync-diagram-surface));
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    line-height: 1.4;
+    word-break: break-word;
+    user-select: text;
+  }
+}
+
+.sync-error-hero__technical-label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .operation-error-panel {
@@ -332,6 +360,29 @@
     margin-top: 0.1rem;
     flex-shrink: 0;
   }
+}
+
+.operation-error-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.operation-error-kind {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 650;
+  line-height: 1.35;
+  color: var(--sync-diagram-text);
+}
+
+.operation-error-text,
+.log-text,
+.sync-error-hero__headline,
+.sync-error-hero__detail {
+  user-select: text;
+  cursor: text;
 }
 
 .operation-error-actions {
@@ -367,6 +418,21 @@
 
 .op-action-details {
   color: var(--sync-diagram-text-muted);
+}
+
+.op-action-copy {
+  color: var(--sync-diagram-text-muted);
+
+  &.is-copied {
+    border-color: color-mix(in srgb, var(--sync-diagram-status-done) 45%, var(--sync-diagram-border));
+    color: var(--sync-diagram-status-done);
+  }
+}
+
+.operation-detail-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
 }
 
 .operation-error-list {

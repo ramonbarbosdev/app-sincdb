@@ -15,6 +15,12 @@ import {
 import { SyncDiagramOperationService } from './sync-diagram-operation.service';
 import { SyncDiagramQueueService } from './sync-diagram-queue.service';
 import { SyncDiagramStateService } from './sync-diagram-state.service';
+import {
+  extractApiErrorMessage,
+  extractSyncFailureFromPayload,
+  humanizeBackendMessage,
+  humanizeSyncErrorList,
+} from '../../../utils/api-error-message';
 
 @Injectable()
 export class SyncDiagramActionsService {
@@ -181,12 +187,17 @@ export class SyncDiagramActionsService {
       next: () => {
         this.runSequentialVerifySync(contexts, mode, 0, () => this.finishBatch());
       },
-      error: () => {
+      error: (err) => {
         this.batchActive = false;
+        const detail = extractApiErrorMessage(
+          err,
+          'Não foi possível validar o schema no ambiente local. Verifique a conexão padrão.'
+        );
+        this.registrarErroPreflight(contexts[0], mode, detail);
         this.messageService.add({
           severity: 'error',
           summary: 'Conexão indisponível',
-          detail: 'Não foi possível validar o schema no ambiente local. Verifique a conexão padrão.',
+          detail,
         });
       },
     });
@@ -376,7 +387,7 @@ export class SyncDiagramActionsService {
     if (mode === 'estrutura') {
       this.verificarESincronizarEstrutura(ctx, onFinished);
     } else {
-      this.verificarESincronizarDados(ctx, onFinished);
+      this.verificarESincronizarDados(ctx, onFinished, undefined, true);
     }
   }
 
@@ -505,6 +516,26 @@ export class SyncDiagramActionsService {
     return existing ? this.state.isOperationRunning(existing) : false;
   }
 
+  private registrarErroPreflight(
+    context: SyncDiagramContext,
+    mode: SyncDiagramMode,
+    message: string
+  ): void {
+    const existing = this.state.findOperationByScope(context, mode);
+    if (existing && this.state.isOperationActive(existing)) {
+      return;
+    }
+    const targetContext = { base: context.base, esquema: context.esquema };
+    const opId =
+      existing && existing.phase === 'erro'
+        ? existing.id
+        : this.startOperation(mode, 'verificar-sync', targetContext);
+    if (!opId) {
+      return;
+    }
+    this.failOp(opId, message);
+  }
+
   private failOp(
     opId: string,
     message: string,
@@ -515,10 +546,12 @@ export class SyncDiagramActionsService {
       onFinished?.();
       return;
     }
-    const errors = extras?.errors?.length ? extras.errors : [message];
-    const primary = errors[0] ?? message;
+    const errors = extras?.errors?.length
+      ? humanizeSyncErrorList(extras.errors)
+      : humanizeSyncErrorList([message]);
+    const primary = humanizeBackendMessage(errors[0] ?? message);
     this.progressoSync.marcarErro(primary);
-    this.operations.failOperation(opId, errors, extras?.tabelas_afetadas);
+    this.operations.failOperation(opId, errors.length ? errors : [primary], extras?.tabelas_afetadas);
     onFinished?.();
   }
 
@@ -616,13 +649,13 @@ export class SyncDiagramActionsService {
                 detail: `${base}.${esquema}`,
               });
             },
-            error: () => {
-              this.failOp(opId, 'Falha na verificação de estrutura');
+            error: (err) => {
+              this.failOp(opId, extractApiErrorMessage(err, 'Falha na verificação de estrutura'));
             },
           });
       },
-      error: () => {
-        this.failOp(opId, 'Falha ao verificar esquema');
+      error: (err) => {
+        this.failOp(opId, extractApiErrorMessage(err, 'Falha ao verificar esquema'));
       },
     });
   }
@@ -668,8 +701,8 @@ export class SyncDiagramActionsService {
         this.operations.beginSyncPhase(opId);
         this.sincronizarEstruturaInterno(context, true, opId, onFinished);
       },
-      error: () => {
-        this.failOp(opId, 'Falha na verificação de estrutura', onFinished);
+      error: (err) => {
+        this.failOp(opId, extractApiErrorMessage(err, 'Falha na verificação de estrutura'), onFinished);
       },
     });
   }
@@ -742,12 +775,8 @@ export class SyncDiagramActionsService {
         const tabelas = Array.isArray(body?.tabelas_afetadas)
           ? (body.tabelas_afetadas as TabelaAfetadaDTO[])
           : undefined;
-        const message =
-          errors?.[0] ||
-          (typeof body?.detalhes === 'string' && body.detalhes) ||
-          (typeof body?.error === 'string' && body.error) ||
-          'Falha na sincronização de estrutura';
-        this.failOp(opId!, message, onFinished, { errors, tabelas_afetadas: tabelas });
+        const message = extractApiErrorMessage(err, 'Falha na sincronização de estrutura');
+        this.failOp(opId!, message, onFinished, { errors: errors ?? [message], tabelas_afetadas: tabelas });
       },
     });
   }
@@ -770,6 +799,11 @@ export class SyncDiagramActionsService {
           .findAll(`dados/verificar/${base}/${esquema}/${tabelaParam}`)
           .subscribe({
             next: (res) => {
+              const falha = extractSyncFailureFromPayload(res);
+              if (falha) {
+                this.failOp(opId, falha);
+                return;
+              }
               if (this.resolveCancelledFromResponse(opId, res)) return;
               this.operations.completeVerificar(opId, 'dados', res as { tabelas_afetadas?: TabelaAfetadaDTO[] });
               this.messageService.add({
@@ -778,13 +812,13 @@ export class SyncDiagramActionsService {
                 detail: `${base}.${esquema}`,
               });
             },
-            error: () => {
-              this.failOp(opId, 'Falha na verificação de dados');
+            error: (err) => {
+              this.failOp(opId, extractApiErrorMessage(err, 'Falha na verificação de dados'));
             },
           });
       },
-      error: () => {
-        this.failOp(opId, 'Falha ao verificar esquema');
+      error: (err) => {
+        this.failOp(opId, extractApiErrorMessage(err, 'Falha ao verificar esquema'));
       },
     });
   }
@@ -797,7 +831,8 @@ export class SyncDiagramActionsService {
   private verificarESincronizarDados(
     context: SyncDiagramContext,
     onFinished?: () => void,
-    reuseOpId?: string
+    reuseOpId?: string,
+    schemaJaValidado = false
   ): void {
     const base = context.base;
     const esquema = context.esquema;
@@ -812,26 +847,76 @@ export class SyncDiagramActionsService {
       onFinished?.();
       return;
     }
-    this.progressoSync.iniciarGenericoProgressoLocal();
+    this.executarVerificacaoDadosComPreflight(
+      context,
+      opId,
+      tabelaParam,
+      onFinished,
+      schemaJaValidado || this.batchActive
+    );
+  }
 
-    this.baseService.findAll(`dados/verificar/${base}/${esquema}/${tabelaParam}`).subscribe({
-      next: (res) => {
-        if (this.resolveCancelledFromResponse(opId, res, onFinished)) return;
-        const dados = res as { tabelas_afetadas?: TabelaAfetadaDTO[] };
-        this.operations.completeVerificar(opId, 'dados', dados);
-        if (this.isOperationCancelled(opId)) {
-          onFinished?.();
-          return;
-        }
-        if (!this.dadosTemPendencias(dados)) {
-          this.finalizarSemSincronizar(opId, onFinished);
-          return;
-        }
-        this.operations.beginSyncPhase(opId);
-        this.sincronizarDadosInterno(context, true, opId, onFinished);
-      },
-      error: () => {
-        this.failOp(opId, 'Falha na verificação de dados', onFinished);
+  private executarVerificacaoDadosComPreflight(
+    context: SyncDiagramContext,
+    opId: string,
+    tabelaParam: string,
+    onFinished?: () => void,
+    pularPreflightEsquema = false
+  ): void {
+    const base = context.base!;
+    const esquema = context.esquema!;
+
+    const iniciarVerificacao = () => {
+      this.progressoSync.iniciarGenericoProgressoLocal();
+      this.baseService
+        .findAll(`dados/verificar/${base}/${esquema}/${tabelaParam}`)
+        .subscribe({
+          next: (res) => {
+            const falha = extractSyncFailureFromPayload(res);
+            if (falha) {
+              this.failOp(opId, falha, onFinished);
+              return;
+            }
+            if (this.resolveCancelledFromResponse(opId, res, onFinished)) return;
+            const dados = res as { tabelas_afetadas?: TabelaAfetadaDTO[] };
+            this.operations.completeVerificar(opId, 'dados', dados);
+            if (this.isOperationCancelled(opId)) {
+              onFinished?.();
+              return;
+            }
+            if (!this.dadosTemPendencias(dados)) {
+              this.finalizarSemSincronizar(opId, onFinished);
+              return;
+            }
+            this.operations.beginSyncPhase(opId);
+            this.sincronizarDadosInterno(context, true, opId, onFinished);
+          },
+          error: (err) => {
+            this.failOp(
+              opId,
+              extractApiErrorMessage(err, 'Falha na verificação de dados'),
+              onFinished
+            );
+          },
+        });
+    };
+
+    if (pularPreflightEsquema) {
+      iniciarVerificacao();
+      return;
+    }
+
+    this.baseService.findAll(`sincronizacao/verificaesquema/${base}/${esquema}`).subscribe({
+      next: () => iniciarVerificacao(),
+      error: (err) => {
+        this.failOp(
+          opId,
+          extractApiErrorMessage(
+            err,
+            'Não foi possível preparar o schema no ambiente local. Verifique a conexão e se a base existe.'
+          ),
+          onFinished
+        );
       },
     });
   }
@@ -904,12 +989,8 @@ export class SyncDiagramActionsService {
         const tabelas = Array.isArray(body?.tabelas_afetadas)
           ? (body.tabelas_afetadas as TabelaAfetadaDTO[])
           : undefined;
-        const message =
-          errors?.[0] ||
-          (typeof body?.detalhes === 'string' && body.detalhes) ||
-          (typeof body?.error === 'string' && body.error) ||
-          'Falha na sincronização de dados';
-        this.failOp(opId!, message, onFinished, { errors, tabelas_afetadas: tabelas });
+        const message = extractApiErrorMessage(err, 'Falha na sincronização de dados');
+        this.failOp(opId!, message, onFinished, { errors: errors ?? [message], tabelas_afetadas: tabelas });
       },
     });
   }
@@ -918,7 +999,9 @@ export class SyncDiagramActionsService {
     if (!body || typeof body !== 'object') return undefined;
     const errors = (body as { errors?: unknown }).errors;
     if (!Array.isArray(errors)) return undefined;
-    const list = errors.filter((e): e is string => typeof e === 'string' && e.trim().length > 0);
+    const list = errors
+      .filter((e): e is string => typeof e === 'string' && e.trim().length > 0)
+      .map((e) => humanizeBackendMessage(e));
     return list.length ? list : undefined;
   }
 }

@@ -14,6 +14,8 @@ import { AuthService } from '../../../auth/auth.service';
 import { LayoutCampo } from '../../../components/layout-campo/layout-campo';
 import { SelecionarOrganizacao } from '../selecionar-organizacao/selecionar-organizacao';
 import { FlagOption } from '../../../models/flag-option';
+import { extractApiErrorMessage } from '../../../utils/api-error-message';
+import { copyTextToClipboard } from '../../../utils/copy-to-clipboard';
 
 export type LoginStep = 'credentials' | 'organization';
 
@@ -45,6 +47,8 @@ export class Login {
   loginStep: LoginStep = 'credentials';
   loading = false;
   apiError: string | null = null;
+  apiErrorCopied = false;
+  copyErrorLabel = 'Copiar erro';
 
   private auth = inject(AuthService);
   private router = inject(Router);
@@ -64,6 +68,7 @@ export class Login {
   voltarParaCredenciais(): void {
     this.loginStep = 'credentials';
     this.apiError = null;
+    this.apiErrorCopied = false;
     this.objeto.idOrganizacao = undefined;
     this.listaEmpresa = [];
     this.auth.clearSession();
@@ -75,6 +80,7 @@ export class Login {
 
     this.loading = true;
     this.apiError = null;
+    this.apiErrorCopied = false;
     this.auth.login(this.objeto).subscribe({
       next: (res: any) => {
         if (res.precisaSelecionarOrganizacao) {
@@ -96,13 +102,35 @@ export class Login {
         this.cd.markForCheck();
       },
       error: (err) => {
-        this.apiError =
-          err?.error?.message ?? 'Não foi possível entrar. Verifique CPF e senha.';
+        this.apiError = extractApiErrorMessage(
+          err,
+          'Não foi possível entrar. Verifique CPF e senha.'
+        );
         this.loginStep = 'credentials';
         this.loading = false;
         this.cd.markForCheck();
       },
     });
+  }
+
+  async copiarErroApi(event: Event): Promise<void> {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!this.apiError) {
+      return;
+    }
+    const copied = await copyTextToClipboard(this.apiError);
+    if (!copied) {
+      return;
+    }
+    this.apiErrorCopied = true;
+    this.copyErrorLabel = 'Copiado';
+    this.cd.markForCheck();
+    window.setTimeout(() => {
+      this.apiErrorCopied = false;
+      this.copyErrorLabel = 'Copiar erro';
+      this.cd.markForCheck();
+    }, 2000);
   }
 
   validarItens(): boolean {

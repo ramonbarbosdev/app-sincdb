@@ -20,6 +20,7 @@ import {
   TabelaAfetadaDTO,
 } from '../models/sync-diagram.model';
 import { SyncDiagramStateService } from './sync-diagram-state.service';
+import { humanizeBackendMessage, humanizeSyncErrorList } from '../../../utils/api-error-message';
 
 @Injectable()
 export class SyncDiagramOperationService implements OnDestroy {
@@ -183,12 +184,13 @@ export class SyncDiagramOperationService implements OnDestroy {
     if (this.isCancelled(operationId)) return;
 
     const op = this.state.getOperation(operationId);
-    const hasErrors = (res.errors?.length ?? 0) > 0;
+    const normalizedErrors = humanizeSyncErrorList(res.errors);
+    const hasErrors = normalizedErrors.length > 0;
     this.state.patchOperation(operationId, {
       phase: hasErrors ? 'erro' : 'concluido',
       progress: 100,
       tabelasAfetadas: res.tabelas_afetadas,
-      errors: res.errors,
+      errors: hasErrors ? normalizedErrors : res.errors,
     });
     if (res.tabelas_afetadas && op?.mode !== 'estrutura') {
       this.state.applySyncResultVisuals(operationId, res.tabelas_afetadas, res.errors);
@@ -221,10 +223,13 @@ export class SyncDiagramOperationService implements OnDestroy {
   ): void {
     if (this.isCancelled(operationId)) return;
     const op = this.state.getOperation(operationId);
+    const normalized = errors?.length
+      ? humanizeSyncErrorList(errors)
+      : ['A operação falhou. Tente novamente.'];
     this.state.patchOperation(operationId, {
       phase: 'erro',
       progress: 0,
-      errors: errors?.length ? errors : ['A operação falhou. Tente novamente.'],
+      errors: normalized,
       tabelasAfetadas: tabelasAfetadas ?? op?.tabelasAfetadas,
     });
     if (this.activeOperationId === operationId) {
@@ -428,6 +433,7 @@ export class SyncDiagramOperationService implements OnDestroy {
     status: string;
     progresso?: number;
     tabelaAtual?: string | null;
+    mensagem?: string | null;
   }): void {
     const opId = this.activeOperationId;
     if (!opId) return;
@@ -466,9 +472,17 @@ export class SyncDiagramOperationService implements OnDestroy {
       if (op.phase !== 'verificando' && op.phase !== 'sincronizando' && op.phase !== 'verificado') {
         return;
       }
+      if (op.errors?.length) {
+        return;
+      }
+      const fromProgress = estado.mensagem ? humanizeBackendMessage(estado.mensagem) : null;
       patch.phase = 'erro';
       patch.progress = 0;
-      patch.errors = op.errors?.length ? op.errors : ['Falha durante a operação'];
+      patch.errors = op.errors?.length
+        ? op.errors
+        : fromProgress
+          ? [fromProgress]
+          : ['Falha durante a operação'];
       this.state.patchOperation(opId, patch);
       this.releaseOperationTracking();
       return;
@@ -525,9 +539,9 @@ export class SyncDiagramOperationService implements OnDestroy {
       ...op,
       errors: [message],
     });
-    const primary = summary.detail ?? summary.headline ?? message;
+    const primary = summary.headline ?? message;
     this.progressoSync.marcarErro(primary);
-    this.failOperation(operationId, [primary], op.tabelasAfetadas);
+    this.failOperation(operationId, [message], op.tabelasAfetadas);
   }
 
   private isCancelled(operationId: string): boolean {

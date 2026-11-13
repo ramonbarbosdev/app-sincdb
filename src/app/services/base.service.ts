@@ -4,6 +4,7 @@ import { catchError, map, Observable, tap, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { MessageService } from 'primeng/api';
 import { FlagOption } from '../models/flag-option';
+import { extractApiErrorMessage } from '../utils/api-error-message';
 
 @Injectable({
   providedIn: 'root',
@@ -219,37 +220,19 @@ export class BaseService {
   }
 
   exibirErros(e: any) {
-    const error = e?.error;
-
     let summary = 'Erro';
-    let detail = 'Ocorreu um erro inesperado';
+    let detail = extractApiErrorMessage(e, 'Ocorreu um erro inesperado');
 
     if (e?.status === 400) {
       summary = 'Dados invalidos';
-      detail = error?.resumo?.mensagem || error?.message || error?.error || detail;
-    }
-    else if (e?.status === 404) {
+    } else if (e?.status === 404) {
       summary = 'Registro nao encontrado';
-      detail = error?.resumo?.mensagem || error?.message || 'Nao foi possivel encontrar o recurso solicitado';
-    }
-    else if (e?.status === 409) {
+    } else if (e?.status === 409) {
       summary = 'Conflito';
-      detail = error?.resumo?.mensagem || error?.message || 'Ja existe um registro conflitante com estes dados';
-    }
-    else if (error?.sucesso === false) {
+    } else if (e?.error?.sucesso === false) {
       summary = 'Erro de validação';
-      detail = error?.resumo?.mensagem ?? detail;
-    }
-    else if (error?.error) {
-      summary = 'Erro interno';
-      detail = error?.error ?? detail;
-    }
-    else if (e?.error) {
-      summary = 'Erro';
-      detail = error?.message ?? detail;
-    }
-    else if (e?.message) {
-      detail = e.message;
+    } else if (e?.status >= 500) {
+      summary = 'Erro no servidor';
     }
 
     this.messageService.add({

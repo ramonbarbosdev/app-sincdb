@@ -23,7 +23,19 @@
 
       <div class="login-card__body" aria-live="polite">
         @if (apiError) {
-          <p-message severity="error" [text]="apiError" styleClass="login-api-error w-full" />
+          <div class="login-api-error-wrap">
+            <p-message severity="error" [text]="apiError" styleClass="login-api-error w-full" />
+            <button
+              type="button"
+              class="login-copy-error"
+              [attr.aria-label]="copyErrorLabel"
+              [title]="copyErrorLabel"
+              (click)="copiarErroApi($event)"
+            >
+              <i class="pi" [class.pi-copy]="!apiErrorCopied" [class.pi-check]="apiErrorCopied" aria-hidden="true"></i>
+              <span>{{ apiErrorCopied ? 'Copiado' : 'Copiar erro' }}</span>
+            </button>
+          </div>
         }
 
         @switch (loginStep) {
