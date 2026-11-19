@@ -11,6 +11,7 @@ import {
   resolveUpdaterBridge,
   UpdateAvailablePayload,
 } from '../utils/electron-updater-bridge';
+import { SYNCDB_DOWNLOAD_SITE_URL } from '../constants/syncdb-urls';
 
 export interface UpdateVersionInfo {
   currentVersion: string;
@@ -25,9 +26,6 @@ export type UpdateUiPreviewScenario =
   | 'not-available'
   | 'error'
   | 'install-failed';
-
-const LATEST_RELEASES_URL =
-  'https://github.com/ramonbarbosdev/syncdb-desktop/releases/latest';
 
 @Injectable({
   providedIn: 'root',
@@ -156,6 +154,7 @@ export class UpdateService {
     updater.onError?.((message) => {
       this.checking$.next(false);
       this.downloading$.next(false);
+      this.fallbackUrl$.next(SYNCDB_DOWNLOAD_SITE_URL);
       this.error$.next(message);
     });
 
@@ -164,7 +163,7 @@ export class UpdateService {
       this.downloading$.next(false);
       this.installFailed$.next(true);
       this.error$.next(data?.message ?? 'Falha ao instalar a atualizacao.');
-      this.fallbackUrl$.next(data?.fallbackUrl ?? null);
+      this.fallbackUrl$.next(data?.fallbackUrl ?? SYNCDB_DOWNLOAD_SITE_URL);
     });
   }
 
@@ -185,7 +184,7 @@ export class UpdateService {
   openLatestRelease() {
     const desktop = window.desktop as { openLatestRelease?: () => Promise<void> } | undefined;
     if (desktop?.openLatestRelease) {
-      desktop.openLatestRelease().catch(() => this.openReleasesInBrowser());
+      desktop.openLatestRelease().catch(() => this.openDownloadSiteInBrowser());
       return;
     }
 
@@ -197,7 +196,7 @@ export class UpdateService {
       return;
     }
 
-    this.openReleasesInBrowser();
+    this.openDownloadSiteInBrowser();
   }
 
   checkForUpdates() {
@@ -208,7 +207,7 @@ export class UpdateService {
 
     if (!checkForUpdates) {
       this.checking$.next(false);
-      this.fallbackUrl$.next(LATEST_RELEASES_URL);
+      this.fallbackUrl$.next(SYNCDB_DOWNLOAD_SITE_URL);
       this.installFailed$.next(false);
       this.error$.next(this.updaterUnavailableMessage());
       return;
@@ -226,6 +225,7 @@ export class UpdateService {
           .catch((error) => {
             this.manualCheckPending = false;
             this.checking$.next(false);
+            this.fallbackUrl$.next(SYNCDB_DOWNLOAD_SITE_URL);
             this.error$.next(
               this.normalizeError(error, 'Nao foi possivel verificar atualizacoes.')
             );
@@ -234,6 +234,7 @@ export class UpdateService {
     } catch (error) {
       this.manualCheckPending = false;
       this.checking$.next(false);
+      this.fallbackUrl$.next(SYNCDB_DOWNLOAD_SITE_URL);
       this.error$.next(this.normalizeError(error, 'Nao foi possivel verificar atualizacoes.'));
     }
   }
@@ -271,6 +272,7 @@ export class UpdateService {
     if (payload.status === 'error') {
       this.manualCheckPending = false;
       this.checking$.next(false);
+      this.fallbackUrl$.next(SYNCDB_DOWNLOAD_SITE_URL);
       this.error$.next(payload.message || 'Nao foi possivel verificar atualizacoes.');
     }
   }
@@ -285,10 +287,10 @@ export class UpdateService {
     }
 
     if (isElectronShell()) {
-      return 'O atualizador automatico nao esta disponivel nesta instalacao. Baixe o instalador mais recente e instale por cima.';
+      return 'O atualizador automatico nao esta disponivel nesta instalacao. Baixe o instalador em syncdb.ramoncode.com.br e instale por cima.';
     }
 
-    return 'Atualizador indisponivel nesta execucao do aplicativo.';
+    return 'Baixe a versao mais recente em syncdb.ramoncode.com.br.';
   }
 
   simulateUiPreview(scenario: UpdateUiPreviewScenario): void {
@@ -333,7 +335,7 @@ export class UpdateService {
       case 'install-failed':
         this.installFailed$.next(true);
         this.error$.next('Nao foi possivel executar quitAndInstall (simulacao).');
-        this.fallbackUrl$.next('https://github.com/ramonbarbosdev/syncdb-desktop/releases/latest');
+        this.fallbackUrl$.next(SYNCDB_DOWNLOAD_SITE_URL);
         break;
     }
   }
@@ -393,6 +395,7 @@ export class UpdateService {
     const updater = resolveUpdaterBridge();
     if (!updater) {
       this.checking$.next(false);
+      this.fallbackUrl$.next(SYNCDB_DOWNLOAD_SITE_URL);
       this.error$.next(this.updaterUnavailableMessage());
       return;
     }
@@ -424,7 +427,8 @@ export class UpdateService {
     return fallback;
   }
 
-  private openReleasesInBrowser(): void {
-    window.open(LATEST_RELEASES_URL, '_blank', 'noopener,noreferrer');
+  private openDownloadSiteInBrowser(): void {
+    const url = this.fallbackUrl$.value ?? SYNCDB_DOWNLOAD_SITE_URL;
+    window.open(url, '_blank', 'noopener,noreferrer');
   }
 }

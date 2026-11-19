@@ -78,7 +78,7 @@
         (onClick)="dismiss()">
       </p-button>
       <p-button
-        label="Baixar manualmente"
+        label="Baixar no site"
         icon="pi pi-external-link"
         (onClick)="openLatestRelease()">
       </p-button>
@@ -104,6 +104,10 @@
     </div>
     <div class="update-actions">
       <p-button label="Fechar" severity="secondary" [outlined]="true" (onClick)="dismiss()" />
+      <p-button
+        label="Baixar no site"
+        icon="pi pi-external-link"
+        (onClick)="openLatestRelease()" />
     </div>
   </ng-container>
 
@@ -156,7 +160,7 @@
       <div>
         <h2>Atualização pronta para instalar</h2>
         <p *ngIf="!isMacOS">O aplicativo será reiniciado para concluir a instalação.</p>
-        <p *ngIf="isMacOS">No macOS, baixe o instalador na página da release.</p>
+        <p *ngIf="isMacOS">No macOS, baixe o instalador em syncdb.ramoncode.com.br.</p>
       </div>
     </section>
     <div class="update-actions">
@@ -175,7 +179,7 @@
       </p-button>
       <p-button
         *ngIf="isMacOS"
-        label="Abrir release no GitHub"
+        label="Abrir site de download"
         icon="pi pi-external-link"
         (onClick)="openLatestRelease()">
       </p-button>
@@ -199,7 +203,7 @@
           Uma atualização está disponível. Clique em <strong>Baixar atualização</strong> para iniciar o download.
         </p>
         <p *ngIf="isMacOS">
-          Uma atualização está disponível. No macOS, a instalação é feita manualmente pela release no GitHub.
+          Uma atualização está disponível. No macOS, baixe e instale manualmente em syncdb.ramoncode.com.br.
         </p>
       </div>
     </section>
@@ -225,13 +229,13 @@
       </p-button>
       <p-button
         *ngIf="isMacOS"
-        label="Abrir release no GitHub"
+        label="Abrir site de download"
         icon="pi pi-external-link"
         (onClick)="openLatestRelease()">
       </p-button>
       <ng-container *ngIf="!isMacOS">
         <p-button
-          label="Ver release"
+          label="Baixar no site"
           icon="pi pi-external-link"
           severity="secondary"
           [link]="true"
