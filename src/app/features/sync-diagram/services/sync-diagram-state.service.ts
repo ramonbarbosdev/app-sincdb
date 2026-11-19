@@ -70,6 +70,7 @@ export class SyncDiagramStateService {
   readonly operations = signal<SyncOperation[]>([]);
   /** Incrementado ao aplicar filtro — atualiza listas sem recriar nós do fluxo. */
   readonly filterRevision = signal(0);
+  readonly resizeTargetNodeId = signal<string | null>(null);
 
   private bases: SyncDiagramItem[] = [];
   private schemaCache = new Map<string, SyncDiagramItem[]>();
@@ -79,7 +80,7 @@ export class SyncDiagramStateService {
   private filters = new Map<string, string>();
   private loadingNodes = new Map<string, boolean>();
   private positions = new Map<string, DiagramFlowPoint>();
-  private nodeScales = new Map<string, number>();
+  private nodeSizes = new Map<string, DiagramFlowSize>();
   private readonly manualNodePositions = new Set<string>();
 
   private basesNodeId = 'node-bases';
@@ -101,6 +102,8 @@ export class SyncDiagramStateService {
       // ignore private mode / quota
     }
 
+    this.nodeSizes.clear();
+    this.resizeTargetNodeId.set(null);
     this.loadingInitial.set(true);
     this.baseService.findAll('sincronizacao/bases/').subscribe({
       next: (res) => {
@@ -138,43 +141,74 @@ export class SyncDiagramStateService {
     this.filterRevision.update((n) => n + 1);
   }
 
-  getNodeScale(nodeId: string): number {
-    return this.nodeScales.get(nodeId) ?? 1;
+  selectNodeForResize(nodeId: string): void {
+    this.resizeTargetNodeId.set(nodeId);
+  }
+
+  clearNodeResizeSelection(): void {
+    this.resizeTargetNodeId.set(null);
+  }
+
+  isNodeResizeActive(nodeId: string): boolean {
+    return this.resizeTargetNodeId() === nodeId;
   }
 
   getNodeSize(nodeId: string): DiagramFlowSize {
-    const base = this.defaultNodeSizeFor(nodeId);
-    const scale = this.getNodeScale(nodeId);
-    return {
-      width: Math.round(base.width * scale),
-      height: Math.round(base.height * scale),
-    };
-  }
-
-  setNodeScale(nodeId: string, scale: number): void {
-    const clamped = Math.min(
-      SYNC_DIAGRAM_NODE_SIZE.maxScale,
-      Math.max(SYNC_DIAGRAM_NODE_SIZE.minScale, scale)
-    );
-    this.nodeScales.set(nodeId, clamped);
-    this.patchFlowNodeSize(nodeId, this.getNodeSize(nodeId));
+    const custom = this.nodeSizes.get(nodeId);
+    const raw = custom ?? this.defaultNodeSizeFor(nodeId);
+    const width = Math.max(1, Math.round(raw.width));
+    const height = Math.max(1, Math.round(raw.height));
+    return { width, height };
   }
 
   setNodeSize(nodeId: string, size: DiagramFlowSize): void {
-    const base = this.defaultNodeSizeFor(nodeId);
-    if (base.width <= 0 || base.height <= 0) {
+    const clamped = this.clampNodeSize(nodeId, size);
+    if (!this.isValidNodeSize(clamped)) {
       return;
     }
-    const scaleW = size.width / base.width;
-    const scaleH = size.height / base.height;
-    this.setNodeScale(nodeId, (scaleW + scaleH) / 2);
+    this.nodeSizes.set(nodeId, clamped);
+    this.patchFlowNodeSize(nodeId, clamped);
   }
 
   adjustNodeSize(nodeId: string, grow: boolean): void {
-    const factor = grow
-      ? 1 + SYNC_DIAGRAM_NODE_SIZE.stepFactor
-      : 1 - SYNC_DIAGRAM_NODE_SIZE.stepFactor;
-    this.setNodeScale(nodeId, this.getNodeScale(nodeId) * factor);
+    const current = this.getNodeSize(nodeId);
+    const base = this.defaultNodeSizeFor(nodeId);
+    const stepW = Math.round(base.width * SYNC_DIAGRAM_NODE_SIZE.stepFactor);
+    const stepH = Math.round(base.height * SYNC_DIAGRAM_NODE_SIZE.stepFactor);
+    const sign = grow ? 1 : -1;
+    this.setNodeSize(nodeId, {
+      width: current.width + stepW * sign,
+      height: current.height + stepH * sign,
+    });
+  }
+
+  private clampNodeSize(nodeId: string, size: DiagramFlowSize): DiagramFlowSize {
+    const base = this.defaultNodeSizeFor(nodeId);
+    if (base.width <= 0 || base.height <= 0) {
+      return size;
+    }
+    const minW = Math.round(base.width * SYNC_DIAGRAM_NODE_SIZE.minScale);
+    const minH = Math.round(base.height * SYNC_DIAGRAM_NODE_SIZE.minScale);
+    const maxW = Math.round(base.width * SYNC_DIAGRAM_NODE_SIZE.maxScale);
+    const maxH = Math.round(base.height * SYNC_DIAGRAM_NODE_SIZE.maxScale);
+    const width = Math.round(size.width);
+    const height = Math.round(size.height);
+    if (!Number.isFinite(width) || !Number.isFinite(height) || width < 1 || height < 1) {
+      return { ...base };
+    }
+    return {
+      width: Math.min(maxW, Math.max(minW, width)),
+      height: Math.min(maxH, Math.max(minH, height)),
+    };
+  }
+
+  private isValidNodeSize(size: DiagramFlowSize): boolean {
+    return (
+      Number.isFinite(size.width) &&
+      Number.isFinite(size.height) &&
+      size.width >= 1 &&
+      size.height >= 1
+    );
   }
 
   updateNodePosition(nodeId: string, position: DiagramFlowPoint): void {

@@ -13,7 +13,7 @@
       fDraggable
       class="diagram-flow"
       (fFullRendered)="onFlowReady()"
-      (pointerdown)="onUserCanvasInteraction()"
+      (pointerdown)="onFlowPointerDown($event)"
     >
       <f-background>
         <f-circle-pattern [color]="canvasDotColor()" [radius]="canvasDotGap" />
@@ -65,6 +65,9 @@
           class="flow-node-shell"
           [class.flow-node-erd]="flowNode.type === 'erd-table'"
           [class.flow-node-resizable]="!!flowNode.size"
+          [class.is-resize-selected]="
+            flowNode.type === 'selector' && state.resizeTargetNodeId() === flowNode.id
+          "
         >
           <div
             fConnector
@@ -83,8 +86,14 @@
 
           <app-sync-diagram-node-card
             *ngIf="flowNode.type === 'selector' && flowNode.selectorMeta"
+            class="flow-node-card"
             [node]="flowNode.selectorMeta"
-            [nodeScale]="state.getNodeScale(flowNode.id)"
+            [resizeActive]="state.resizeTargetNodeId() === flowNode.id"
+            [sizeLabel]="
+              flowNode.size
+                ? flowNode.size.width + ' × ' + flowNode.size.height
+                : ''
+            "
             [items]="filteredItems(flowNode.id)"
             (filterChange)="onFilterChange(flowNode.id, $event)"
             (itemClick)="onItemClick(flowNode.selectorMeta, $event)"
@@ -92,7 +101,24 @@
             (action)="onNodeAction($event, flowNode.selectorMeta)"
             (sizeGrow)="onNodeSizeStep(flowNode.id, true)"
             (sizeShrink)="onNodeSizeStep(flowNode.id, false)"
+            (headerActivate)="state.selectNodeForResize(flowNode.id)"
           />
+
+          <div
+            *ngIf="
+              flowNode.type === 'selector' && state.resizeTargetNodeId() === flowNode.id
+            "
+            class="flow-node-resize-handles is-active"
+          >
+            <span fResizeHandle fResizeHandleType="left-top" aria-hidden="true"></span>
+            <span fResizeHandle fResizeHandleType="top" aria-hidden="true"></span>
+            <span fResizeHandle fResizeHandleType="right-top" aria-hidden="true"></span>
+            <span fResizeHandle fResizeHandleType="right" aria-hidden="true"></span>
+            <span fResizeHandle fResizeHandleType="right-bottom" aria-hidden="true"></span>
+            <span fResizeHandle fResizeHandleType="bottom" aria-hidden="true"></span>
+            <span fResizeHandle fResizeHandleType="left-bottom" aria-hidden="true"></span>
+            <span fResizeHandle fResizeHandleType="left" aria-hidden="true"></span>
+          </div>
 
           <app-sync-operation-node-card
             *ngIf="flowNode.type === 'operation' && flowNode.operationMeta"

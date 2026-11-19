@@ -1,7 +1,7 @@
 <ng-container *ngIf="node.kind === 'schema'; else listNodeCard">
-  <div class="diagram-node-wrap kind-schema" [style.--node-scale]="nodeScale">
+  <div class="diagram-node-wrap kind-schema" [class.is-resize-target]="resizeActive">
     <div class="diagram-node schema-node" [class.is-active-path]="hasActivePath()">
-      <header class="diagram-node-header" fDragHandle>
+      <header class="diagram-node-header" fDragHandle (pointerdown)="onHeaderPointerDown($event)">
         <div class="diagram-node-title">
           <span class="diagram-icon">{{ iconLabel(node.kind) }}</span>
           <div>
@@ -54,40 +54,20 @@
         </button>
       </div>
     </div>
-    <span
-      class="diagram-resize-handle diagram-resize-handle--right"
-      fResizeHandle
-      fResizeHandleType="right"
-      title="Ajustar largura"
-      aria-label="Ajustar largura da caixa"
-    ></span>
-    <span
-      class="diagram-resize-handle diagram-resize-handle--bottom"
-      fResizeHandle
-      fResizeHandleType="bottom"
-      title="Ajustar altura"
-      aria-label="Ajustar altura da caixa"
-    ></span>
-    <span
-      class="diagram-resize-handle diagram-resize-handle--corner"
-      fResizeHandle
-      fResizeHandleType="right-bottom"
-      title="Ajustar escala"
-      aria-label="Ajustar escala da caixa"
-    ></span>
+    <span class="diagram-size-badge" *ngIf="resizeActive && sizeLabel">{{ sizeLabel }}</span>
   </div>
 </ng-container>
 
 <ng-template #listNodeCard>
   <div
     class="diagram-node-wrap"
-    [style.--node-scale]="nodeScale"
+    [class.is-resize-target]="resizeActive"
     [class.kind-bases]="node.kind === 'bases'"
     [class.kind-schemas]="node.kind === 'schemas'"
     [class.kind-tables]="node.kind === 'tables'"
   >
     <div class="diagram-node" [class.is-active-path]="hasActivePath()">
-      <header class="diagram-node-header" fDragHandle>
+      <header class="diagram-node-header" fDragHandle (pointerdown)="onHeaderPointerDown($event)">
         <div class="diagram-node-title">
           <span class="diagram-icon">{{ iconLabel(node.kind) }}</span>
           <div>
@@ -189,26 +169,6 @@
         </div>
       </div>
     </div>
-    <span
-      class="diagram-resize-handle diagram-resize-handle--right"
-      fResizeHandle
-      fResizeHandleType="right"
-      title="Ajustar largura"
-      aria-label="Ajustar largura da caixa"
-    ></span>
-    <span
-      class="diagram-resize-handle diagram-resize-handle--bottom"
-      fResizeHandle
-      fResizeHandleType="bottom"
-      title="Ajustar altura"
-      aria-label="Ajustar altura da caixa"
-    ></span>
-    <span
-      class="diagram-resize-handle diagram-resize-handle--corner"
-      fResizeHandle
-      fResizeHandleType="right-bottom"
-      title="Ajustar escala"
-      aria-label="Ajustar escala da caixa"
-    ></span>
+    <span class="diagram-size-badge" *ngIf="resizeActive && sizeLabel">{{ sizeLabel }}</span>
   </div>
 </ng-template>

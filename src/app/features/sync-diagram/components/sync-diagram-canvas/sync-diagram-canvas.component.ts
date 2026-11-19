@@ -7,7 +7,20 @@ import {
   provideFFlow,
 } from '@foblex/flow';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, HostListener, Input, Output, computed, inject, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  HostListener,
+  Input,
+  NgZone,
+  Output,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { TooltipModule } from 'primeng/tooltip';
 import {
   SyncDiagramAction,
@@ -57,6 +70,8 @@ export class SyncDiagramCanvasComponent {
   private operations = inject(SyncDiagramOperationService);
   private actions = inject(SyncDiagramActionsService);
   private camera = inject(SyncDiagramCameraService);
+  private ngZone = inject(NgZone);
+  private cdr = inject(ChangeDetectorRef);
   private canvas = viewChild(FCanvasComponent);
   private zoom = viewChild(FZoomDirective);
 
@@ -117,6 +132,25 @@ export class SyncDiagramCanvasComponent {
     this.camera.pauseAutoFollow();
   }
 
+  onFlowPointerDown(event: PointerEvent): void {
+    this.onUserCanvasInteraction();
+    const target = event.target as HTMLElement | null;
+    if (!target) {
+      return;
+    }
+    if (target.closest('.f-resize-handle')) {
+      const shell = target.closest('.flow-node-shell');
+      const nodeId = shell?.getAttribute('data-f-node-id');
+      if (nodeId) {
+        this.state.selectNodeForResize(nodeId);
+      }
+      return;
+    }
+    if (!target.closest('.flow-node-shell')) {
+      this.state.clearNodeResizeSelection();
+    }
+  }
+
   zoomIn(): void {
     this.camera.zoomIn();
     this.updateZoomLabel();
@@ -143,8 +177,16 @@ export class SyncDiagramCanvasComponent {
   }
 
   onNodeSizeChange(nodeId: string, rect: IRect): void {
-    this.camera.pauseAutoFollow();
-    this.state.setNodeSize(nodeId, { width: rect.width, height: rect.height });
+    const width = Math.round(rect.width);
+    const height = Math.round(rect.height);
+    if (!Number.isFinite(width) || !Number.isFinite(height) || width < 1 || height < 1) {
+      return;
+    }
+    this.ngZone.run(() => {
+      this.camera.pauseAutoFollow();
+      this.state.setNodeSize(nodeId, { width, height });
+      this.cdr.markForCheck();
+    });
   }
 
   onNodeSizeStep(nodeId: string, grow: boolean): void {
