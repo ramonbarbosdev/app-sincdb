@@ -1,6 +1,12 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { environment } from '../../environments/environment';
+import {
+  ElectronUpdaterBridge,
+  isElectronShell,
+  resolveUpdaterBridge,
+  UpdateAvailablePayload,
+} from '../utils/electron-updater-bridge';
 
 export interface UpdateVersionInfo {
   currentVersion: string;
@@ -51,11 +57,11 @@ export class UpdateService {
   aboutOpen = this.aboutOpen$.asObservable();
 
   get isUpdaterAvailable(): boolean {
-    return !!window.updater;
+    return !!resolveUpdaterBridge();
   }
 
   get isDesktopShell(): boolean {
-    return typeof window !== 'undefined' && !!window.desktop;
+    return isElectronShell() || (typeof window !== 'undefined' && !!window.desktop);
   }
 
   get installedVersion(): string {
@@ -83,27 +89,15 @@ export class UpdateService {
   };
 
   constructor() {
-    if (window.updater) {
-      this.listenElectronEvents();
-      const ready = (
-        window.updater as { notifyRendererReady?: () => void | Promise<void> }
-      ).notifyRendererReady;
-      ready?.();
+    const bridge = resolveUpdaterBridge();
+    if (bridge) {
+      this.listenElectronEvents(bridge);
+      bridge.notifyRendererReady?.();
     }
   }
 
-  private listenElectronEvents() {
-    const updater = window.updater;
-    if (!updater) {
-      return;
-    }
-
-    const onAvailable = (data?: {
-      currentVersion?: string;
-      version?: string;
-      availableVersion?: string;
-      latestVersion?: string;
-    }) => {
+  private listenElectronEvents(updater: ElectronUpdaterBridge) {
+    const onAvailable = (data?: UpdateAvailablePayload) => {
       this.manualCheckPending = false;
       this.checking$.next(false);
       this.updateNotAvailable$.next(false);
@@ -118,7 +112,6 @@ export class UpdateService {
     };
 
     updater.onUpdateAvailable(onAvailable);
-
     updater.onManualUpdateAvailable(onAvailable);
 
     updater.onUpdateNotAvailable(() => {
@@ -180,7 +173,8 @@ export class UpdateService {
       return;
     }
 
-    if (window.updater) {
+    const bridge = resolveUpdaterBridge();
+    if (bridge) {
       this.runUpdaterAction('Nao foi possivel abrir a pagina da ultima release.', (updater) =>
         updater.openLatestRelease()
       );
@@ -216,7 +210,6 @@ export class UpdateService {
     );
   }
 
-  /** Somente desenvolvimento: simula estados do dialogo de atualizacao. */
   simulateUiPreview(scenario: UpdateUiPreviewScenario): void {
     if (environment.production) {
       return;
@@ -314,12 +307,18 @@ export class UpdateService {
 
   private runUpdaterAction(
     message: string,
-    action: (updater: NonNullable<Window['updater']>) => void | Promise<void>
+    action: (updater: ElectronUpdaterBridge) => void | Promise<void>
   ) {
-    const updater = window.updater;
+    const updater = resolveUpdaterBridge();
     if (!updater) {
       this.checking$.next(false);
-      this.error$.next('Atualizador indisponivel nesta execucao do aplicativo.');
+      if (this.isDesktopShell) {
+        this.error$.next(
+          'O atualizador automatico nao esta disponivel nesta instalacao. Baixe o instalador mais recente e instale por cima.'
+        );
+      } else {
+        this.error$.next('Atualizador indisponivel nesta execucao do aplicativo.');
+      }
       return;
     }
 
