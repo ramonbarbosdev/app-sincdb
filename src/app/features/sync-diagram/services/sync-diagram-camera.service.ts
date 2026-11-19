@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { PointExtensions } from '@foblex/2d';
 import { FCanvasComponent, FZoomDirective } from '@foblex/flow';
+import { SYNC_DIAGRAM_ZOOM } from '../sync-diagram-chrome.constants';
 
-const MIN_ZOOM = 0.4;
-const MAX_ZOOM = 1.2;
-const ZOOM_STEP = 0.1;
+const MIN_ZOOM = SYNC_DIAGRAM_ZOOM.minimum;
+const MAX_ZOOM = SYNC_DIAGRAM_ZOOM.maximum;
+const ZOOM_STEP = SYNC_DIAGRAM_ZOOM.step;
 const AUTO_FOLLOW_PAUSE_MS = 12000;
 const FIT_PADDING_X = 64;
 const FIT_PADDING_Y = 88;

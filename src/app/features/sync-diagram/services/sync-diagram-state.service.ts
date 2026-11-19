@@ -600,6 +600,43 @@ export class SyncDiagramStateService {
     this.rebuildGraph();
   }
 
+  private removeOperationsMatching(
+    predicate: (operation: SyncOperation) => boolean
+  ): void {
+    const removedIds: string[] = [];
+
+    for (const operation of this.operations()) {
+      if (!predicate(operation)) {
+        continue;
+      }
+      removedIds.push(operation.id);
+      this.clearErdForOperation(operation.id);
+      this.positions.delete(this.operationNodeId(operation.id));
+      if (this.activeOperationId === operation.id) {
+        this.activeOperationId = undefined;
+      }
+    }
+
+    if (!removedIds.length) {
+      return;
+    }
+
+    const removed = new Set(removedIds);
+    this.operations.update((list) => list.filter((operation) => !removed.has(operation.id)));
+    this.rebuildGraph();
+  }
+
+  private removeOperationsForSchemaScope(base: string, esquema: string): void {
+    this.removeOperationsMatching(
+      (operation) =>
+        operation.context.base === base && operation.context.esquema === esquema
+    );
+  }
+
+  private removeOperationsForBase(base: string): void {
+    this.removeOperationsMatching((operation) => operation.context.base === base);
+  }
+
   openOperationDetail(operationId: string): void {
     this.closeAllOperationDetails(operationId);
     this.patchOperation(operationId, { detailOpen: true });
@@ -813,6 +850,7 @@ export class SyncDiagramStateService {
         for (const esquema of opened) {
           this.openTablesKeys.delete(schemaScopeKey(base, esquema));
           this.positions.delete(this.tablesNodeIdFor(base, esquema));
+          this.removeOperationsForSchemaScope(base, esquema);
         }
         this.layoutTreeBranches();
         this.rebuildGraph();
@@ -854,6 +892,7 @@ export class SyncDiagramStateService {
         this.positions.delete(this.tablesNodeIdFor(parsed.base, parsed.esquema));
       }
     }
+    this.removeOperationsForBase(base);
     this.positions.delete(this.schemasListNodeId(base));
     const sel = this.selection();
     if (sel.base === base && !sel.esquema) {
@@ -867,6 +906,7 @@ export class SyncDiagramStateService {
     const key = schemaScopeKey(base, esquema);
     this.openTablesKeys.delete(key);
     this.positions.delete(this.tablesNodeIdFor(base, esquema));
+    this.removeOperationsForSchemaScope(base, esquema);
     const sel = this.selection();
     if (sel.base === base && sel.esquema === esquema) {
       this.selection.set({ base, esquema });
@@ -881,6 +921,7 @@ export class SyncDiagramStateService {
     this.openTablesKeys.delete(key);
     this.positions.delete(this.schemaBoxNodeId(base, esquema));
     this.positions.delete(this.tablesNodeIdFor(base, esquema));
+    this.removeOperationsForSchemaScope(base, esquema);
     this.layoutTreeBranches();
     this.rebuildGraph();
   }

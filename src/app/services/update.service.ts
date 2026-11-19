@@ -16,6 +16,9 @@ export type UpdateUiPreviewScenario =
   | 'error'
   | 'install-failed';
 
+const LATEST_RELEASES_URL =
+  'https://github.com/ramonbarbosdev/syncdb-desktop/releases/latest';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -47,6 +50,10 @@ export class UpdateService {
 
   get isUpdaterAvailable(): boolean {
     return !!window.updater;
+  }
+
+  get isDesktopShell(): boolean {
+    return typeof window !== 'undefined' && !!window.desktop;
   }
 
   private manualCheckPending = false;
@@ -145,14 +152,35 @@ export class UpdateService {
   }
 
   openLatestRelease() {
-    this.runUpdaterAction('Nao foi possivel abrir a pagina da ultima release.', (updater) =>
-      updater.openLatestRelease()
-    );
+    const desktop = window.desktop as { openLatestRelease?: () => Promise<void> } | undefined;
+    if (desktop?.openLatestRelease) {
+      desktop.openLatestRelease().catch(() => this.openReleasesInBrowser());
+      return;
+    }
+
+    if (window.updater) {
+      this.runUpdaterAction('Nao foi possivel abrir a pagina da ultima release.', (updater) =>
+        updater.openLatestRelease()
+      );
+      return;
+    }
+
+    this.openReleasesInBrowser();
   }
 
   checkForUpdates() {
     if (!this.isUpdaterAvailable) {
-      this.error$.next('Atualizador indisponivel nesta execucao do aplicativo.');
+      this.checking$.next(false);
+      this.fallbackUrl$.next(LATEST_RELEASES_URL);
+
+      if (this.isDesktopShell) {
+        this.installFailed$.next(true);
+        this.error$.next(
+          'O atualizador automatico nao esta disponivel nesta instalacao. Baixe o instalador mais recente e instale por cima.'
+        );
+      } else {
+        this.error$.next('Atualizador indisponivel nesta execucao do aplicativo.');
+      }
       return;
     }
 
@@ -296,5 +324,9 @@ export class UpdateService {
     }
 
     return fallback;
+  }
+
+  private openReleasesInBrowser(): void {
+    window.open(LATEST_RELEASES_URL, '_blank', 'noopener,noreferrer');
   }
 }

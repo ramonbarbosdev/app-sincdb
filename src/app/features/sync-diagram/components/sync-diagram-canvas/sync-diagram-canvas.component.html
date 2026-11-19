@@ -22,9 +22,9 @@
       <f-canvas
         fZoom
         [fWheelTrigger]="blockFlowWheelZoom"
-        [fZoomMinimum]="0.4"
-        [fZoomMaximum]="1.2"
-        [fZoomStep]="0.1"
+        [fZoomMinimum]="zoomMinimum"
+        [fZoomMaximum]="zoomMaximum"
+        [fZoomStep]="zoomStep"
         (fCanvasChange)="onCanvasChange()"
       >
         <f-connection

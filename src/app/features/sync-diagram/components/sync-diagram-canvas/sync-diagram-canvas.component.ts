@@ -20,7 +20,10 @@ import { SyncDiagramOperationService } from '../../services/sync-diagram-operati
 import { SyncDiagramQueueService } from '../../services/sync-diagram-queue.service';
 import { SyncDiagramStateService } from '../../services/sync-diagram-state.service';
 import { SyncDiagramThemeService } from '../../services/sync-diagram-theme.service';
-import { SYNC_DIAGRAM_TOOLTIP } from '../../sync-diagram-chrome.constants';
+import {
+  SYNC_DIAGRAM_TOOLTIP,
+  SYNC_DIAGRAM_ZOOM,
+} from '../../sync-diagram-chrome.constants';
 import { SyncDiagramQueueListComponent } from '../sync-diagram-queue-list/sync-diagram-queue-list.component';
 import { SyncDiagramNodeCardComponent } from '../sync-diagram-node-card/sync-diagram-node-card.component';
 import { SyncErdTableNodeComponent } from '../sync-erd-table-node/sync-erd-table-node.component';
@@ -45,6 +48,9 @@ import { SyncOperationNodeCardComponent } from '../sync-operation-node-card/sync
 })
 export class SyncDiagramCanvasComponent {
   readonly tip = SYNC_DIAGRAM_TOOLTIP;
+  readonly zoomMinimum = SYNC_DIAGRAM_ZOOM.minimum;
+  readonly zoomMaximum = SYNC_DIAGRAM_ZOOM.maximum;
+  readonly zoomStep = SYNC_DIAGRAM_ZOOM.step;
   readonly state = inject(SyncDiagramStateService);
   readonly themeService = inject(SyncDiagramThemeService);
   readonly queue = inject(SyncDiagramQueueService);
