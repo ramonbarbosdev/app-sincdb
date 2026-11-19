@@ -25,7 +25,7 @@
         [fZoomMinimum]="zoomMinimum"
         [fZoomMaximum]="zoomMaximum"
         [fZoomStep]="zoomStep"
-        (fCanvasChange)="onCanvasChange()"
+        (fCanvasChange)="onCanvasChange($event)"
       >
         <f-connection
           *ngFor="let edge of state.flowConnections()"
@@ -89,18 +89,12 @@
             class="flow-node-card"
             [node]="flowNode.selectorMeta"
             [resizeActive]="state.resizeTargetNodeId() === flowNode.id"
-            [sizeLabel]="
-              flowNode.size
-                ? flowNode.size.width + ' × ' + flowNode.size.height
-                : ''
-            "
+            [sizeLabel]="state.formatNodeSizeLabel(flowNode.id)"
             [items]="filteredItems(flowNode.id)"
             (filterChange)="onFilterChange(flowNode.id, $event)"
             (itemClick)="onItemClick(flowNode.selectorMeta, $event)"
             (itemOpen)="onItemOpen(flowNode.selectorMeta, $event)"
             (action)="onNodeAction($event, flowNode.selectorMeta)"
-            (sizeGrow)="onNodeSizeStep(flowNode.id, true)"
-            (sizeShrink)="onNodeSizeStep(flowNode.id, false)"
             (headerActivate)="state.selectNodeForResize(flowNode.id)"
           />
 

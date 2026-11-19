@@ -7,6 +7,7 @@ import { SyncDiagramActionsPanelComponent } from '../components/sync-diagram-act
 import { SyncDiagramMode, SyncDiagramTreeLayout } from '../models/sync-diagram.model';
 import { SyncDiagramActionsService } from '../services/sync-diagram-actions.service';
 import { SyncDiagramCameraService } from '../services/sync-diagram-camera.service';
+import { SyncDiagramFlowController } from '../services/sync-diagram-flow.controller';
 import { SyncDiagramLayoutService } from '../services/sync-diagram-layout.service';
 import { SyncDiagramOperationService } from '../services/sync-diagram-operation.service';
 import { SyncDiagramQueueService } from '../services/sync-diagram-queue.service';
@@ -18,6 +19,7 @@ import { SyncDiagramThemeService } from '../services/sync-diagram-theme.service'
   standalone: true,
   providers: [
     SyncDiagramLayoutService,
+    SyncDiagramFlowController,
     SyncDiagramCameraService,
     SyncDiagramThemeService,
     SyncDiagramStateService,

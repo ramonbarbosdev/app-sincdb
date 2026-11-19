@@ -38,8 +38,6 @@ export class SyncDiagramNodeCardComponent implements OnChanges, OnDestroy {
   @Output() itemClick = new EventEmitter<string>();
   @Output() itemOpen = new EventEmitter<string>();
   @Output() action = new EventEmitter<SyncDiagramAction>();
-  @Output() sizeGrow = new EventEmitter<void>();
-  @Output() sizeShrink = new EventEmitter<void>();
   @Output() headerActivate = new EventEmitter<void>();
 
   filterText = '';
@@ -70,16 +68,6 @@ export class SyncDiagramNodeCardComponent implements OnChanges, OnDestroy {
   onFilterInput(value: string): void {
     this.filterText = value;
     this.filterInput$.next(value);
-  }
-
-  onSizeStep(event: Event, grow: boolean): void {
-    event.preventDefault();
-    event.stopPropagation();
-    if (grow) {
-      this.sizeGrow.emit();
-    } else {
-      this.sizeShrink.emit();
-    }
   }
 
   onHeaderPointerDown(event: PointerEvent): void {

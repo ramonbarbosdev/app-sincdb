@@ -154,11 +154,15 @@ export class SyncDiagramStateService {
   }
 
   getNodeSize(nodeId: string): DiagramFlowSize {
-    const custom = this.nodeSizes.get(nodeId);
-    const raw = custom ?? this.defaultNodeSizeFor(nodeId);
-    const width = Math.max(1, Math.round(raw.width));
-    const height = Math.max(1, Math.round(raw.height));
-    return { width, height };
+    return this.resolveNodeSizeRef(nodeId);
+  }
+
+  formatNodeSizeLabel(nodeId: string): string {
+    const size = this.nodeSizes.get(nodeId);
+    if (!size) {
+      return '';
+    }
+    return `${size.width} × ${size.height}`;
   }
 
   setNodeSize(nodeId: string, size: DiagramFlowSize): void {
@@ -166,8 +170,13 @@ export class SyncDiagramStateService {
     if (!this.isValidNodeSize(clamped)) {
       return;
     }
-    this.nodeSizes.set(nodeId, clamped);
-    this.patchFlowNodeSize(nodeId, clamped);
+    const entry = this.resolveNodeSizeRef(nodeId);
+    if (entry.width === clamped.width && entry.height === clamped.height) {
+      return;
+    }
+    entry.width = clamped.width;
+    entry.height = clamped.height;
+    this.patchFlowNodeSize(nodeId, entry);
   }
 
   adjustNodeSize(nodeId: string, grow: boolean): void {
@@ -1389,9 +1398,30 @@ export class SyncDiagramStateService {
     return { width: 260, height: 200 };
   }
 
+  private resolveNodeSizeRef(nodeId: string): DiagramFlowSize {
+    let entry = this.nodeSizes.get(nodeId);
+    if (!entry) {
+      const base = this.defaultNodeSizeFor(nodeId);
+      entry = {
+        width: Math.max(1, Math.round(base.width)),
+        height: Math.max(1, Math.round(base.height)),
+      };
+      this.nodeSizes.set(nodeId, entry);
+    }
+    return entry;
+  }
+
   private patchFlowNodeSize(nodeId: string, size: DiagramFlowSize): void {
     this.flowNodes.update((nodes) =>
-      nodes.map((node) => (node.id === nodeId ? { ...node, size } : node))
+      nodes.map((node) => {
+        if (node.id !== nodeId) {
+          return node;
+        }
+        if (node.size === size) {
+          return node;
+        }
+        return { ...node, size };
+      })
     );
   }
 

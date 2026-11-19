@@ -1,7 +1,9 @@
 import { IRect, PointExtensions } from '@foblex/2d';
 import {
   EFConnectionType,
+  FCanvasChangeEvent,
   FCanvasComponent,
+  FFlowComponent,
   FFlowModule,
   FZoomDirective,
   provideFFlow,
@@ -28,7 +30,7 @@ import {
   SyncDiagramNodeData,
 } from '../../models/sync-diagram.model';
 import { SyncDiagramActionsService } from '../../services/sync-diagram-actions.service';
-import { SyncDiagramCameraService } from '../../services/sync-diagram-camera.service';
+import { SyncDiagramFlowController } from '../../services/sync-diagram-flow.controller';
 import { SyncDiagramOperationService } from '../../services/sync-diagram-operation.service';
 import { SyncDiagramQueueService } from '../../services/sync-diagram-queue.service';
 import { SyncDiagramStateService } from '../../services/sync-diagram-state.service';
@@ -69,9 +71,10 @@ export class SyncDiagramCanvasComponent {
   readonly queue = inject(SyncDiagramQueueService);
   private operations = inject(SyncDiagramOperationService);
   private actions = inject(SyncDiagramActionsService);
-  private camera = inject(SyncDiagramCameraService);
+  private flowController = inject(SyncDiagramFlowController);
   private ngZone = inject(NgZone);
   private cdr = inject(ChangeDetectorRef);
+  private flow = viewChild(FFlowComponent);
   private canvas = viewChild(FCanvasComponent);
   private zoom = viewChild(FZoomDirective);
 
@@ -101,15 +104,18 @@ export class SyncDiagramCanvasComponent {
   readonly blockFlowWheelZoom = (): boolean => false;
 
   onFlowReady(): void {
+    const flowRef = this.flow();
     const canvasRef = this.canvas();
     const zoomRef = this.zoom();
-    if (!canvasRef) return;
-
-    this.camera.registerCanvas(canvasRef);
-    if (zoomRef) {
-      this.camera.registerZoom(zoomRef);
+    if (!flowRef || !canvasRef || !zoomRef) {
+      return;
     }
-    canvasRef.fitToScreen(PointExtensions.initialize(64, 88), false);
+    this.flowController.register({
+      flow: flowRef,
+      canvas: canvasRef,
+      zoom: zoomRef,
+    });
+    this.flowController.initializeViewport();
     this.updateZoomLabel();
   }
 
@@ -120,16 +126,17 @@ export class SyncDiagramCanvasComponent {
     if (!target?.closest('.diagram-flow')) return;
 
     event.preventDefault();
-    this.camera.zoomAtWheel(event);
+    this.flowController.zoomAtWheel(event);
     this.updateZoomLabel();
   }
 
-  onCanvasChange(): void {
+  onCanvasChange(event: FCanvasChangeEvent): void {
+    this.flowController.setCanvasScale(event.scale);
     this.updateZoomLabel();
   }
 
   onUserCanvasInteraction(): void {
-    this.camera.pauseAutoFollow();
+    this.flowController.pauseAutoFollow();
   }
 
   onFlowPointerDown(event: PointerEvent): void {
@@ -152,27 +159,27 @@ export class SyncDiagramCanvasComponent {
   }
 
   zoomIn(): void {
-    this.camera.zoomIn();
+    this.flowController.zoomIn();
     this.updateZoomLabel();
   }
 
   zoomOut(): void {
-    this.camera.zoomOut();
+    this.flowController.zoomOut();
     this.updateZoomLabel();
   }
 
   fitView(): void {
-    this.camera.fitToScreen();
+    this.flowController.fitToScreen();
     this.updateZoomLabel();
   }
 
   resetView(): void {
-    this.camera.resetScaleAndCenter();
+    this.flowController.resetScaleAndCenter();
     this.updateZoomLabel();
   }
 
   onPositionChange(nodeId: string, position: { x: number; y: number }): void {
-    this.camera.pauseAutoFollow();
+    this.flowController.pauseAutoFollow();
     this.state.updateNodePosition(nodeId, position);
   }
 
@@ -183,14 +190,14 @@ export class SyncDiagramCanvasComponent {
       return;
     }
     this.ngZone.run(() => {
-      this.camera.pauseAutoFollow();
+      this.flowController.pauseAutoFollow();
       this.state.setNodeSize(nodeId, { width, height });
       this.cdr.markForCheck();
     });
   }
 
   onNodeSizeStep(nodeId: string, grow: boolean): void {
-    this.camera.pauseAutoFollow();
+    this.flowController.pauseAutoFollow();
     this.state.adjustNodeSize(nodeId, grow);
   }
 
@@ -250,7 +257,7 @@ export class SyncDiagramCanvasComponent {
   }
 
   private updateZoomLabel(): void {
-    const scale = this.camera.getScale();
+    const scale = this.flowController.getScale();
     this.zoomLevel.set(Math.round(scale * 100));
   }
 }

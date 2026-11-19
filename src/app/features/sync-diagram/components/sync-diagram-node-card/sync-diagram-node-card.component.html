@@ -11,24 +11,6 @@
         </div>
         <div class="diagram-node-header-actions">
           <button
-            type="button"
-            class="diagram-size-btn"
-            title="Diminuir caixa"
-            aria-label="Diminuir caixa"
-            (click)="onSizeStep($event, false)"
-          >
-            <i class="pi pi-minus" aria-hidden="true"></i>
-          </button>
-          <button
-            type="button"
-            class="diagram-size-btn"
-            title="Aumentar caixa"
-            aria-label="Aumentar caixa"
-            (click)="onSizeStep($event, true)"
-          >
-            <i class="pi pi-plus" aria-hidden="true"></i>
-          </button>
-          <button
             *ngIf="canShowClose()"
             type="button"
             class="diagram-close-btn"
@@ -77,24 +59,6 @@
         </div>
         <div class="diagram-node-header-actions">
           <span class="diagram-node-badge" *ngIf="node.itemCount != null">{{ node.itemCount }}</span>
-          <button
-            type="button"
-            class="diagram-size-btn"
-            title="Diminuir caixa"
-            aria-label="Diminuir caixa"
-            (click)="onSizeStep($event, false)"
-          >
-            <i class="pi pi-minus" aria-hidden="true"></i>
-          </button>
-          <button
-            type="button"
-            class="diagram-size-btn"
-            title="Aumentar caixa"
-            aria-label="Aumentar caixa"
-            (click)="onSizeStep($event, true)"
-          >
-            <i class="pi pi-plus" aria-hidden="true"></i>
-          </button>
           <button
             *ngIf="canShowClose()"
             type="button"
