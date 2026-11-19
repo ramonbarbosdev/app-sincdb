@@ -5,6 +5,13 @@ export interface UpdateAvailablePayload {
   latestVersion?: string;
 }
 
+export type ManualUpdateCheckResult = {
+  status: 'available' | 'not-available' | 'dev' | 'error' | 'skipped';
+  currentVersion?: string;
+  latestVersion?: string;
+  message?: string;
+};
+
 export interface ElectronUpdaterBridge {
   onUpdateAvailable: (cb: (data?: UpdateAvailablePayload) => void) => void;
   onManualUpdateAvailable: (cb: (data?: UpdateAvailablePayload) => void) => void;
@@ -16,7 +23,7 @@ export interface ElectronUpdaterBridge {
   startDownload: () => void | Promise<void>;
   installUpdate: () => void | Promise<void>;
   openLatestRelease: () => void | Promise<void>;
-  checkForUpdates: () => void | Promise<void>;
+  checkForUpdates: () => void | Promise<ManualUpdateCheckResult | void>;
   notifyRendererReady?: () => void | Promise<void>;
 }
 
@@ -45,9 +52,16 @@ export function resolveUpdaterBridge(): ElectronUpdaterBridge | null {
     return window.updater;
   }
 
-  const desktop = window.desktop;
+  const desktop = window.desktop as
+    | (Window['desktop'] & { updater?: ElectronUpdaterBridge })
+    | undefined;
+
+  if (isUpdaterBridge(desktop?.updater)) {
+    return desktop!.updater!;
+  }
+
   if (isUpdaterBridge(desktop)) {
-    return desktop;
+    return desktop!;
   }
 
   return null;

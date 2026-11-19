@@ -4,6 +4,7 @@ import { environment } from '../../environments/environment';
 import {
   ElectronUpdaterBridge,
   isElectronShell,
+  ManualUpdateCheckResult,
   resolveUpdaterBridge,
   UpdateAvailablePayload,
 } from '../utils/electron-updater-bridge';
@@ -81,6 +82,7 @@ export class UpdateService {
   }
 
   private manualCheckPending = false;
+  private eventsBoundBridge: ElectronUpdaterBridge | null = null;
   private previewProgressTimer: ReturnType<typeof setInterval> | null = null;
 
   private readonly previewVersionInfo: UpdateVersionInfo = {
@@ -89,11 +91,22 @@ export class UpdateService {
   };
 
   constructor() {
+    this.ensureUpdaterBridge();
+  }
+
+  private ensureUpdaterBridge(): ElectronUpdaterBridge | null {
     const bridge = resolveUpdaterBridge();
-    if (bridge) {
+    if (!bridge) {
+      return null;
+    }
+
+    if (this.eventsBoundBridge !== bridge) {
       this.listenElectronEvents(bridge);
+      this.eventsBoundBridge = bridge;
       bridge.notifyRendererReady?.();
     }
+
+    return bridge;
   }
 
   private listenElectronEvents(updater: ElectronUpdaterBridge) {
@@ -187,7 +200,8 @@ export class UpdateService {
   checkForUpdates() {
     this.closeAbout();
 
-    if (!this.isUpdaterAvailable) {
+    const bridge = this.ensureUpdaterBridge();
+    if (!bridge) {
       this.checking$.next(false);
       this.fallbackUrl$.next(LATEST_RELEASES_URL);
 
@@ -205,9 +219,55 @@ export class UpdateService {
     this.resetState();
     this.manualCheckPending = true;
     this.checking$.next(true);
-    this.runUpdaterAction('Nao foi possivel verificar atualizacoes.', (updater) =>
-      updater.checkForUpdates()
-    );
+
+    try {
+      const result = bridge.checkForUpdates();
+      if (result instanceof Promise) {
+        result
+          .then((payload) => this.applyManualCheckResult(payload))
+          .catch((error) => {
+            this.manualCheckPending = false;
+            this.checking$.next(false);
+            this.error$.next(
+              this.normalizeError(error, 'Nao foi possivel verificar atualizacoes.')
+            );
+          });
+      }
+    } catch (error) {
+      this.manualCheckPending = false;
+      this.checking$.next(false);
+      this.error$.next(this.normalizeError(error, 'Nao foi possivel verificar atualizacoes.'));
+    }
+  }
+
+  private applyManualCheckResult(payload: ManualUpdateCheckResult | void | undefined): void {
+    if (!payload || !this.manualCheckPending) {
+      return;
+    }
+
+    if (payload.status === 'not-available') {
+      this.manualCheckPending = false;
+      this.checking$.next(false);
+      this.updateNotAvailable$.next(true);
+      return;
+    }
+
+    if (payload.status === 'available') {
+      this.manualCheckPending = false;
+      this.checking$.next(false);
+      this.versionInfo$.next({
+        currentVersion: payload.currentVersion || this.installedVersion,
+        availableVersion: payload.latestVersion || '-',
+      });
+      this.updateAvailable$.next(true);
+      return;
+    }
+
+    if (payload.status === 'error') {
+      this.manualCheckPending = false;
+      this.checking$.next(false);
+      this.error$.next(payload.message || 'Nao foi possivel verificar atualizacoes.');
+    }
   }
 
   simulateUiPreview(scenario: UpdateUiPreviewScenario): void {

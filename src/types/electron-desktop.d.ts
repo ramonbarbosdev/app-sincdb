@@ -13,6 +13,7 @@ declare global {
         body: string;
         silent?: boolean;
       }) => Promise<{ ok: boolean; reason?: string }>;
+      updater?: NonNullable<Window['updater']>;
     } & Partial<NonNullable<Window['updater']>>;
   }
 }
