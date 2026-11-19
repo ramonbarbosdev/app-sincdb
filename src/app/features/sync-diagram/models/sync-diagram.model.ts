@@ -451,10 +451,16 @@ export interface DiagramFlowPoint {
   y: number;
 }
 
+export interface DiagramFlowSize {
+  width: number;
+  height: number;
+}
+
 export interface DiagramFlowNode {
   id: string;
   type: FlowNodeType;
   position: DiagramFlowPoint;
+  size?: DiagramFlowSize;
   sourceConnectorId: string;
   targetConnectorId: string;
   selectorMeta?: SyncDiagramNodeData;

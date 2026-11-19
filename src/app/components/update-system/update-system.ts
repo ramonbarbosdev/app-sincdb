@@ -45,8 +45,16 @@ export class UpdateSystem {
   checking$ = this.updateService.checking;
 
   showUpdateDialog = false;
+  showAboutDialog = false;
+
+  get installedVersion(): string {
+    return this.updateService.installedVersion;
+  }
 
   ngOnInit() {
+    this.updateService.aboutOpen.subscribe((open) => {
+      this.showAboutDialog = open;
+    });
     this.updateAvailable$.subscribe((avail) => {
       if (avail) {
         this.showUpdateDialog = true;
@@ -108,6 +116,14 @@ export class UpdateSystem {
 
   dismiss() {
     this.showUpdateDialog = false;
+  }
+
+  closeAbout() {
+    this.updateService.closeAbout();
+  }
+
+  checkForUpdates() {
+    this.updateService.checkForUpdates();
   }
 
   preview(scenario: UpdateUiPreviewScenario): void {

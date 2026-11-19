@@ -1,4 +1,46 @@
 <p-dialog
+  header="Sobre"
+  [(visible)]="showAboutDialog"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  styleClass="update-dialog about-dialog"
+  [style]="dialogStyle"
+  (onHide)="closeAbout()">
+
+  <section class="update-hero">
+    <div class="update-icon">
+      <i class="pi pi-database" aria-hidden="true"></i>
+    </div>
+    <div>
+      <h2>SyncDB Desktop</h2>
+      <p>Sincronização de bases de dados.</p>
+    </div>
+  </section>
+
+  <dl class="update-versions">
+    <div>
+      <dt>Versão instalada</dt>
+      <dd>{{ installedVersion }}</dd>
+    </div>
+  </dl>
+
+  <div class="update-actions">
+    <p-button
+      label="Fechar"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="closeAbout()">
+    </p-button>
+    <p-button
+      label="Verificar atualizações"
+      icon="pi pi-refresh"
+      (onClick)="checkForUpdates()">
+    </p-button>
+  </div>
+</p-dialog>
+
+<p-dialog
   header="Atualizações"
   [(visible)]="showUpdateDialog"
   [modal]="true"

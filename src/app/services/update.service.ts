@@ -36,6 +36,7 @@ export class UpdateService {
   private installFailed$ = new BehaviorSubject<boolean>(false);
   private fallbackUrl$ = new BehaviorSubject<string | null>(null);
   private checking$ = new BehaviorSubject<boolean>(false);
+  private aboutOpen$ = new BehaviorSubject<boolean>(false);
 
   updateAvailable = this.updateAvailable$.asObservable();
   versionInfo = this.versionInfo$.asObservable();
@@ -47,6 +48,7 @@ export class UpdateService {
   installFailed = this.installFailed$.asObservable();
   fallbackUrl = this.fallbackUrl$.asObservable();
   checking = this.checking$.asObservable();
+  aboutOpen = this.aboutOpen$.asObservable();
 
   get isUpdaterAvailable(): boolean {
     return !!window.updater;
@@ -54,6 +56,22 @@ export class UpdateService {
 
   get isDesktopShell(): boolean {
     return typeof window !== 'undefined' && !!window.desktop;
+  }
+
+  get installedVersion(): string {
+    const version = window.desktop?.appVersion;
+    if (version) {
+      return version;
+    }
+    return environment.production ? '-' : 'dev';
+  }
+
+  openAbout(): void {
+    this.aboutOpen$.next(true);
+  }
+
+  closeAbout(): void {
+    this.aboutOpen$.next(false);
   }
 
   private manualCheckPending = false;
@@ -67,6 +85,10 @@ export class UpdateService {
   constructor() {
     if (window.updater) {
       this.listenElectronEvents();
+      const ready = (
+        window.updater as { notifyRendererReady?: () => void | Promise<void> }
+      ).notifyRendererReady;
+      ready?.();
     }
   }
 
@@ -169,6 +191,8 @@ export class UpdateService {
   }
 
   checkForUpdates() {
+    this.closeAbout();
+
     if (!this.isUpdaterAvailable) {
       this.checking$.next(false);
       this.fallbackUrl$.next(LATEST_RELEASES_URL);

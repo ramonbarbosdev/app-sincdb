@@ -1,5 +1,5 @@
 <ng-container *ngIf="node.kind === 'schema'; else listNodeCard">
-  <div class="diagram-node-wrap kind-schema">
+  <div class="diagram-node-wrap kind-schema" [style.--node-scale]="nodeScale">
     <div class="diagram-node schema-node" [class.is-active-path]="hasActivePath()">
       <header class="diagram-node-header" fDragHandle>
         <div class="diagram-node-title">
@@ -9,16 +9,36 @@
             <small *ngIf="node.subtitle">{{ node.subtitle }}</small>
           </div>
         </div>
-        <button
-          *ngIf="canShowClose()"
-          type="button"
-          class="diagram-close-btn"
-          [title]="closeButtonTitle()"
-          [attr.aria-label]="closeButtonTitle()"
-          (click)="action.emit('close-children')"
-        >
-          <i class="pi pi-times" aria-hidden="true"></i>
-        </button>
+        <div class="diagram-node-header-actions">
+          <button
+            type="button"
+            class="diagram-size-btn"
+            title="Diminuir caixa"
+            aria-label="Diminuir caixa"
+            (click)="onSizeStep($event, false)"
+          >
+            <i class="pi pi-minus" aria-hidden="true"></i>
+          </button>
+          <button
+            type="button"
+            class="diagram-size-btn"
+            title="Aumentar caixa"
+            aria-label="Aumentar caixa"
+            (click)="onSizeStep($event, true)"
+          >
+            <i class="pi pi-plus" aria-hidden="true"></i>
+          </button>
+          <button
+            *ngIf="canShowClose()"
+            type="button"
+            class="diagram-close-btn"
+            [title]="closeButtonTitle()"
+            [attr.aria-label]="closeButtonTitle()"
+            (click)="action.emit('close-children')"
+          >
+            <i class="pi pi-times" aria-hidden="true"></i>
+          </button>
+        </div>
       </header>
       <div class="schema-node-actions">
         <button
@@ -34,12 +54,34 @@
         </button>
       </div>
     </div>
+    <span
+      class="diagram-resize-handle diagram-resize-handle--right"
+      fResizeHandle
+      fResizeHandleType="right"
+      title="Ajustar largura"
+      aria-label="Ajustar largura da caixa"
+    ></span>
+    <span
+      class="diagram-resize-handle diagram-resize-handle--bottom"
+      fResizeHandle
+      fResizeHandleType="bottom"
+      title="Ajustar altura"
+      aria-label="Ajustar altura da caixa"
+    ></span>
+    <span
+      class="diagram-resize-handle diagram-resize-handle--corner"
+      fResizeHandle
+      fResizeHandleType="right-bottom"
+      title="Ajustar escala"
+      aria-label="Ajustar escala da caixa"
+    ></span>
   </div>
 </ng-container>
 
 <ng-template #listNodeCard>
   <div
     class="diagram-node-wrap"
+    [style.--node-scale]="nodeScale"
     [class.kind-bases]="node.kind === 'bases'"
     [class.kind-schemas]="node.kind === 'schemas'"
     [class.kind-tables]="node.kind === 'tables'"
@@ -55,6 +97,24 @@
         </div>
         <div class="diagram-node-header-actions">
           <span class="diagram-node-badge" *ngIf="node.itemCount != null">{{ node.itemCount }}</span>
+          <button
+            type="button"
+            class="diagram-size-btn"
+            title="Diminuir caixa"
+            aria-label="Diminuir caixa"
+            (click)="onSizeStep($event, false)"
+          >
+            <i class="pi pi-minus" aria-hidden="true"></i>
+          </button>
+          <button
+            type="button"
+            class="diagram-size-btn"
+            title="Aumentar caixa"
+            aria-label="Aumentar caixa"
+            (click)="onSizeStep($event, true)"
+          >
+            <i class="pi pi-plus" aria-hidden="true"></i>
+          </button>
           <button
             *ngIf="canShowClose()"
             type="button"
@@ -129,5 +189,26 @@
         </div>
       </div>
     </div>
+    <span
+      class="diagram-resize-handle diagram-resize-handle--right"
+      fResizeHandle
+      fResizeHandleType="right"
+      title="Ajustar largura"
+      aria-label="Ajustar largura da caixa"
+    ></span>
+    <span
+      class="diagram-resize-handle diagram-resize-handle--bottom"
+      fResizeHandle
+      fResizeHandleType="bottom"
+      title="Ajustar altura"
+      aria-label="Ajustar altura da caixa"
+    ></span>
+    <span
+      class="diagram-resize-handle diagram-resize-handle--corner"
+      fResizeHandle
+      fResizeHandleType="right-bottom"
+      title="Ajustar escala"
+      aria-label="Ajustar escala da caixa"
+    ></span>
   </div>
 </ng-template>

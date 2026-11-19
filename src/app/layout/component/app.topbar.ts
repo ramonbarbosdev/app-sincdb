@@ -174,9 +174,9 @@ export class AppTopbar {
 
     items.push(
       {
-        label: 'Verificar atualizações',
-        icon: 'pi pi-refresh',
-        command: () => this.checkUpdates(),
+        label: 'Sobre',
+        icon: 'pi pi-info-circle',
+        command: () => this.updateService.openAbout(),
       },
       { separator: true },
       {
@@ -189,10 +189,6 @@ export class AppTopbar {
     );
 
     return items;
-  }
-
-  checkUpdates() {
-    this.updateService.checkForUpdates();
   }
 
   toggleDarkMode() {

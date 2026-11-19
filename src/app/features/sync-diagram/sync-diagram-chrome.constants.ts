@@ -10,3 +10,9 @@ export const SYNC_DIAGRAM_ZOOM = {
   maximum: 4,
   step: 0.1,
 } as const;
+
+export const SYNC_DIAGRAM_NODE_SIZE = {
+  minScale: 0.75,
+  maxScale: 2.5,
+  stepFactor: 0.12,
+} as const;

@@ -58,10 +58,13 @@
           [fNodeId]="flowNode.id"
           [fNodePosition]="flowNode.position"
           (fNodePositionChange)="onPositionChange(flowNode.id, $event)"
+          [fNodeSize]="flowNode.size"
+          (fNodeSizeChange)="onNodeSizeChange(flowNode.id, $event)"
           [fNodeSelectionDisabled]="true"
           [fNodeDraggingDisabled]="false"
           class="flow-node-shell"
           [class.flow-node-erd]="flowNode.type === 'erd-table'"
+          [class.flow-node-resizable]="!!flowNode.size"
         >
           <div
             fConnector
@@ -81,11 +84,14 @@
           <app-sync-diagram-node-card
             *ngIf="flowNode.type === 'selector' && flowNode.selectorMeta"
             [node]="flowNode.selectorMeta"
+            [nodeScale]="state.getNodeScale(flowNode.id)"
             [items]="filteredItems(flowNode.id)"
             (filterChange)="onFilterChange(flowNode.id, $event)"
             (itemClick)="onItemClick(flowNode.selectorMeta, $event)"
             (itemOpen)="onItemOpen(flowNode.selectorMeta, $event)"
             (action)="onNodeAction($event, flowNode.selectorMeta)"
+            (sizeGrow)="onNodeSizeStep(flowNode.id, true)"
+            (sizeShrink)="onNodeSizeStep(flowNode.id, false)"
           />
 
           <app-sync-operation-node-card

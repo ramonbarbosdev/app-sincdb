@@ -7,6 +7,7 @@ import {
   DiagramFlowConnectionLabel,
   DiagramFlowNode,
   DiagramFlowPoint,
+  DiagramFlowSize,
   ErdEdge,
   ErdImpactZone,
   ErdTableNode,
@@ -31,6 +32,7 @@ import {
   TabelaAfetadaDTO,
 } from '../models/sync-diagram.model';
 import { SyncDiagramLayoutService } from './sync-diagram-layout.service';
+import { SYNC_DIAGRAM_NODE_SIZE } from '../sync-diagram-chrome.constants';
 
 const DEFAULT_POSITIONS: Record<string, DiagramFlowPoint> = {
   'node-bases': { x: 80, y: 100 },
@@ -77,6 +79,7 @@ export class SyncDiagramStateService {
   private filters = new Map<string, string>();
   private loadingNodes = new Map<string, boolean>();
   private positions = new Map<string, DiagramFlowPoint>();
+  private nodeScales = new Map<string, number>();
   private readonly manualNodePositions = new Set<string>();
 
   private basesNodeId = 'node-bases';
@@ -133,6 +136,45 @@ export class SyncDiagramStateService {
       this.nodeMeta.set(nodeId, { ...meta, filter: value });
     }
     this.filterRevision.update((n) => n + 1);
+  }
+
+  getNodeScale(nodeId: string): number {
+    return this.nodeScales.get(nodeId) ?? 1;
+  }
+
+  getNodeSize(nodeId: string): DiagramFlowSize {
+    const base = this.defaultNodeSizeFor(nodeId);
+    const scale = this.getNodeScale(nodeId);
+    return {
+      width: Math.round(base.width * scale),
+      height: Math.round(base.height * scale),
+    };
+  }
+
+  setNodeScale(nodeId: string, scale: number): void {
+    const clamped = Math.min(
+      SYNC_DIAGRAM_NODE_SIZE.maxScale,
+      Math.max(SYNC_DIAGRAM_NODE_SIZE.minScale, scale)
+    );
+    this.nodeScales.set(nodeId, clamped);
+    this.patchFlowNodeSize(nodeId, this.getNodeSize(nodeId));
+  }
+
+  setNodeSize(nodeId: string, size: DiagramFlowSize): void {
+    const base = this.defaultNodeSizeFor(nodeId);
+    if (base.width <= 0 || base.height <= 0) {
+      return;
+    }
+    const scaleW = size.width / base.width;
+    const scaleH = size.height / base.height;
+    this.setNodeScale(nodeId, (scaleW + scaleH) / 2);
+  }
+
+  adjustNodeSize(nodeId: string, grow: boolean): void {
+    const factor = grow
+      ? 1 + SYNC_DIAGRAM_NODE_SIZE.stepFactor
+      : 1 - SYNC_DIAGRAM_NODE_SIZE.stepFactor;
+    this.setNodeScale(nodeId, this.getNodeScale(nodeId) * factor);
   }
 
   updateNodePosition(nodeId: string, position: DiagramFlowPoint): void {
@@ -1293,6 +1335,10 @@ export class SyncDiagramStateService {
   }
 
   private nodeSizeFor(nodeId: string): { width: number; height: number } {
+    return this.getNodeSize(nodeId);
+  }
+
+  private defaultNodeSizeFor(nodeId: string): DiagramFlowSize {
     if (nodeId === this.basesNodeId) return { width: 240, height: 280 };
     if (nodeId.startsWith('node-schemas-')) {
       return { width: 260, height: SELECTOR_LIST_HEIGHT };
@@ -1307,6 +1353,12 @@ export class SyncDiagramStateService {
       return { width: OPERATION_CARD_WIDTH, height: 160 };
     }
     return { width: 260, height: 200 };
+  }
+
+  private patchFlowNodeSize(nodeId: string, size: DiagramFlowSize): void {
+    this.flowNodes.update((nodes) =>
+      nodes.map((node) => (node.id === nodeId ? { ...node, size } : node))
+    );
   }
 
   private rectsOverlap(
@@ -1880,6 +1932,7 @@ export class SyncDiagramStateService {
         id: opNodeId,
         type: 'operation',
         position: opPos,
+        size: this.getNodeSize(opNodeId),
         sourceConnectorId: connectors.source,
         targetConnectorId: connectors.target,
         operationMeta: op,
@@ -2099,6 +2152,7 @@ export class SyncDiagramStateService {
       id,
       type: 'selector',
       position: { ...(this.positions.get(id) ?? defaultPosition) },
+      size: this.getNodeSize(id),
       sourceConnectorId: connectors.source,
       targetConnectorId: connectors.target,
       selectorMeta: meta,

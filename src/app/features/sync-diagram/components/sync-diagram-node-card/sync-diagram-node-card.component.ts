@@ -31,11 +31,14 @@ const FILTER_DEBOUNCE_MS = 1000;
 export class SyncDiagramNodeCardComponent implements OnChanges, OnDestroy {
   @Input({ required: true }) node!: SyncDiagramNodeData;
   @Input() items: SyncDiagramItem[] = [];
+  @Input() nodeScale = 1;
 
   @Output() filterChange = new EventEmitter<string>();
   @Output() itemClick = new EventEmitter<string>();
   @Output() itemOpen = new EventEmitter<string>();
   @Output() action = new EventEmitter<SyncDiagramAction>();
+  @Output() sizeGrow = new EventEmitter<void>();
+  @Output() sizeShrink = new EventEmitter<void>();
 
   filterText = '';
   private readonly filterInput$ = new Subject<string>();
@@ -65,6 +68,16 @@ export class SyncDiagramNodeCardComponent implements OnChanges, OnDestroy {
   onFilterInput(value: string): void {
     this.filterText = value;
     this.filterInput$.next(value);
+  }
+
+  onSizeStep(event: Event, grow: boolean): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (grow) {
+      this.sizeGrow.emit();
+    } else {
+      this.sizeShrink.emit();
+    }
   }
 
   iconLabel(kind: SyncDiagramKind): string {

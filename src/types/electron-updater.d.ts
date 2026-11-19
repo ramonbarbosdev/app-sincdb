@@ -31,6 +31,7 @@ declare global {
       installUpdate: () => void | Promise<void>;
       openLatestRelease: () => void | Promise<void>;
       checkForUpdates: () => void | Promise<void>;
+      notifyRendererReady?: () => void | Promise<void>;
     };
   }
 }

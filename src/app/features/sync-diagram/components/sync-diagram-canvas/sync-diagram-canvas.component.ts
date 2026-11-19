@@ -1,4 +1,4 @@
-import { PointExtensions } from '@foblex/2d';
+import { IRect, PointExtensions } from '@foblex/2d';
 import {
   EFConnectionType,
   FCanvasComponent,
@@ -140,6 +140,16 @@ export class SyncDiagramCanvasComponent {
   onPositionChange(nodeId: string, position: { x: number; y: number }): void {
     this.camera.pauseAutoFollow();
     this.state.updateNodePosition(nodeId, position);
+  }
+
+  onNodeSizeChange(nodeId: string, rect: IRect): void {
+    this.camera.pauseAutoFollow();
+    this.state.setNodeSize(nodeId, { width: rect.width, height: rect.height });
+  }
+
+  onNodeSizeStep(nodeId: string, grow: boolean): void {
+    this.camera.pauseAutoFollow();
+    this.state.adjustNodeSize(nodeId, grow);
   }
 
   filteredItems(nodeId: string) {

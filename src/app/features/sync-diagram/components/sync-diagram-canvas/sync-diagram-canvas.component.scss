@@ -218,11 +218,15 @@
 
 .flow-node-shell {
   position: relative;
+  box-sizing: border-box;
+
+  &.flow-node-resizable {
+    height: 100%;
+  }
 }
 
 /* Reset Foblex .f-node defaults — cards usam .diagram-node com largura própria */
 :host ::ng-deep f-flow .f-node.f-component {
-  width: auto !important;
   min-width: 0;
   min-height: 0 !important;
   padding: 0 !important;
