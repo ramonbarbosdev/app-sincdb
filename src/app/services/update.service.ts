@@ -3,8 +3,11 @@ import { BehaviorSubject } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
   ElectronUpdaterBridge,
+  isBrowserAccessingDesktopBuild,
   isElectronShell,
+  isRunningInElectron,
   ManualUpdateCheckResult,
+  resolveCheckForUpdates,
   resolveUpdaterBridge,
   UpdateAvailablePayload,
 } from '../utils/electron-updater-bridge';
@@ -62,7 +65,7 @@ export class UpdateService {
   }
 
   get isDesktopShell(): boolean {
-    return isElectronShell() || (typeof window !== 'undefined' && !!window.desktop);
+    return isElectronShell();
   }
 
   get installedVersion(): string {
@@ -124,10 +127,10 @@ export class UpdateService {
       this.updateAvailable$.next(true);
     };
 
-    updater.onUpdateAvailable(onAvailable);
-    updater.onManualUpdateAvailable(onAvailable);
+    updater.onUpdateAvailable?.(onAvailable);
+    updater.onManualUpdateAvailable?.(onAvailable);
 
-    updater.onUpdateNotAvailable(() => {
+    updater.onUpdateNotAvailable?.(() => {
       this.checking$.next(false);
       this.resetActiveUpdateState();
       if (this.manualCheckPending) {
@@ -136,27 +139,27 @@ export class UpdateService {
       this.manualCheckPending = false;
     });
 
-    updater.onProgress((data) => {
+    updater.onProgress?.((data) => {
       this.checking$.next(false);
       this.updateAvailable$.next(false);
       this.downloading$.next(true);
       this.progress$.next(data.percent);
     });
 
-    updater.onDownloaded(() => {
+    updater.onDownloaded?.(() => {
       this.checking$.next(false);
       this.updateAvailable$.next(false);
       this.downloading$.next(false);
       this.downloaded$.next(true);
     });
 
-    updater.onError((message) => {
+    updater.onError?.((message) => {
       this.checking$.next(false);
       this.downloading$.next(false);
       this.error$.next(message);
     });
 
-    updater.onInstallFailed((data) => {
+    updater.onInstallFailed?.((data) => {
       this.checking$.next(false);
       this.downloading$.next(false);
       this.installFailed$.next(true);
@@ -200,19 +203,14 @@ export class UpdateService {
   checkForUpdates() {
     this.closeAbout();
 
-    const bridge = this.ensureUpdaterBridge();
-    if (!bridge) {
+    this.ensureUpdaterBridge();
+    const checkForUpdates = resolveCheckForUpdates();
+
+    if (!checkForUpdates) {
       this.checking$.next(false);
       this.fallbackUrl$.next(LATEST_RELEASES_URL);
-
-      if (this.isDesktopShell) {
-        this.installFailed$.next(true);
-        this.error$.next(
-          'O atualizador automatico nao esta disponivel nesta instalacao. Baixe o instalador mais recente e instale por cima.'
-        );
-      } else {
-        this.error$.next('Atualizador indisponivel nesta execucao do aplicativo.');
-      }
+      this.installFailed$.next(false);
+      this.error$.next(this.updaterUnavailableMessage());
       return;
     }
 
@@ -221,7 +219,7 @@ export class UpdateService {
     this.checking$.next(true);
 
     try {
-      const result = bridge.checkForUpdates();
+      const result = checkForUpdates();
       if (result instanceof Promise) {
         result
           .then((payload) => this.applyManualCheckResult(payload))
@@ -263,11 +261,34 @@ export class UpdateService {
       return;
     }
 
+    if (payload.status === 'dev') {
+      this.manualCheckPending = false;
+      this.checking$.next(false);
+      this.updateNotAvailable$.next(true);
+      return;
+    }
+
     if (payload.status === 'error') {
       this.manualCheckPending = false;
       this.checking$.next(false);
       this.error$.next(payload.message || 'Nao foi possivel verificar atualizacoes.');
     }
+  }
+
+  private updaterUnavailableMessage(): string {
+    if (isBrowserAccessingDesktopBuild()) {
+      return 'Abra o SyncDB pela janela do aplicativo (icone SyncDB ou npm start), nao pelo navegador em localhost.';
+    }
+
+    if (isRunningInElectron()) {
+      return 'A integracao com o atualizador falhou ao iniciar. Feche o SyncDB e abra de novo (npm start ou o atalho instalado).';
+    }
+
+    if (isElectronShell()) {
+      return 'O atualizador automatico nao esta disponivel nesta instalacao. Baixe o instalador mais recente e instale por cima.';
+    }
+
+    return 'Atualizador indisponivel nesta execucao do aplicativo.';
   }
 
   simulateUiPreview(scenario: UpdateUiPreviewScenario): void {
@@ -372,13 +393,7 @@ export class UpdateService {
     const updater = resolveUpdaterBridge();
     if (!updater) {
       this.checking$.next(false);
-      if (this.isDesktopShell) {
-        this.error$.next(
-          'O atualizador automatico nao esta disponivel nesta instalacao. Baixe o instalador mais recente e instale por cima.'
-        );
-      } else {
-        this.error$.next('Atualizador indisponivel nesta execucao do aplicativo.');
-      }
+      this.error$.next(this.updaterUnavailableMessage());
       return;
     }
 
