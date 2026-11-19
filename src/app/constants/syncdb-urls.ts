@@ -1,1 +1,1 @@
-export const SYNCDB_DOWNLOAD_SITE_URL = 'https://syncdb.ramoncode.com.br/#download';
+export const SYNCDB_DOWNLOAD_SITE_URL = 'https://syncdb.ramoncode.com.br/download';
